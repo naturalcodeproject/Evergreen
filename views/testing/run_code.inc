@@ -1,0 +1,1 @@
+<p>The number is: <?= $this->number; ?></p>

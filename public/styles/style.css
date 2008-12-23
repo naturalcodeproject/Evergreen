@@ -1,0 +1,228 @@
+
+body {
+ background-color: #fff;
+ margin: 0px;
+ font-family: Lucida Grande, Verdana, Sans-serif;
+ font-size: 14px;
+ color: #4F5155;
+ height: 100%;
+}
+
+.bodyBG{
+	background: url(../images/bodybg.jpg) repeat-x left top;
+}
+
+h2{
+	color: #A1C24F;
+}
+
+#header{
+	background: url(../images/bodybg.jpg) repeat-x left top;
+	width: auto;
+	height: 120px;
+}
+
+#container { /* div you want to stretch */ 
+min-height: 100%; 
+border: 1px solid #000;
+}
+
+#footer{
+	background-color: #93ACC0;
+	height: 100%;
+	width: auto;
+}
+
+.site_title {
+ color: #333;
+ font-size: 32px;
+ font-weight: bold;
+ margin: 24px 0 2px 0;
+ padding: 5px 0 6px 0;
+}
+
+.price{
+	color: red;
+}
+
+#store .entry form, #store .entry form div{
+	display: inline;
+}
+
+.list-line-odd{
+	background-color: #fff;
+}
+
+.list-line-even{
+	background-color: #fff;
+}
+
+.list-image{
+	width: 75px;
+	border: 1px solid #666666;
+	padding: 2px;
+	margin: 2px;
+}
+
+.list-title{
+	font-family: Lucida Grande, Verdana, Sans-serif;
+	font-size:   14px;
+	line-height: 18px;
+	font-weight: bold;
+	font-style: bold;
+}
+
+
+pre {
+  background-color: #eee;
+  padding: 10px;
+  font-size: 11px;
+}
+
+a { color: #3366FF; }
+a:visited { color: #3366FF; }
+a:hover { color: #3366FF; background-color:#000; }
+
+.fieldWithErrors {
+  padding: 1px;
+  background-color: red;
+  display: table;
+}
+
+#errorExplanation {
+  width: 400px;
+  border: 1px solid red;
+  padding: 7px;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  background-color: #ffff66;
+}
+
+#errorExplanation h2 {
+  text-align: left;
+  font-weight: bold;
+  padding: 5px 5px 5px 15px;
+  font-size: 12px;
+  margin: -7px;
+  background-color: #c00;
+  color: #fff;
+}
+
+#errorExplanation p {
+  color: #333;
+  margin-bottom: 0;
+  padding: 5px;
+}
+
+#errorExplanation ul li {
+  font-size: 12px;
+  list-style: square;
+}
+
+div.uploadStatus {
+  margin: 5px;
+}
+
+div.progressBar {
+  margin: 5px;
+}
+
+div.progressBar div.border {
+  background-color: #fff;
+  border: 1px solid grey;
+  width: 100%;
+}
+
+div.progressBar div.background {
+  background-color: #333;
+  height: 18px;
+  width: 0%;
+}
+
+.sidebar{
+	width: 160px;
+	background-color: #E5ECF9;
+	padding: 5px;
+	border: 1px solid #C5D7EF;
+	color: #3366FF;
+}
+
+.line-odd{
+	background-color: #EEF2FA;
+}
+
+.line-even{
+	background-color: #D3DFF5;
+}
+
+/*------------------------------------------------------ 
+Main Navigation
+------------------------------------------------------*/
+
+#clientNavContainer {
+  margin-top: 10px;
+  padding: 0px;
+  background: url(../images/navbg.jpg) repeat-x left top;
+  width: 760px;
+  height: 36px;
+  border: 1px solid #545521;
+}
+
+ul#clientHeaderNavLinks {
+  width: 98%;
+  margin: 0;
+  padding: 0 0 0 0px;
+  height: 30;
+  background: url(../images/topnav_bg.jpg) repeat-x right top;
+  list-style: none;
+}
+
+ul#clientHeaderNavLinks li {
+  float: left;
+  margin: 0;
+  padding: 0;
+  font-family: "Lucida Grande", Verdana, sans-serif;
+  font-size: 96%;
+}
+
+#clientHeaderNavLinks li a {
+  position: relative;
+  float: left;
+  display: block;
+  margin: 0;
+  padding: 8px 15px;
+  color: white;
+  border-right: 1px solid #5253D1;
+  text-decoration: none;
+  height: 20px;
+}
+
+#clientHeaderNavLinks li a:hover {
+  background-color: #5253D1;
+}
+
+#clientHeaderNavLinks li a.first {
+	
+}
+
+#clientHeaderNavLinks li a.selected {
+  color: white;
+  background-color: #5253D1;
+}
+
+
+
+
+
+
+
+code {
+ font-family: Monaco, Verdana, Sans-serif;
+ font-size: 12px;
+ background-color: #f9f9f9;
+ border: 1px solid #D0D0D0;
+ color: #002166;
+ display: block;
+ margin: 14px 0 14px 0;
+ padding: 12px 10px 12px 10px;
+}
