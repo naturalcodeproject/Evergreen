@@ -1,5 +1,5 @@
 <?php
-	class Somethingelse
+	class Somethingelse_DeveloperHelper
 	{
 		function aFunction()
 		{

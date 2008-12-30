@@ -1,6 +1,6 @@
 <?php
 
-class Main extends BranchController
+class Main_DeveloperController extends BranchController
 {
 	var $layout = "index";
 	

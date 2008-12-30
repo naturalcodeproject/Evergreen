@@ -1,6 +1,6 @@
 <?php
 
-class Main extends ApplicationController {
+class Main_Controller extends ApplicationController {
 	var $layout = "index";
 	
 	public function index () {
@@ -17,6 +17,16 @@ class Main extends ApplicationController {
 	
 		//$hookhelper = System::load_helper("somethingelse");
 		//$hookhelper->aFunction();
+		
+		echo "<p/>";
+		echo "Current ='[current]' - <a href='[current]'>Test</a><br/>";
+		echo "Site ='[site]' - <a href='[site]'>Test</a><br/>";
+		echo "View ='[view]' - <a href='[view]'>Test</a><br/>";
+		echo "Controller ='[controller]' - <a href='[controller]'>Test</a><br/>";
+		echo "Branch ='[branch]' - <a href='[branch]'>Test</a><br/>";
+		
+		echo "<br /><br />";
+		var_dump(Factory::get_config()->get_working_uri());
 	}
 	
 	

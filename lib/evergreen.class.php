@@ -34,7 +34,7 @@ final class Evergreen
 		if (file_exists($this->config->get_base_path()."/controllers/".$uri_params[$url_vals[0]].".php") && empty($branch_name))
 		{
 			## Run Controller ##
-			$class_name = ucwords($uri_params[$url_vals[0]]);
+			$class_name = ucwords($uri_params[$url_vals[0]])."_Controller";
 			$controller = new $class_name($settings, $uri_params, $url_vals);
 			
 		}
@@ -49,7 +49,7 @@ final class Evergreen
 			## Run Branch Controller ##
 			if (file_exists($this->config->get_base_path()."/branches/{$branch_name}/controllers/".reset($uri_params).".php"))
 			{
-				$class_name = ucwords(reset($uri_params));
+				$class_name = ucwords(reset($uri_params))."_".ucwords($branch_name)."Controller";
 				$controller = new $class_name($settings, $uri_params, $url_vals);
 			}
 			else
@@ -74,7 +74,6 @@ class AutoLoaders
 {
 	static function main($class_name)
 	{
-		$class_name[0] = strtolower($class_name[0]);
 		self::parse_class_name($class_name);
 		self::base_includes($class_name);
 		
@@ -87,7 +86,6 @@ class AutoLoaders
 	
 	static function branches($class_name)
 	{
-		$class_name[0] = strtolower($class_name[0]);
 		self::parse_class_name($class_name);
 		$branch_name = Factory::get_config()->get_branch_name();
 		self::base_includes($class_name);
@@ -115,6 +113,19 @@ class AutoLoaders
 	
 	static function parse_class_name(&$class_name)
 	{
+		$class_name[0] = strtolower($class_name[0]);
+		
+		$class_name = explode("_", $class_name);
+		if (count($class_name) > 1)
+		{
+			array_pop($class_name);
+			$class_name = implode("_", $class_name);
+		}
+		else
+		{
+			$class_name = $class_name[0];
+		}
+		
 		if (!ctype_lower($class_name))
 		{
 			$new_name = '';

@@ -66,27 +66,14 @@ class Loader
 		{
 			$file_path = $this->get_path();
 			
-			$new_class_name = $this->class_to_load.((strlen($this->branch_to_use)) ? $this->branch_to_use : "").ucwords($this->class_type);
-			$class_contents = file_get_contents($file_path);
+			$class_name = $this->class_to_load."_".((strlen($this->branch_to_use)) ? ucwords($this->branch_to_use) : "").ucwords($this->class_type);
 			
-			$class_contents = str_replace("<?php", "", $class_contents);
-			$class_contents = str_replace("?>", "", $class_contents);
-			$class_contents = preg_replace("/class ".$this->class_to_load."/i", "class ".$new_class_name, $class_contents);
+			if (!class_exists($class_name, false))
+			{
+				include($file_path);
+			}
 			
-			$class_contents = preg_replace("/extends (.*)/i", "", $class_contents);
-			
-			$class_contents = preg_replace("/(include|require|include_once|require_once)(\(\"|\"|')([^(\"\)|\"|')]+)/i", "//$3", $class_contents);
-			//$class_contents = str_replace("class ".$this->class_to_load, "class ".$new_class_name, $class_contents);
-			//var_dump($class_contents);
-			
-			$path = dirname($this->get_path());
-			set_include_path(get_include_path().PATH_SEPARATOR.$path);
-			
-			eval($class_contents);
-			
-			set_include_path(str_replace(PATH_SEPARATOR.$path, "", get_include_path()));
-			
-			$object = new $new_class_name();
+			$object = new $class_name();
 		
 			return $object;
 		}

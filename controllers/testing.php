@@ -1,10 +1,17 @@
 <?php
 
-class Testing extends ApplicationController {
+class Testing_Controller extends ApplicationController
+{
 	var $layout = "index";
 	
-	public function look_here () {
-		$this->home_selected = "selected";
+	public function index()
+	{
+		# code...
+	}
+	
+	public function look_here()
+	{
+		//$this->home_selected = "selected";
 		
 		
 		//print_r($_GET);
@@ -30,7 +37,7 @@ class Testing extends ApplicationController {
 		//$test_model->set_name($_POST['first_name']." ".$_POST['last_name']);
 		//$test_model->create();
 		
-		header("Location: ".URI_CONTROLLER."/look_here");
+		//header("Location: ".URI_CONTROLLER."/look_here");
 		
 	}
 	

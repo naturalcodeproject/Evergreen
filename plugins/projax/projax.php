@@ -17,7 +17,7 @@ include("javascript.php");
 include("prototype.php");
 include("scriptaculous.php");
 
-class Projax extends Scriptaculous
+class Projax_Plugin extends Scriptaculous
 {
 	
 }

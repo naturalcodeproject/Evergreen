@@ -1,5 +1,5 @@
 <?php
-class Test extends Model {
+class Test_Model extends Model {
 	protected $id;
 	protected $name;
 

@@ -39,6 +39,10 @@ class Designer
 			$config_base_uri = "/";
 		}
 		define("URI_ROOT", $config_base_uri.$config_base_uri_append);
+		if (Factory::get_config()->get_branch_name() != "")
+		{
+			define("URI_BRANCH", URI_ROOT."/".Factory::get_config()->get_branch_name());
+		}
 		define("URI_SKIN", implode("/", array_merge(explode("/", $config_base_uri), array("public"))));
 		
 		foreach($uri_to_use as $key => $item)
@@ -54,7 +58,8 @@ class Designer
 		{
 			if (!empty($item)) $current_uri_map[] = $item;
 		}
-		define("URI_CURRENT", implode("/", array_merge(explode("/", $config_base_uri), $current_uri_map)));
+		
+		define("URI_CURRENT", implode("/", array_merge(explode("/", ((Factory::get_config()->get_branch_name() != "") ? URI_BRANCH : URI_ROOT)), $current_uri_map)));
 	}
 	
 	public function do_fixes (&$content)
