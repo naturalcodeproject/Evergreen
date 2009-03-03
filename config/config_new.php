@@ -13,7 +13,6 @@
 	
 	## Errors Setup ##
 	$config['errors']['404'] = "/error404";
-	$config['errors']['500'] = "/error500";
 	
 	## Database Setup ##
 	$database['host'] = "localhost";
