@@ -33,8 +33,9 @@
 						<li><a href="[site]/developer/apples" class="<?php echo $this->link2_selected;?>">Apples</a></li>
 						<li><a href="[site]/oranges" class="<?php echo $this->link3_selected;?>">Oranges</a></li>
 						<li><a href="[site]/pickles" class="<?php echo $this->link3_selected;?>">Pickles</a></li>
-						<li><a href="[site]/test" class="<?php echo $this->link3_selected;?>">Evergreen Route</a></li>
+						<!-- <li><a href="[site]/test" class="<?php echo $this->link3_selected;?>">Evergreen Route</a></li> -->
 						<li><a href="[site]/developer/formtest" class="<?php echo $this->link3_selected;?>">Form Test</a></li>
+						<li><a href="[site]/thisdoesntexist" class="<?php echo $this->link3_selected;?>">Error 404</a></li>
 					  </ul>
 					</div>
 				</td>

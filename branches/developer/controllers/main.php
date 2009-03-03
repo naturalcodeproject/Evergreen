@@ -75,6 +75,7 @@ class Main_DeveloperController extends BranchController
 		
 		echo "<p/>";
 		echo "Current ='[current]' - <a href='[current]'>Test</a><br/>";
+		echo "Root ='[root]' - <a href='[root]'>Test</a><br/>";
 		
 		echo "<p/>";
 		

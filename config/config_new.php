@@ -1,6 +1,4 @@
 <?php
-	
-	
 	## URI Map ##
 	$uri['controller'] = "main";
 	$uri['view'] = "index";
@@ -8,14 +6,14 @@
 	$uri['id'] = "";
 	
 	## URI Type ##
-	$config['uri_type'] = "AUTO";
+	$config['uri_type'] = "REWRITE";
 	
 	## Error Logs ##
 	$config['error_log'] = "public/log";
 	
 	## Errors Setup ##
-	$config['errors_path'] = "public/errors";
-	$config['error_404'] = "404.php";
+	$config['errors']['404'] = "/error404";
+	$config['errors']['500'] = "/error500";
 	
 	## Database Setup ##
 	$database['host'] = "localhost";
@@ -28,6 +26,4 @@
 	$routes['/test(.*)'] = "/testing/look_here/$1";
 	$routes['/oranges(.*)'] = "/developer/main/oranges/$1";
 	$routes['/pickles(.*)'] = "/developer/main/pickles/$1";
-	
-	
 ?>

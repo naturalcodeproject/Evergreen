@@ -2,6 +2,10 @@
 
 class Main_Controller extends ApplicationController {
 	var $layout = "index";
+	//var $bounce = array("bounce"=>"loud", "check"=>"soft");
+	//var $filter = "";
+	//var $filter_only = array("", array("wibble"));
+	//var $filter_except = array("", array("wibble"));
 	
 	public function index () {
 		$this->home_selected = "selected";
@@ -29,6 +33,21 @@ class Main_Controller extends ApplicationController {
 		var_dump(Factory::get_config()->get_working_uri());
 	}
 	
+	// public function soft()
+	// {
+	// 	echo "soft";
+	// 	return false;
+	// }
+	// 
+	// public function loud()
+	// {
+	// 	echo "Loud";
+	// }
+	
+	public function error404()
+	{
+		echo "This is an error page.";
+	}
 	
 	public function wibble()
 	{

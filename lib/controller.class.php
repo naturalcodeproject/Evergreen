@@ -9,8 +9,7 @@
 *
 */
 
-abstract class Controller
-{
+abstract class Controller {
 	protected $params;
 	protected $settings;
 	protected $formhandler;
@@ -18,12 +17,11 @@ abstract class Controller
 	protected $config;
 	private $view_overridden = false;
 	
-	final function __construct ()
-	{
+	final function __construct () {
 		## Construct Code
-		$this->branch_name = Factory::get_config()->get_branch_name();
 		$this->config = Factory::get_config();
-		$this->params = $this->config->get_working_uri();
+		$this->branch_name = Factory::get_config()->get_branch_name();
+		$this->params = Factory::get_config()->get_working_uri();
 		
 		$this->formhandler = new Formhandler($this);
 		$this->designer = new Designer();
@@ -32,8 +30,7 @@ abstract class Controller
 		$this->show_view();
 	}
 	
-	final private function show_view ()
-	{
+	final private function show_view () {
 		## Set up the actual page
 		$full_page = $this->run_view();
 		
@@ -50,37 +47,43 @@ abstract class Controller
 		echo $full_page;
 	}
 	
-	final private function run_view()
-	{
+	final private function run_view() {
 		ob_start();
 		$error = false;
 		if (empty($this->params['view'])) $this->params['view'] = "index";
 		
-		if ($this->view_exists($this->params['view']) || (!$this->view_exists($this->params['view']) && isset($this->bounceback) && method_exists($this, $this->bounceback['check']) && method_exists($this, $this->bounceback['bounce'])))
-		{
-			if (isset($this->bounceback) && !$this->view_exists($this->params['view']))
-			{
+		if ($this->view_exists($this->params['view']) || (!$this->view_exists($this->params['view']) && isset($this->bounceback) && method_exists($this, $this->bounceback['check']) && method_exists($this, $this->bounceback['bounce']))) {
+			if (isset($this->filter) || isset($this->filter_only) || isset($this->filter_except)) {
+				if (isset($this->filter)) {
+					if (!empty($this->filter) && !is_array($this->filter)) {
+						$this->{$this->filter}();
+					}
+				}
+				
+				if (isset($this->filter_only) && is_array($this->filter_only[1]) && in_array($this->params['view'], $this->filter_only[1])) {
+					if (!empty($this->filter_only[0]) && !is_array($this->filter_only[0])) {
+						$this->{$this->filter_only[0]}();
+					}
+				}
+				
+				if (isset($this->filter_except) && is_array($this->filter_only[1]) && !in_array($this->params['view'], $this->filter_only[1])) {
+					if (!empty($this->filter_except[0]) && !is_array($this->filter_except[0])) {
+						$this->{$this->filter_except[0]}();
+					}
+				}
+			}
+			
+			if (isset($this->bounceback) && !$this->view_exists($this->params['view'])) {
 				$view = $this->params['view'];
 				$values = array_values($this->params);
 				$this->params = array_combine(array_keys($this->params), array_slice(array_merge(array($values[0]), array($this->bounceback['bounce']),array_slice($values, 1)), 0, count(array_keys($this->params))));
 				
-				if (!call_user_func(array($this, $this->bounceback['check'])))
-				{
-					if (!$this->view_exists($view))
-					{
+				if (!call_user_func(array($this, $this->bounceback['check']))) {
+					if (!$this->view_exists($view)) {
 						$error = true;
-						header("HTTP/1.0 404 Not Found");
-						//header("Location: ".URI_ROOT."/error");
+						Error::load404();
 						exit;
 					}
-				}
-			}
-			$filter_name = strtolower($this->filter);
-			if (isset($this->filter))
-			{
-				if (!isset($this->filter_only) || (isset($this->filter_only) && in_array($this->params['view'], $this->filter_only)))
-				{
-					$this->$filter_name();
 				}
 			}
 			
@@ -89,21 +92,15 @@ abstract class Controller
 				if (!$this->view_overridden) $this->get_view($this->params['view']);
 			$this->content_for_layout = ob_get_clean();
 			
-		}
-		else
-		{
+		} else {
 			$error = true;
-			header("HTTP/1.0 404 Not Found");
-			//header("Location: ".URI_ROOT."/error");
+			Error::load404();
 			exit;
 		}
 		
-		if(!empty($this->layout) && !$error)
-		{
+		if(!empty($this->layout) && !$error) {
 			$this->render_layout($this->layout);
-		}
-		else
-		{
+		} else {
 			echo $this->content_for_layout;
 		}
 		
@@ -112,30 +109,22 @@ abstract class Controller
 		return $full_page;
 	}
 	
-	final protected function get_view ($name, $controller="", $override = false)
-	{
+	final protected function get_view ($name, $controller="", $override = false) {
 		$this->view_overridden = $override;
 		if (empty($controller)) $controller = $this->params['controller'];
-		if ((empty($this->branch_name) && (@include("views/".strtolower($controller)."/{$name}.inc")) == true) || (!empty($this->branch_name) && (@include("branches/{$this->branch_name}/views/".strtolower($controller)."/{$name}.inc")) == true))
-		{
+		if ((empty($this->branch_name) && (@include("views/".strtolower($controller)."/{$name}.inc")) == true) || (!empty($this->branch_name) && (@include("branches/{$this->branch_name}/views/".strtolower($controller)."/{$name}.inc")) == true)) {
 			return true;
-		}
-		else
-		{
+		} else {
 			return false;
 		}
 	}
 	
-	final protected function render_view ($name, $controller="", $override = false)
-	{
+	final protected function render_view ($name, $controller="", $override = false) {
 		$this->view_overridden = $override;
 		if (empty($controller)) $controller = $this->params['controller'];
-		if (strtolower(get_class($this)) == $controller)
-		{
+		if (strtolower(get_class($this)) == $controller) {
 			$instance_func = $this;
-		}
-		else
-		{
+		} else {
 			$new_controller_name = ucwords($controller);
 			$arr_keys = array_keys($this->params);
 			$new_params = $params;
@@ -146,51 +135,36 @@ abstract class Controller
 			ob_end_clean();
 		}
 		
-		if (method_exists($instance_func, $name))
-		{
+		if (method_exists($instance_func, $name)) {
 			$instance_func->$name();
 			$instance_func->get_view($name);
 			return true;
-		}
-		else
-		{
+		} else {
 			return false;
 		}
 	}
 	
-	final protected function view_exists ($name, $controller="")
-	{
+	final protected function view_exists ($name, $controller="") {
 		if (empty($controller)) $controller = $this->params['controller'];
 		
-		if (method_exists($this, $name))
-		{
+		if (method_exists($this, $name)) {
 			return true;
-		}
-		else
-		{
+		} else {
 			return false;
 		}
 	}
 
-	final protected function render_layout ($name)
-	{
+	final protected function render_layout ($name) {
 		$content_for_layout = $this->content_for_layout;
-		if (!empty($this->branch_name) && (@include("branches/{$this->branch_name}/views/layouts/{$name}.inc")) == true)
-		{
+		if (!empty($this->branch_name) && (@include("branches/{$this->branch_name}/views/layouts/{$name}.inc")) == true) {
 			return 1;
-		}
-		else
-		{
-			if ((@include("views/layouts/{$name}.inc")) == true)
-			{
+		} else {
+			if ((@include("views/layouts/{$name}.inc")) == true) {
 				return true;
-			}
-			else
-			{
+			} else {
 				return false;
 			}
 		}
 	}
 }
-
 ?>

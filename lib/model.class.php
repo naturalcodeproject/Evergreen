@@ -61,7 +61,7 @@ class Model {
 		$this->$method($value); 
 	}
 	
-	public function set_properties(array $properties) {		
+	public function set_properties(array $properties) {
 		$class = new ReflectionObject($this);
 
 		foreach ($properties as $property=>$value) {

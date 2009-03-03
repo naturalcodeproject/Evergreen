@@ -1,26 +1,27 @@
 <?php
-final class System
-{
-	
+final class System {
 	final private function __construct() {}
 	
-	final public static function helper($name)
-	{
-		return new Loader($name, "helper");
+	final public static function load($args) {
+		if (empty($args['name'])) return NULL;
+		if (empty($args['type'])) return NULL;
+		
+		return new Loader($args['name'], $args['type'], $args['branch']);
 	}
 	
-	final public static function model($name)
-	{
-		return new Loader($name, "model");
+	final public static function helper($name, $branch="") {
+		return new Loader($name, "helper", $branch);
 	}
 	
-	final public static function plugin($name)
-	{
-		return new Loader($name, "plugin");
+	final public static function model($name, $branch="") {
+		return new Loader($name, "model", $branch);
 	}
 	
-	public static function log_error($errno, $errstr, $errfile, $errline, $errcontext)
-	{
+	final public static function plugin($name, $branch="") {
+		return new Loader($name, "plugin", $branch);
+	}
+	
+	public static function log_error($errno, $errstr, $errfile, $errline, $errcontext) {
 		$type = '';
    		$display = false;
    		$notify = false;
