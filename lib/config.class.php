@@ -39,9 +39,9 @@ final class Config {
 	function __construct() {
 		$this->set_physical_path(dirname(dirname(__FILE__)));
 		
-		include($this->get_base_path().'/config/config_new.php');
+		include($this->get_base_path().'/config/config.php');
 		
-		//$this->errors = $config['main-settings']['errors'];
+		$this->errors = $config['errors'];
 		//$this->errors_path = $config['errors_path'];
 		
 		$this->database_info = $database;
@@ -112,7 +112,7 @@ final class Config {
 	}
 	
 	public function get_error($err_number) {
-		return $this->errors_path."/".$this->errors[$err_number];
+		return $this->errors[$err_number];
 	}
 	
 	public function set_branch_name($name) {
