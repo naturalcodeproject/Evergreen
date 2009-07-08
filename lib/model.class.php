@@ -7,6 +7,9 @@ class Model {
 		$settings = Factory::get_config()->get_database_info();
 		$specific_driver = $settings['database-type'];
 		$driver_name = "DB_Driver_$specific_driver";
+        
+        require_once('db.driver.' . strtolower($specific_driver) . '.class.php');
+        
 		$this->db_driver = new $driver_name($table_name, get_class($this), get_object_vars($this));
 	}
 	

@@ -55,6 +55,11 @@ class Main_Controller extends ApplicationController {
 		
 		$this->layout = "";
 	}
+    
+    public function models() {
+        $blog_tag_model = System::model('blogtag')->load();
+        $this->blog_tags = $blog_tag_model->find();
+    }
 
 }
 ?>

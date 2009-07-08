@@ -1,5 +1,7 @@
 <?php
 
+require_once('db.driver.class.php');
+
 class DB_Driver_MySQL extends DB_Driver {
 	
 	public function __construct($table_name, $model_name, $model_properties) {
