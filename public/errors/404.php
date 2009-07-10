@@ -45,13 +45,5 @@ h1 {
 <p>The page you were looking for does not exist.</p>
 </div>
 </div>
-<?php
-
-	print_r($_GET);
-	echo "<p/>";
-	print_r(Factory::get_config()->get_working_uri());
-
-
-?>
 </body>
 </html>

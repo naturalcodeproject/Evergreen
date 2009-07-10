@@ -1,7 +1,5 @@
 <?php
 final class Evergreen {
-	protected $config;
-	
 	function __construct() {
 		## Register Autoloader Class ##
 		spl_autoload_register(array('AutoLoaders', 'main'));
@@ -9,23 +7,11 @@ final class Evergreen {
 		## Register Error Handler Class ##
 		set_error_handler(array("System", "log_error"), ini_get('error_reporting'));
 		
-		## Get Config ##
-		$this->config = Factory::get_config();
+		## URI Managment ##
+		Factory::get_config()->check_uri();
 		
-		## Run Evergreen ##
-		$this->run();
-	}
-	
-	private function run() {
-		#################
-		# URI Managment #
-		#################
-		$this->config->check_uri();
-		
-		#######################
-		# Load in Controller  #
-		#######################
-		if ($this->config->get_branch_name()) {
+		## Load in Controller ##
+		if (Factory::get_config()->get_branch_name()) {
 			## Unload Main Autoloader ##
 			spl_autoload_unregister(array('AutoLoaders', 'main'));
 			
@@ -33,12 +19,13 @@ final class Evergreen {
 			spl_autoload_register(array('AutoLoaders', 'branches'));
 		}
 		
-		if (System::load(array("name"=>reset($this->config->get_working_uri()), "type"=>"controller", "branch"=>$this->config->get_branch_name())) == NULL) {
+		if (($controller = System::load(array("name"=>reset(Factory::get_config()->get_working_uri()), "type"=>"controller", "branch"=>Factory::get_config()->get_branch_name()))) === false) {
 			Error::load404();
-			exit;
+			return false;
+		} else {
+			$controller->show_view();
 		}
 	}
-	
 }
 
 class AutoLoaders {
@@ -68,6 +55,7 @@ class AutoLoaders {
 		require_once("lib/factory.class.php");
 		require_once("lib/system.class.php");
 		require_once("lib/config.class.php");
+		require_once("lib/error.class.php");
 		
 		## Other Lib Includes ##
 		if (file_exists(Factory::get_config()->get_base_path()."/lib/{$class_name}.class.php")) {

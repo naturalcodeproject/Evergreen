@@ -10,7 +10,8 @@ class Main_Controller extends ApplicationController {
 	public function index () {
 		$this->home_selected = "selected";
 		
-		$this->projax = System::plugin("projax")->load();
+		//$this->projax = System::plugin("projax")->load();
+		//$this->render_view('wibble');
 		
 		//echo "<pre>";
 			//print_r(get_loaded_extensions());

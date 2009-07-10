@@ -12,8 +12,8 @@ class Main_DeveloperController extends BranchController
 		//$hookhelper = System::from_branch()->load_helper("somethingelse");
 		echo URI_SKIN;
 		echo "<br />";
-		$hookhelper = System::helper('somethingelse')->from_branch()->load();
-		$hookhelper->aFunction();
+		//$hookhelper = System::helper('somethingelse')->from_branch()->load();
+		//$hookhelper->aFunction();
 		
 		//$errors = error_get_last();
 		//if ($errors) var_dump($errors);
@@ -83,7 +83,7 @@ class Main_DeveloperController extends BranchController
 		
 		echo "<p/>";
 		
-		var_dump(Factory::get_config()->brnach_current_route_exact);
+		var_dump(Factory::get_config()->branch_current_route_exact);
 	}
 }
 

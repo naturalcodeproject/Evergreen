@@ -6,19 +6,39 @@ final class System {
 		if (empty($args['name'])) return NULL;
 		if (empty($args['type'])) return NULL;
 		
-		return new Loader($args['name'], $args['type'], $args['branch']);
+		try {
+			$load = new Loader($args['name'], $args['type'], $args['branch']);
+			return $load->load();
+		} catch(Exception $e) {
+			return NULL;
+		}
 	}
 	
 	final public static function helper($name, $branch="") {
-		return new Loader($name, "helper", $branch);
+		try {
+			$load = new Loader($name, "helper", $branch);
+			return $load->load();
+		} catch(Exception $e) {
+			return NULL;
+		}
 	}
 	
 	final public static function model($name, $branch="") {
-		return new Loader($name, "model", $branch);
+		try {
+			$load = new Loader($name, "model", $branch);
+			return $load->load();
+		} catch(Exception $e) {
+			return NULL;
+		}
 	}
 	
 	final public static function plugin($name, $branch="") {
-		return new Loader($name, "plugin", $branch);
+		try {
+			$load = new Loader($name, "plugin", $branch);
+			return $load->load();
+		} catch(Exception $e) {
+			return NULL;
+		}
 	}
 	
 	public static function log_error($errno, $errstr, $errfile, $errline, $errcontext) {

@@ -7,8 +7,6 @@ class Loader {
 	public function __construct($name, $class_type, $branch="") {
 		$this->set_class($name, $class_type);
 		$this->branch_to_use = $branch;
-		
-		$this->load();
 	}
 	
 	public function set_class($name, $class_type) {
@@ -58,6 +56,7 @@ class Loader {
 	
 	public function load() {
 		if ($this->exists()) {
+			
 			$file_path = $this->get_path();
 			
 			$class_name = $this->class_to_load."_".((strlen($this->branch_to_use)) ? ucwords($this->branch_to_use) : "").ucwords($this->class_type);
