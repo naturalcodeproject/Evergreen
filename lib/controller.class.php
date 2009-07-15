@@ -84,7 +84,7 @@ abstract class Controller {
 				if (!call_user_func(array($this, $this->bounceback['check']))) {
 					if (!$this->view_exists($view)) {
 						$error = true;
-						throw new Exception("The view you requested could not be found.");
+						throw new Exception("The view you requested could not be found.", 404);
 					}
 				}
 			}
@@ -96,7 +96,7 @@ abstract class Controller {
 			
 		} else {
 			$error = true;
-			throw new Exception("The view you requested could not be found.");
+			throw new Exception("The view you requested could not be found.", 404);
 		}
 		
 		if(!empty($this->layout) && !$error) {
@@ -126,7 +126,7 @@ abstract class Controller {
 		if (method_exists($this, $name)) {
 			return true;
 		} else {
-			throw new Exception("The view \"{$name}\" does not exist in the controller \"{$controller}\".");
+			throw new Exception("The view \"{$name}\" does not exist in the controller \"{$controller}\".", 404);
 			return false;
 		}
 	}

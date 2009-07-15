@@ -23,7 +23,16 @@ final class Evergreen {
 			Error::load404();
 			return false;
 		} else {
-			$controller->show_view();
+			try {
+				$controller->show_view();
+			} catch(Exception $e) {
+				if ($e->getCode() == 404) {
+					Error::load404();
+					return false;
+				} else {
+					echo "Caught exception: ".$e->getMessage();
+				}
+			}
 		}
 	}
 }
