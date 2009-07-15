@@ -113,7 +113,7 @@ abstract class Controller {
 	final protected function get_view ($name, $controller="", $override = false) {
 		$this->view_overridden = $override;
 		if (empty($controller)) $controller = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
-		if ((empty($this->branch_name) && (@include("views/".strtolower($controller)."/{$name}.inc")) == true) || (!empty($this->branch_name) && (@include("branches/{$this->branch_name}/views/".strtolower($controller)."/{$name}.inc")) == true)) {
+		if ((empty($this->branch_name) && (@include("views/".strtolower($controller)."/{$name}.php")) == true) || (!empty($this->branch_name) && (@include("branches/{$this->branch_name}/views/".strtolower($controller)."/{$name}.php")) == true)) {
 			return true;
 		} else {
 			return false;
@@ -133,10 +133,10 @@ abstract class Controller {
 	
 	final protected function render_layout ($name) {
 		$content_for_layout = $this->content_for_layout;
-		if (!empty($this->branch_name) && (@include("branches/{$this->branch_name}/views/layouts/{$name}.inc")) == true) {
+		if (!empty($this->branch_name) && (@include("branches/{$this->branch_name}/views/layouts/{$name}.php")) == true) {
 			return 1;
 		} else {
-			if ((@include("views/layouts/{$name}.inc")) == true) {
+			if ((@include("views/layouts/{$name}.php")) == true) {
 				return true;
 			} else {
 				return false;
