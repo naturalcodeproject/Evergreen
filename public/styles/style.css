@@ -34,12 +34,11 @@ body {
 }
 
 .footer{
-	width: 100%;
-	margin-top: 50px;
-	border-top: solid 1px #c2c2c2;
-	padding-top: 10px;
+	width: 90%;
+	padding: 10px;
 	text-align: right;
-	color: #D0D0D0;
+	color: #333;
+	font-size: 9px;
 }
 
 .container{
@@ -56,14 +55,12 @@ h1{
 	font-style: normal;
 	font-size: 27px;
 	margin-bottom: -5px;
-	font-family: Georgia, Serif;
 }
 
 h2{
 	color: #A1C24F;
 	font-weight: normal;
 	font-style: normal;
-	font-family: Georgia, Serif;
 }
 
 .h3{
@@ -73,7 +70,6 @@ h2{
 	font-weight: normal;
 	font-style: normal;
 	font-size: 32px;
-	font-family: Georgia, Serif;
 }
 
 .content{

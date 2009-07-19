@@ -3,8 +3,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
-  <title>Evergreen::Base</title>
+	<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+	<title>evergreen</title>
 	<link REL="stylesheet" type="text/css" href="[skin]/styles/style.css">
 </head>
 <body>
@@ -20,10 +20,12 @@
 				<div style="clear: both"></div>
 			</div>
 			
-			<div id="footer">
-				fsdsd
+			
+			</div>
 			</div>
 		
+		<div class="footer">
+			this site was built using evergreen
 		</div>
 	
 	
