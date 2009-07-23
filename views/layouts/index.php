@@ -31,8 +31,9 @@
 	
 		<?php
 		//echo "<p />";
-		
-		//var_dump(Factory::get_config()->get_working_uri());
+		echo "<pre>";
+			var_dump(Factory::get_config());
+		echo "</pre>";
 		//echo "<p />";
 		//var_dump(Factory::get_config()->get_uri_map());
 		?>

@@ -2,7 +2,7 @@
 	
 	## URI Map ##
 	$uri['controller'] = "main";
-	$uri['view'] = "index";
+	$uri['thing'] = "index";
 	$uri['action'] = "";
 	$uri['id'] = "";
 	
@@ -16,10 +16,10 @@
 	$config['default_layout'] = "index";
 	
 	## Database Setup ##
-	$database['host'] = "localhost";
-	$database['username'] = "root";
-	$database['password'] = "root";
-	$database['database'] = "hooktest";
+	$database['host'] = "localhost_dev";
+	$database['username'] = "root_dev";
+	$database['password'] = "root_dev";
+	$database['database'] = "developer_database";
 	$database['database-type'] = "MySQL";
 	
 	## Routes ##

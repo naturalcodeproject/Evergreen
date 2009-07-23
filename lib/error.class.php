@@ -15,7 +15,7 @@ final class Error {
 					echo "Caught exception: ".$e->getMessage();
 				}
 			}
-
+			
 		} else {
 			include("public/errors/404.php");
 		}
