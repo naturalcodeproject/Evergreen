@@ -1,7 +1,12 @@
-<h2>High Five</h2>
+<h1>High Five</h1>
 <p>The framework is running, now get to work. </p>
 
-<p>For best results it is helpful to set the following permissions</p>
+
+<p>
+	<h2>Get Started</h2>
+	For best results it is helpful to set the following permissions
+</p>
+
 <code>
 chmod -R 777 public/errors<br />
 chmod -R 777 config/tmp
