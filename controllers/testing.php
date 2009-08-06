@@ -5,7 +5,6 @@ class Testing_Controller extends ApplicationController {
 	
 	public function index() {
 		# code...
-		echo "string";
 	}
 	
 	// public function look_here()

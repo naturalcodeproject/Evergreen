@@ -34,6 +34,13 @@ class Main_Controller extends ApplicationController {
 		// 		var_dump(Factory::get_config()->get_working_uri());
 	}
 	
+	public function custom_error()
+	{
+		echo "custom_error_stuff<br />";
+		Error::load("custom 404 error", array('code'=>404));
+		//Error::load("hello world");
+	}
+	
 	// public function soft()
 	// {
 	// 	echo "soft";
@@ -47,7 +54,7 @@ class Main_Controller extends ApplicationController {
 	
 	public function error404()
 	{
-		echo "This is an error page.";
+		echo "This is an error page. The error message is: ".Error::getMessage();
 	}
 	
 	public function wibble()

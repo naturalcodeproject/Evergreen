@@ -1,5 +1,20 @@
 <?php
 final class Error {
+	static private $message;
+	
+	final public static function load($message, $params = array()) {
+		self::$message = $message;
+		if (isset($params['code']) && $params['code'] == 404) {
+			Error::load404();
+		} else {
+			throw new Exception($message);
+		}
+	}
+	
+	final public static function getMessage() {
+		return self::$message;
+	}
+	
 	final public static function load404() {
 		header("HTTP/1.0 404 Not Found");
 		

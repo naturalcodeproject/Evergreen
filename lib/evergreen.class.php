@@ -30,7 +30,7 @@ final class Evergreen {
 					Error::load404();
 					return false;
 				} else {
-					echo "Caught exception: ".$e->getMessage();
+					echo "Caught exception: ".Error::getMessage();
 				}
 			}
 		}
