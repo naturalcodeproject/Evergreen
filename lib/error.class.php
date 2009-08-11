@@ -1,6 +1,11 @@
 <?php
 final class Error {
+	static private $registeredErrors = array();
 	static private $message;
+	
+	final public static function register($key, $params) {
+		self::$registeredErrors[$key] = $params;
+	}
 	
 	final public static function load($message, $params = array()) {
 		self::$message = $message;
