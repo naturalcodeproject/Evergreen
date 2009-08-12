@@ -4,20 +4,37 @@ final class Error {
 	static private $message;
 	
 	final public static function register($key, $params) {
+		if (!is_array($params)) {
+			$params = array("message"=>$params);
+		}
+		
 		self::$registeredErrors[$key] = $params;
 	}
 	
 	final public static function load($message, $params = array()) {
+		self::clearAllBuffers();
+		if (array_key_exists($message, self::$registeredErrors)) {
+			$params = self::$registeredErrors[$message];
+			$message = self::$registeredErrors[$message]['message'];
+		}
+		
 		self::$message = $message;
 		if (isset($params['code']) && $params['code'] == 404) {
 			Error::load404();
 		} else {
-			throw new Exception($message);
+			throw new Exception(self::$message);
 		}
 	}
 	
 	final public static function getMessage() {
 		return self::$message;
+	}
+	
+	final public static function clearAllBuffers() {
+		$buffer_count = ob_get_level();
+		for($i = 1; $i <= $buffer_count; $i++) {
+			ob_end_clean();
+		}
 	}
 	
 	final public static function load404() {

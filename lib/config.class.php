@@ -40,6 +40,7 @@ final class Config {
 		$this->set_physical_path(dirname(dirname(__FILE__)));
 		
 		include($this->get_base_path().'/config/config.php');
+		include($this->get_base_path().'/config/errors.php');
 		
 		$this->errors = $config['errors'];
 		//$this->errors_path = $config['errors_path'];
