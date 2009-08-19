@@ -37,8 +37,9 @@ class Main_Controller extends ApplicationController {
 	public function custom_error()
 	{
 		echo "custom_error_stuff<br />";
-		Error::load("custom 404 error", array('code'=>404));
-		//Error::load("hello world");
+		//Error::trigger("custom 404 error", array('code'=>404));
+		Error::trigger("custom 404 error page", array('code'=>404, 'url'=>'/anothererror'));
+		//Error::trigger("hello world");
 	}
 	
 	// public function soft()
@@ -55,6 +56,11 @@ class Main_Controller extends ApplicationController {
 	public function error404()
 	{
 		echo "This is an error page. The error message is: ".Error::getMessage();
+	}
+	
+	public function anothererror()
+	{
+		echo "This is another 404 error page. The error message is: ".Error::getMessage();
 	}
 	
 	public function wibble()

@@ -2,6 +2,7 @@
 final class Error {
 	static private $registeredErrors = array();
 	static private $message;
+	static private $params;
 	
 	final public static function register($key, $params) {
 		if (!is_array($params)) {
@@ -11,7 +12,7 @@ final class Error {
 		self::$registeredErrors[$key] = $params;
 	}
 	
-	final public static function load($message, $params = array()) {
+	final public static function trigger($message, $params = array()) {
 		self::clearAllBuffers();
 		if (array_key_exists($message, self::$registeredErrors)) {
 			$params = self::$registeredErrors[$message];
@@ -19,10 +20,19 @@ final class Error {
 		}
 		
 		self::$message = $message;
+		self::$params = $params;
 		if (isset($params['code']) && $params['code'] == 404) {
-			Error::load404();
+			if (isset($params['url'])) {
+				Error::loadURL($params['url']);
+			} else {
+				Error::loadURL(Factory::get_config()->get_error('404'));
+			}
 		} else {
-			throw new Exception(self::$message);
+			if (isset($params['url'])) {
+				Error::loadURL($params['url']);
+			} else {
+				throw new Exception(self::$message);
+			}
 		}
 	}
 	
@@ -37,11 +47,11 @@ final class Error {
 		}
 	}
 	
-	final public static function load404() {
+	final public static function loadURL($url) {
 		header("HTTP/1.0 404 Not Found");
 		
-		if (Factory::get_config()->get_error('404')) {
-			Factory::get_config(true)->set_working_uri(Factory::get_config()->get_error('404'));
+		if ($url) {
+			Factory::get_config(true)->set_working_uri($url);
 			Factory::get_config()->check_uri();
 			if (($controller = System::load(array("name"=>reset(Factory::get_config()->get_working_uri()), "type"=>"controller"))) === false) {
 				include("public/errors/404.php");
@@ -57,5 +67,7 @@ final class Error {
 			include("public/errors/404.php");
 		}
 	}
+	
+	
 }
 ?>

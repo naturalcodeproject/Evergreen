@@ -84,7 +84,7 @@ abstract class Controller {
 				if (!call_user_func(array($this, $this->bounceback['check']))) {
 					if (!$this->view_exists($view)) {
 						$error = true;
-						Error::load("VIEW_NOT_FOUND");
+						Error::trigger("VIEW_NOT_FOUND");
 					}
 				}
 			}
@@ -96,7 +96,7 @@ abstract class Controller {
 			
 		} else {
 			$error = true;
-			Error::load("VIEW_NOT_FOUND");
+			Error::trigger("VIEW_NOT_FOUND");
 		}
 		
 		if(!empty($this->layout) && !$error) {
@@ -126,7 +126,7 @@ abstract class Controller {
 		if (method_exists($this, $name)) {
 			return true;
 		} else {
-			Error::load("VIEW_NOT_FOUND");
+			Error::trigger("VIEW_NOT_FOUND");
 			return false;
 		}
 	}

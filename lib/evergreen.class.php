@@ -27,7 +27,7 @@ final class Evergreen {
 				$controller->show_view();
 			} catch(Exception $e) {
 				if ($e->getCode() == 404) {
-					Error::load("VIEW_NOT_FOUND");
+					Error::trigger("VIEW_NOT_FOUND");
 					return false;
 				} else {
 					echo "Caught exception: ".Error::getMessage();
