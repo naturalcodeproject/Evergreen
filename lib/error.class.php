@@ -48,9 +48,14 @@ final class Error {
 	}
 	
 	final public static function loadURL($url) {
-		header("HTTP/1.0 404 Not Found");
-		
-		if ($url) {
+		if (isset(self::$params['code']) && self::$params['code'] == 404) {
+			header("HTTP/1.0 404 Not Found");
+		}
+		/*
+			TODO : Check for an external url
+		*/
+		if (!empty($url)) {
+			$url = str_replace(URI_ROOT, "", $url);
 			Factory::get_config(true)->set_working_uri($url);
 			Factory::get_config()->check_uri();
 			if (($controller = System::load(array("name"=>reset(Factory::get_config()->get_working_uri()), "type"=>"controller"))) === false) {
