@@ -31,6 +31,9 @@ final class Evergreen {
 					return false;
 				} else {
 					echo "Caught exception: ".Error::getMessage();
+                    echo "<br /><PRE>";
+                    print_r($e->getTrace());
+                    echo "</PRE>";
 				}
 			}
 		}
@@ -65,6 +68,7 @@ class AutoLoaders {
 		require_once("lib/system.class.php");
 		require_once("lib/config.class.php");
 		require_once("lib/error.class.php");
+        require_once("lib/db.driver.class.php");
 		
 		## Other Lib Includes ##
 		if (file_exists(Factory::get_config()->get_base_path()."/lib/{$class_name}.class.php")) {

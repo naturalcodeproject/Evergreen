@@ -1,11 +1,12 @@
 <?php
 
 class Blogtag_Model extends Model {
-	protected $__id;
-	protected $_name;
-	
+    
 	public function __construct() {
-		parent::__construct('blog_tags');
+        $this->setTableName('blog_tags');
+        
+        $this->addField('id', array('key'));
+        $this->addField('name', array('required'));
 	}
 }
 

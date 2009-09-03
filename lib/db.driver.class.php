@@ -47,6 +47,7 @@ abstract class DB_Driver {
 	protected $single_primary_key;
 	protected $relate_setup;
 	protected $derived_name;
+    protected $model;
 	
 	// Relationship Members
     
@@ -95,7 +96,7 @@ abstract class DB_Driver {
 	/* Class Methods                                 */
 	/*************************************************/
 	
-	public function __construct($table_name, $model_name, $model_properties) {
+	public function __construct($table_name, $model_name, $fields, $model) {
 		$this->db = Factory::get_db();
 
 		$this->all_flags = array();
@@ -104,30 +105,28 @@ abstract class DB_Driver {
 		$this->all_flags[FL_UPDATE] = FL_UPDATE;
 		$this->all_flags[FL_FIND] = FL_FIND;
 		$this->column_flags = array();
+        $this->model = $model;
 		
 		$this->derived_name = $model_name;
 		$this->table_name = $table_name;
 		$this->alias = $table_name;
-		$this->properties = $model_properties;
 		$this->column_names = array();
 		$this->primary_key = array();
 		$this->relate_setup = false;
-		
-		foreach ($this->properties as $name=>$value) {
-			if ($this->is_property_a_column($name)) {
-				if ($this->is_property_primary_key($name)) {
-					$this->primary_key[] = $this->property_to_column($name);
-				}
-				
-				$column_name = $this->property_to_column($name);
-				$this->column_names[] = $column_name;
-				
-				$flags;
-				foreach ($this->all_flags as $flag) {
-					$flags |= $flag;
-				}
-				$this->column_flags[$column_name] = $flags;
-			}
+
+		foreach ($fields as $field) {
+            if ($field->key) {
+                $this->primary_key[] = $this->property_to_column($field->name);
+            }
+
+            $this->column_names[] = $field->name;
+            $this->properties[$field->name] = null;
+
+            $flags;
+            foreach ($this->all_flags as $flag) {
+                $flags |= $flag;
+            }
+            $this->column_flags[$field->name] = $flags;
 		}
 		
 		$this->single_primary_key = (count($this->primary_key) == 1);
@@ -291,9 +290,7 @@ abstract class DB_Driver {
 			return $this->$prop;
 		} else if ($this->relationships && array_key_exists($property, $this->relationship_classes)) {
 			return $this->get_relationship_results($property);
-		} else if ($this->has_property($property)) {
-			return $this->$property;
-		}
+		} 
 	}
     
     public function set($property, $value) {
@@ -301,11 +298,10 @@ abstract class DB_Driver {
 			
 		if ($this->has_property($prop)) {
 			$this->$prop = $value;
+            $this->model->$prop = $value;
 		} else if ($this->relationships && array_key_exists($property, $this->relationship_classes)) {
 			$this->relationship_classes[$property] = $value;
-		} else if ($this->has_property($property)) {
-			$this->$property = $value;
-		}
+		} 
 	}
 
 	public function set_properties($properties) {
@@ -473,7 +469,7 @@ abstract class DB_Driver {
 				unset($this->relationship_join_types[$alias]);
 				unset($this->relationship_results[$alias]);
 			} else {
-				$foreign_object = new $class_name();
+                $foreign_object = System::model(strtolower($class_name));
 				$foreign_object->db_driver()->set_alias($alias);
 				
 				foreach ($this->relationship_of as $rel) {
@@ -780,29 +776,14 @@ abstract class DB_Driver {
 	}
 
 	protected function is_property_primary_key($property) {
-		if (strpos($property, '__') === 0) {
-			return true;
-		}
-		
-		return false;
+        return in_array($property, $this->get_primary_key());
 	}
 	
 	protected function is_property_a_column($property) {
-		if (strpos($property, '_') === 0) {
-			return true;
-		}
-		
-		return false;
+        return in_array($property, $this->get_column_names());
 	}
 	
 	protected function property_to_column($property) {
-		$property = substr($property, 1);
-		
-		// check for primary key, extra leading _
-		if (strpos($property, '_') === 0) {
-			$property = substr($property, 1);
-		}
-		
 		return $property;
 	}
 	
@@ -811,12 +792,7 @@ abstract class DB_Driver {
 			$column = str_replace($this->get_alias() . '.', '', $column);	
 		}
 		
-		$property = "_$column";
-        
-        if (in_array($column, $this->primary_key)) {
-			$property = "_$property";
-		}
-		
+		$property = $column;
 		return $property;
 	}
 	
