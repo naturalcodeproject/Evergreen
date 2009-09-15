@@ -30,7 +30,7 @@ class Main_DeveloperController extends BranchController
 		echo "Branch ='[branch]' - <a href='[branch]'>Test</a><br/>";
 		
 		echo "<br /><br />";
-		var_dump(Factory::get_config()->get_working_uri());
+		var_dump(Config::read("URI.working"));
 	}
 	
 	public function formtest()
@@ -42,15 +42,15 @@ class Main_DeveloperController extends BranchController
 	{
 		echo "<p>This is the next page.</p>";
 		
-		var_dump(Factory::get_config()->get_branch_uri_map());
+		//var_dump(Factory::get_config()->get_branch_uri_map());
 		
 		echo "<p/>";
 		
-		var_dump(Factory::get_config()->get_branch_current_route_uri());
+		//var_dump(Factory::get_config()->get_branch_current_route_uri());
 		
 		echo "<p/>";
 		
-		var_dump(Factory::get_config()->get_current_route_uri());
+		//var_dump(Factory::get_config()->get_current_route_uri());
 	}
 	
 	public function pickles()
@@ -66,7 +66,7 @@ class Main_DeveloperController extends BranchController
 		
 		echo "<p/>";
 		
-		var_dump(Factory::get_config()->get_branch_current_route_uri());
+		//var_dump(Factory::get_config()->get_branch_current_route_uri());
 	}
 	
 	public function oranges()
@@ -79,11 +79,11 @@ class Main_DeveloperController extends BranchController
 		
 		echo "<p/>";
 		
-		var_dump(Factory::get_config()->get_branch_current_route_uri());
+		//var_dump(Factory::get_config()->get_branch_current_route_uri());
 		
 		echo "<p/>";
 		
-		var_dump(Factory::get_config()->branch_current_route_exact);
+		//var_dump(Factory::get_config()->branch_current_route_exact);
 	}
 }
 

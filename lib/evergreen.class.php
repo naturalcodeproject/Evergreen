@@ -5,13 +5,17 @@ final class Evergreen {
 		spl_autoload_register(array('AutoLoaders', 'main'));
 		
 		## Register Error Handler Class ##
-		set_error_handler(array("System", "log_error"), ini_get('error_reporting'));
+		set_error_handler(array("System", "log_error"), ini_get("error_reporting"));
+		
+		## Load Base Configuration ##
+		include(Config::read("System.physicalPath")."/config/config.php");
+		include(Config::read("System.physicalPath")."/config/errors.php");
 		
 		## URI Managment ##
-		Factory::get_config()->check_uri();
+		Config::processURI();
 		
 		## Load in Controller ##
-		if (Factory::get_config()->get_branch_name()) {
+		if (Config::read("Branch.name")) {
 			## Unload Main Autoloader ##
 			spl_autoload_unregister(array('AutoLoaders', 'main'));
 			
@@ -19,8 +23,8 @@ final class Evergreen {
 			spl_autoload_register(array('AutoLoaders', 'branches'));
 		}
 		
-		if (($controller = System::load(array("name"=>reset(Factory::get_config()->get_working_uri()), "type"=>"controller", "branch"=>Factory::get_config()->get_branch_name()))) === false) {
-			Error::load404();
+		if (($controller = System::load(array("name"=>reset(Config::read("URI.working")), "type"=>"controller", "branch"=>Config::read("Branch.name")))) === false) {
+			Error::trigger("CONTROLLER_NOT_FOUND");
 			return false;
 		} else {
 			try {
@@ -37,32 +41,34 @@ final class Evergreen {
 				}
 			}
 		}
+		
+
 	}
 }
 
 class AutoLoaders {
-	static function main($class_name) {
-		self::parse_class_name($class_name);
-		self::base_includes($class_name);
+	public static function main($class_name) {
+		self::parseClassName($class_name);
+		self::baseIncludes($class_name);
 		
 		## Controller Include ##
-		if (file_exists(Factory::get_config()->get_base_path()."/controllers/{$class_name}.php")) {
-			include_once("controllers/{$class_name}.php");
+		if (file_exists(Config::read("System.physicalPath")."/controllers/{$class_name}.php")) {
+			include_once(Config::read("System.physicalPath")."/controllers/{$class_name}.php");
 		}
 	}
 	
-	static function branches($class_name) {
-		self::parse_class_name($class_name);
-		$branch_name = Factory::get_config()->get_branch_name();
-		self::base_includes($class_name);
+	public static function branches($class_name) {
+		self::parseClassName($class_name);
+		$branch_name = Config::read("Branch.name");
+		self::baseIncludes($class_name);
 		
 		## Branch Controller Include ##
-		if (file_exists(Factory::get_config()->get_base_path()."/branches/{$branch_name}/controllers/{$class_name}.php")) {
-			include_once("branches/{$branch_name}/controllers/{$class_name}.php");
+		if (file_exists(Config::read("System.physicalPath")."/branches/{$branch_name}/controllers/{$class_name}.php")) {
+			include_once(Config::read("System.physicalPath")."/branches/{$branch_name}/controllers/{$class_name}.php");
 		}
 	}
 	
-	static function base_includes($class_name) {
+	public static function baseIncludes($class_name) {
 		## Base System Includes ##
 		require_once("lib/factory.class.php");
 		require_once("lib/system.class.php");
@@ -71,12 +77,12 @@ class AutoLoaders {
         require_once("lib/db.driver.class.php");
 		
 		## Other Lib Includes ##
-		if (file_exists(Factory::get_config()->get_base_path()."/lib/{$class_name}.class.php")) {
-			require_once("lib/{$class_name}.class.php");
+		if (file_exists(Config::read("System.physicalPath")."/lib/{$class_name}.class.php")) {
+			require_once(Config::read("System.physicalPath")."/lib/{$class_name}.class.php");
 		}
 	}
 	
-	static function parse_class_name(&$class_name) {
+	static function parseClassName(&$class_name) {
 		$class_name[0] = strtolower($class_name[0]);
 		
 		$class_name = explode("_", $class_name);

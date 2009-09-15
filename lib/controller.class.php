@@ -19,19 +19,14 @@ abstract class Controller {
 	private $view_overridden = false;
 	
 	final function __construct () {
-		## Construct Code
-		$this->config = Factory::get_config();
-		$this->branch_name = Factory::get_config()->get_branch_name();
-		$this->params = Factory::get_config()->get_working_uri();
-		if (!strlen(reset(array_slice($this->params, 1, 1)))) $this->params[reset(array_slice(array_keys($this->params), 1, 1))] = reset(array_slice(Factory::get_config()->get_uri_map(), 1, 1));
+		## Construct Code ##
+		$this->params = Config::read("URI.working");
+		if (!strlen(reset(array_slice($this->params, 1, 1)))) $this->params[reset(array_slice(array_keys($this->params), 1, 1))] = reset(array_slice(Config::read("URI.map"), 1, 1));
 		
 		$this->view_to_load = $this->params[reset(array_slice(array_keys($this->params), 1, 1))];
 		
 		$this->formhandler = new Formhandler($this);
 		$this->designer = new Designer();
-		
-		## Show View ##
-		//$this->show_view();
 	}
 	
 	final public function show_view () {
@@ -113,7 +108,7 @@ abstract class Controller {
 	final protected function get_view ($name, $controller="", $override = false) {
 		$this->view_overridden = $override;
 		if (empty($controller)) $controller = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
-		if ((empty($this->branch_name) && (@include("views/".strtolower($controller)."/{$name}.php")) == true) || (!empty($this->branch_name) && (@include("branches/{$this->branch_name}/views/".strtolower($controller)."/{$name}.php")) == true)) {
+		if ((!strlen(Config::read("Branch.name")) && (@include("views/".strtolower($controller)."/{$name}.php")) == true) || (strlen(Config::read("Branch.name")) && (@include("branches/".Config::read("Branch.name")."/views/".strtolower($controller)."/{$name}.php")) == true)) {
 			return true;
 		} else {
 			return false;
@@ -133,7 +128,7 @@ abstract class Controller {
 	
 	final protected function render_layout ($name) {
 		$content_for_layout = $this->content_for_layout;
-		if (!empty($this->branch_name) && (@include("branches/{$this->branch_name}/views/layouts/{$name}.php")) == true) {
+		if (strlen(Config::read("Branch.name")) && (@include("branches/".Config::read("Branch.name")."/views/layouts/{$name}.php")) == true) {
 			return 1;
 		} else {
 			if ((@include("views/layouts/{$name}.php")) == true) {

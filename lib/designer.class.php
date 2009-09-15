@@ -1,43 +1,44 @@
 <?php
 class Designer {
 	function __construct () {
-		$view_info = $_SESSION['params'];
+		$view_info = Config::read("URI.working");
 		$main_uri_names = array();
 		
 		##############################
 		###       Constants        ###
 		##############################
 		$uri_to_use = array();
-		
-		if (Factory::get_config()->get_branch_name() != "" && Factory::get_config()->get_branch_current_route_uri() != "") {
+		/*
+		if (Config::read("Branch.name") != "" && Factory::get_config()->get_branch_current_route_uri() != "") {
 			# Branch Route URL #
 			$uri_to_use = Factory::get_config()->get_branch_request_uri();
-		} elseif (Factory::get_config()->get_branch_name() != "" && Factory::get_config()->get_branch_uri_map() != "") {
+		} elseif (Config::read("Branch.name") != "" && Factory::get_config()->get_branch_uri_map() != "") {
 			# Branch URL #
-			$uri_to_use = array_merge(array("branch"=>Factory::get_config()->get_branch_name()), Factory::get_config()->get_branch_uri_map());
+			$uri_to_use = array_merge(array("branch"=>Config::read("Branch.name")), Factory::get_config()->get_branch_uri_map());
 		} elseif (Factory::get_config()->get_current_route_uri() != "") {
 			# Route URL #
 			$uri_to_use = Factory::get_config()->get_request_uri();
 		} else {
+		*/
 			# Regular URL #
-			$uri_to_use = Factory::get_config()->get_working_uri();
-		}
+			$uri_to_use = Config::read("URI.working");
+		//}
 		
-		$config_base_uri = Factory::get_config()->get_base_uri();
-		$config_base_uri_append = Factory::get_config()->get_url_append();
+		$config_base_uri = Config::read("URI.base");
+		$config_base_uri_prepend = Config::read("URI.prepend");
 		if (empty($config_base_uri)) {
 			$config_base_uri = "/";
 		}
-		define("URI_ROOT", $config_base_uri.$config_base_uri_append);
-		if (Factory::get_config()->get_branch_name() != "") {
-			define("URI_BRANCH", URI_ROOT."/".Factory::get_config()->get_branch_name());
+		define("URI_ROOT", $config_base_uri.$config_base_uri_prepend);
+		if (Config::read("Branch.name") != "") {
+			define("URI_BRANCH", URI_ROOT."/".Config::read("Branch.name"));
 		}
 		define("URI_SKIN", implode("/", array_merge(explode("/", $config_base_uri), array("public"))));
 		
 		foreach($uri_to_use as $key => $item) {
-			$position = array_search($key, array_keys(Factory::get_config()->get_working_uri()));
+			$position = array_search($key, array_keys(Config::read("URI.working")));
 			$new_base = explode("/", URI_ROOT);
-			define("URI_".strtoupper($key), implode("/", array_merge($new_base, array_slice(Factory::get_config()->get_working_uri(), 0, ($position+1))))); 
+			define("URI_".strtoupper($key), implode("/", array_merge($new_base, array_slice(Config::read("URI.working"), 0, ($position+1))))); 
 		}
 		
 		$current_uri_map = array();
@@ -46,7 +47,7 @@ class Designer {
 			if (!empty($item)) $current_uri_map[] = $item;
 		}
 		
-		define("URI_CURRENT", implode("/", array_merge(explode("/", ((Factory::get_config()->get_branch_name() != "") ? URI_BRANCH : URI_ROOT)), $current_uri_map)));
+		define("URI_CURRENT", implode("/", array_merge(explode("/", ((Config::read("Branch.name") != "") ? URI_BRANCH : URI_ROOT)), $current_uri_map)));
 	}
 	
 	public function do_fixes (&$content) {
@@ -80,10 +81,10 @@ class Designer {
 			break;
 			
 			default:
-				$working_uri = Factory::get_config()->get_working_uri();
+				$working_uri = Config::read("URI.working");
 				
-				if (strlen(Factory::get_config()->get_branch_name())) {
-					$working_uri = array_merge(array("branch"=>Factory::get_config()->get_branch_name()), $working_uri);
+				if (strlen(Config::read("Branch.name"))) {
+					$working_uri = array_merge(array("branch"=>Config::read("Branch.name")), $working_uri);
 				}
 				
 				foreach($working_uri as $key => $item) {
@@ -105,7 +106,7 @@ class Designer {
 		return $link[1].((!empty($return)) ? $return : $link[2]);
 	}
 	
-	public function linkFix (&$skin, $view_info) {
+	public function linkFix (&$skin) {
 		$skin = preg_replace_callback("/(=\"|=\'|=)([\[\]][^(\"|\'|[:space:]|>)]+)/", array($this, "linkCallback"), $skin);
 	}
 }

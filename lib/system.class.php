@@ -1,7 +1,5 @@
 <?php
 final class System {
-	final private function __construct() {}
-	
 	final public static function load($args) {
 		if (empty($args['name'])) return NULL;
 		if (empty($args['type'])) return NULL;
@@ -82,7 +80,7 @@ final class System {
 		}
 
 		if($notify) {
-			$log_file = dirname(dirname(__FILE__))."/errors/error.log";
+			$log_file = Config::read("System.physicalPath")."/".Config::read("Errors.logDirectory")."/error.log";
 			$date = date('Y-m-d');
 			$log_file .= ".$date";
 		

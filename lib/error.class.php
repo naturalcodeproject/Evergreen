@@ -25,7 +25,7 @@ final class Error {
 			if (isset($params['url'])) {
 				Error::loadURL($params['url']);
 			} else {
-				Error::loadURL(Factory::get_config()->get_error('404'));
+				Error::loadURL(Config::read("Errors.404"));
 			}
 		} else {
 			if (isset($params['url'])) {
@@ -56,10 +56,26 @@ final class Error {
 		*/
 		if (!empty($url)) {
 			$url = str_replace(URI_ROOT, "", $url);
-			Factory::get_config(true)->set_working_uri($url);
-			Factory::get_config()->check_uri();
-			if (($controller = System::load(array("name"=>reset(Factory::get_config()->get_working_uri()), "type"=>"controller"))) === false) {
-				include("public/errors/404.php");
+			Config::register("URI.working", $url);
+			Config::register("Branch.name", "");
+			Config::processURI();
+			
+			if (Config::read("Branch.name")) {
+				## Unload Main Autoloader ##
+				spl_autoload_unregister(array('AutoLoaders', 'main'));
+				
+				## Load Branch Autoloader ##
+				spl_autoload_register(array('AutoLoaders', 'branches'));
+			} else {
+				## Unload Branch Autoloader ##
+				spl_autoload_unregister(array('AutoLoaders', 'branches'));
+				
+				## Load Main Autoloader ##
+				spl_autoload_register(array('AutoLoaders', 'main'));
+			}
+			
+			if (($controller = System::load(array("name"=>reset(Config::read("URI.working")), "type"=>"controller", "branch"=>Config::read("Branch.name")))) === false) {
+				include(Config::read("System.defaultError404"));
 			} else {
 				try {
 					$controller->show_view();
@@ -69,7 +85,7 @@ final class Error {
 			}
 			
 		} else {
-			include("public/errors/404.php");
+			include(Config::read("System.defaultError404"));
 		}
 	}
 	

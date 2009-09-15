@@ -1,40 +1,38 @@
 <?php
-	## URI Map ##
-	$uri['controller'] = "main";
-	$uri['view'] = "index";
-	$uri['action'] = "";
-	$uri['id'] = "";
+	## System Setup ##
+	Config::register("System.mode", "development");
 	
-	## URI Type ##
-	$config['uri_type'] = "REWRITE";
+	## URI Setup ##
+	Config::register("URI.useModRewrite", true);
+	Config::register("URI.useDashes", true);
+	Config::register("URI.forceDashes", true);
 	
-	## Error Logs ##
-	$config['error_log'] = "public/log";
+	Config::register("URI.map", array(
+		"controller"=>"main",
+		"view"=>"index",
+		"action"=>"",
+		"id"=>""
+	));
 	
 	## Errors Setup ##
-	$config['errors']['404'] = "/error404";
-	
-	// Throw exceptions bool
+	Config::register("Errors.logDirectory", "public/log");
+	Config::register("Errors.404", "/error404");
+	Config::register("Errors.500", "/error404");
 	
 	## Database Setup ##
-	$database['host'] = "localhost";
-	$database['username'] = "root";
-	$database['password'] = "root";
-	$database['database'] = "hooktest";
-	$database['database-type'] = "MySQL";
+	Config::register("Database.host", "localhost");
+	Config::register("Database.username", "root");
+	Config::register("Database.password", "root");
+	Config::register("Database.database", "hooktest");
+	Config::register("Database.driver", "MySQL");
 	
 	## Routes ##
-	$routes['/test(.*)'] = "/testing/look_here/$1";
-	$routes['/oranges(.*)'] = "/developer/main/oranges/$1";
-	$routes['/pickles(.*)'] = "/developer/main/pickles/$1";
+	Config::registerRoute("/test(.*)", "/testing/look_here/$1");
+	Config::registerRoute("/oranges(.*)", "/developer/main/oranges/$1");
+	Config::registerRoute("/pickles(.*)", "/developer/main/pickles/$1");
 	
 	/*
-	Error::throw('MODEL_DB_FAILED');
-	Error::thorw("custom error message", array("url"=>"asdasd"));
-	
-	// Look at Zend
-	
-	Hey you got and error and this is the message:
-	echo Error::getMessage();
+		## URI OPTIONS ##
+		$config['uri_allow_dashes'] = "BOTH";	# Options: BOTH, NONE, ONLY
 	*/
 ?>

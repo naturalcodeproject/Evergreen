@@ -18,6 +18,7 @@
   <ul id="navLinks">
 	<li><a href="[site]" class="<?php echo $this->home_selected;?>">Home</a></li>
 	<li><a href="[site]/developer" class="<?php echo $this->link1_selected;?>">Developer</a></li>
+	<li><a href="[site]/developer/brancherror" class="<?php echo $this->link1_selected;?>">Branch Error</a></li>
 	<li><a href="[site]/developer/apples" class="<?php echo $this->link2_selected;?>">Apples</a></li>
 	<li><a href="[site]/oranges" class="<?php echo $this->link3_selected;?>">Oranges</a></li>
 	<li><a href="[site]/pickles" class="<?php echo $this->link3_selected;?>">Pickles</a></li>

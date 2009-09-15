@@ -5,11 +5,11 @@ class Loader {
 	protected $class_type;
 	
 	public function __construct($name, $class_type, $branch="") {
-		$this->set_class($name, $class_type);
+		$this->setClass($name, $class_type);
 		$this->branch_to_use = $branch;
 	}
 	
-	public function set_class($name, $class_type) {
+	public function setClass($name, $class_type) {
 		$name = strtolower($name);
 		if (strpos($name, '.') !== FALSE) {
 			$name = str_replace('.', ' ', $name);
@@ -21,35 +21,35 @@ class Loader {
 		$this->class_type = $class_type;
 	}
 	
-	public function from_branch($branch_name="") {
-		if (empty($branch_name)) $branch_name = Factory::get_config()->get_branch_name();
+	public function fromBranch($branch_name="") {
+		if (empty($branch_name)) $branch_name = Config::read("Branch.name");
 		$this->branch_to_use = $branch_name;
 		
 		return $this;
 	}
 	
-	private function get_path() {
+	private function getPath() {
 		switch ($this->class_type) {
 			case 'helper':
-				return Factory::get_config()->get_base_path().((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/helpers/{$this->original_class_name}.php";
+				return Config::read("System.physicalPath").((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/helpers/{$this->original_class_name}.php";
 			break;
 			
 			case 'controller':
-				return Factory::get_config()->get_base_path().((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/controllers/{$this->original_class_name}.php";
+				return Config::read("System.physicalPath").((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/controllers/{$this->original_class_name}.php";
 			break;
 			
 			case 'model':
-				return Factory::get_config()->get_base_path().((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/models/{$this->original_class_name}.php";
+				return Config::read("System.physicalPath").((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/models/{$this->original_class_name}.php";
 			break;
 			
 			case 'plugin':
-				return Factory::get_config()->get_base_path().((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/plugins/{$this->original_class_name}/{$this->original_class_name}.php";
+				return Config::read("System.physicalPath").((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/plugins/{$this->original_class_name}/{$this->original_class_name}.php";
 			break;
 		}
 	}
 	
 	public function exists() {
-		$file_path = $this->get_path();
+		$file_path = $this->getPath();
 		
 		return ((file_exists($file_path)) ? true : false);
 	}
@@ -57,7 +57,7 @@ class Loader {
 	public function load() {
 		if ($this->exists()) {
 			
-			$file_path = $this->get_path();
+			$file_path = $this->getPath();
 			
 			$class_name = $this->class_to_load."_".((strlen($this->branch_to_use)) ? ucwords($this->branch_to_use) : "").ucwords($this->class_type);
 			
@@ -66,7 +66,6 @@ class Loader {
 			}
 			
 			$object = new $class_name();
-		
 			return $object;
 		} else {
 			return NULL;
