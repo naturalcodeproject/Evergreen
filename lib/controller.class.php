@@ -21,7 +21,9 @@ abstract class Controller {
 	final function __construct () {
 		## Construct Code ##
 		$this->params = Config::read("URI.working");
-		if (!strlen(reset(array_slice($this->params, 1, 1)))) $this->params[reset(array_slice(array_keys($this->params), 1, 1))] = reset(array_slice(Config::read("URI.map"), 1, 1));
+		if (!strlen(reset(array_slice($this->params, 1, 1)))) {
+			$this->params[reset(array_slice(array_keys($this->params), 1, 1))] = reset(array_slice(Config::read("URI.map"), 1, 1));
+		}
 		
 		$this->view_to_load = $this->params[reset(array_slice(array_keys($this->params), 1, 1))];
 		
@@ -29,7 +31,7 @@ abstract class Controller {
 		$this->designer = new Designer();
 	}
 	
-	final public function show_view () {
+	final public function showView () {
 		## Set up the actual page
 		$full_page = $this->loadView();
 		

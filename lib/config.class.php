@@ -20,8 +20,9 @@ final class Config {
 			$base_uri = ($base_uri{strlen($base_uri)-1} == '/') ? substr($base_uri, 0, strlen($base_uri)-1) : $base_uri;
 			self::$config['URI']['base'] = $base_uri;
 			
-			// Setup the System.defaultError404 configuration setting
+			// Setup the System.defaultError's configuration setting
 			self::$config['System']['defaultError404'] = self::$config['System']['physicalPath']."/public/errors/404.php";
+			self::$config['System']['defaultErrorGEN'] = self::$config['System']['physicalPath']."/public/errors/general.php";
 		}
 		
 		// Indicate that the setup function has been run and doesnt need to be run again
@@ -164,26 +165,31 @@ final class Config {
 		if (file_exists(self::read("System.physicalPath")."/branches/{$branch_name}/config/config.php")) {
 			// Load the branch configuration
 			include(self::read("System.physicalPath")."/branches/{$branch_name}/config/config.php");
-			
-			if (self::read("Branch.active") !== null && self::read("Branch.active") == false) {
-				// The branch is not active so don't load it
-				Error::trigger("BRANCH_INACTIVE");
-			}
-			
-			if (self::read("Branch.requiredSystemMode") !== null && self::read("Branch.requiredSystemMode") != self::read("System.mode")) {
-				// The system does not have the required mode so don't load the branch
-				Error::trigger("BRANCH_REQUIRED_SYSTEM_MODE");
-			}
-			
-			if (self::read("Branch.minimumSystemVersion") !== null && !version_compare(self::read("System.version"), self::read("Branch.minimumSystemVersion"), ">")) {
-				// The system version is lower than the branch's required minimum so don't load the branch
-				Error::trigger("BRANCH_MINIMUM_SYSTEM_VERSION");
-			}
-			
-			if (self::read("Branch.maximumSystemVersion") !== null && !version_compare(self::read("System.version"), self::read("Branch.maximumSystemVersion"), "<")) {
-				// The system version is higher than the branch's required maximum so don't load the branch
-				Error::trigger("BRANCH_MAXIMUM_SYSTEM_VERSION");
-			}
+		}
+		
+		if (file_exists(self::read("System.physicalPath")."/branches/{$branch_name}/config/errors.php")) {
+			// Load the branch errors
+			include(self::read("System.physicalPath")."/branches/{$branch_name}/config/errors.php");
+		}
+		
+		if (self::read("Branch.active") !== null && self::read("Branch.active") == false) {
+			// The branch is not active so don't load it
+			Error::trigger("BRANCH_INACTIVE");
+		}
+		
+		if (self::read("Branch.requiredSystemMode") !== null && self::read("Branch.requiredSystemMode") != self::read("System.mode")) {
+			// The system does not have the required mode so don't load the branch
+			Error::trigger("BRANCH_REQUIRED_SYSTEM_MODE");
+		}
+		
+		if (self::read("Branch.minimumSystemVersion") !== null && !version_compare(self::read("System.version"), self::read("Branch.minimumSystemVersion"), ">")) {
+			// The system version is lower than the branch's required minimum so don't load the branch
+			Error::trigger("BRANCH_MINIMUM_SYSTEM_VERSION");
+		}
+		
+		if (self::read("Branch.maximumSystemVersion") !== null && !version_compare(self::read("System.version"), self::read("Branch.maximumSystemVersion"), "<")) {
+			// The system version is higher than the branch's required maximum so don't load the branch
+			Error::trigger("BRANCH_MAXIMUM_SYSTEM_VERSION");
 		}
 	}
 	

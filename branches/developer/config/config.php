@@ -7,6 +7,8 @@
 	Config::register("Branch.minimumSystemVersion", "1.0.0b");
 	//Config::register("Branch.maximumSystemVersion", "1.0.0");
 	
+	Config::register("Errors.404", "/anothererror");
+	
 	## Database Setup ##
 	Config::register("Database.host", "localhost_dev");
 	Config::register("Database.username", "root_dev");

@@ -17,7 +17,6 @@
 	## Errors Setup ##
 	Config::register("Errors.logDirectory", "public/log");
 	Config::register("Errors.404", "/error404");
-	Config::register("Errors.500", "/error404");
 	
 	## Database Setup ##
 	Config::register("Database.host", "localhost");

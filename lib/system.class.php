@@ -4,39 +4,20 @@ final class System {
 		if (empty($args['name'])) return NULL;
 		if (empty($args['type'])) return NULL;
 		
-		try {
-			$load = new Loader($args['name'], $args['type'], $args['branch']);
-			return $load->load();
-		} catch(Exception $e) {
-			return NULL;
-		}
+		$load = new Loader($args['name'], $args['type'], $args['branch']);
+		return $load->load();
 	}
 	
 	final public static function helper($name, $branch="") {
-		try {
-			$load = new Loader($name, "helper", $branch);
-			return $load->load();
-		} catch(Exception $e) {
-			return NULL;
-		}
+		return self::load(array("name"=>$name, "type"=>"helper", "branch"=>$branch));
 	}
 	
 	final public static function model($name, $branch="") {
-		try {
-			$load = new Loader($name, "model", $branch);
-			return $load->load();
-		} catch(Exception $e) {
-			return NULL;
-		}
+		return self::load(array("name"=>$name, "type"=>"model", "branch"=>$branch));
 	}
 	
 	final public static function plugin($name, $branch="") {
-		try {
-			$load = new Loader($name, "plugin", $branch);
-			return $load->load();
-		} catch(Exception $e) {
-			return NULL;
-		}
+		return self::load(array("name"=>$name, "type"=>"plugin", "branch"=>$branch));
 	}
 	
 	public static function logError($errno, $errstr, $errfile, $errline, $errcontext) {

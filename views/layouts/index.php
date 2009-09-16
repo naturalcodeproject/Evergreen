@@ -27,16 +27,6 @@
 		<div class="footer">
 			this site was built using evergreen
 		</div>
-	
-	
-		<?php
-		//echo "<p />";
-		echo "<pre>";
-			var_dump(Factory::get_config());
-		echo "</pre>";
-		//echo "<p />";
-		//var_dump(Factory::get_config()->get_uri_map());
-		?>
 		<!--
 		[site]="[site]"<br>
 		[controller]="[controller]"<br>

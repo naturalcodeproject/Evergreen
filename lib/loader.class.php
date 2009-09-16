@@ -66,6 +66,24 @@ class Loader {
 			}
 			
 			$object = new $class_name();
+			
+			if (ucwords($this->class_type) == "Helper" || ucwords($this->class_type) == "Plugin") {
+				if (isset($object->requiredSystemMode) && $object->requiredSystemMode != Config::read("System.mode")) {
+					// The system does not have the required mode so don't load the object
+					Error::trigger("LOADER_REQUIRED_SYSTEM_MODE");
+				}
+
+				if (isset($object->minimumSystemVersion) && !version_compare(Config::read("System.version"), $object->minimumSystemVersion, ">")) {
+					// The system version is lower than the object's required minimum so don't load the object
+					Error::trigger("LOADER_MINIMUM_SYSTEM_VERSION");
+				}
+
+				if (isset($object->maximumSystemVersion)  && !version_compare(Config::read("System.version"), $object->maximumSystemVersion, "<")) {
+					// The system version is higher than the object's required maximum so don't load the object
+					Error::trigger("LOADER_MAXIMUM_SYSTEM_VERSION");
+				}
+			}
+			
 			return $object;
 		} else {
 			return NULL;

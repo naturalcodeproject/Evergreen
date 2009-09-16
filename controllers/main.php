@@ -10,6 +10,10 @@ class Main_Controller extends ApplicationController {
 	public function index () {
 		$this->home_selected = "selected";
 		
+		$test = System::helper("test");
+		echo $test->getSomething()."<br />";
+		//var_dump($test);
+		
 		//$this->projax = System::plugin("projax")->load();
 		//$this->render_view('wibble');
 		
@@ -69,7 +73,7 @@ class Main_Controller extends ApplicationController {
 	
 	public function anothererror()
 	{
-		echo "This is another 404 error page. The error message is: ".Error::getMessage();
+		echo "This is <b>another</b> 404 error page. The error message is: ".Error::getMessage();
 	}
 	
 	public function wibble()

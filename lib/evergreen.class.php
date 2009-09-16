@@ -8,11 +8,36 @@ final class Evergreen {
 		set_error_handler(array("System", "logError"), ini_get("error_reporting"));
 		
 		## Load Base Configuration ##
-		include(Config::read("System.physicalPath")."/config/config.php");
-		include(Config::read("System.physicalPath")."/config/errors.php");
+		if (file_exists(Config::read("System.physicalPath")."/config/config.php")) {
+			// Load in the config.php file
+			include(Config::read("System.physicalPath")."/config/config.php");
+		} else {
+			// Error if the config.php file isnt present in the config directory
+			echo "You are missing the configuration file and without it Evergreen cannot run.";
+			exit;
+		}
 		
+		## Load Base Errors ##
+		if (file_exists(Config::read("System.physicalPath")."/config/errors.php")) {
+			// Load in the errors.php file
+			include(Config::read("System.physicalPath")."/config/errors.php");
+		}
+		
+		## Check to see if the welcome content is present ##
 		if (file_exists(Config::read("System.physicalPath")."/public/welcome.php")) {
-			include(Config::read("System.physicalPath")."/public/welcome.php");
+			// Load the Designer class
+			$designer = new Designer();
+			
+			// Load the welcome content and save the result to the $welcome_content variable
+			ob_start();
+				include(Config::read("System.physicalPath")."/public/welcome.php");
+			$welcome_content = ob_get_clean();
+			
+			// Do the Designer class fixes on the $welcome_content variable content
+			$designer->doFixes($welcome_content);
+			
+			// Print out the welcome content
+			echo $welcome_content;
 			exit;
 		}
 		
@@ -28,24 +53,18 @@ final class Evergreen {
 			spl_autoload_register(array('AutoLoaders', 'branches'));
 		}
 		
+		## Load in the requested controller ##
 		if (($controller = System::load(array("name"=>reset(Config::read("URI.working")), "type"=>"controller", "branch"=>Config::read("Branch.name")))) === false) {
+			// The controller wasn’t found so trigger an error
 			Error::trigger("CONTROLLER_NOT_FOUND");
-			return false;
+			exit;
 		} else {
 			try {
-				$controller->show_view();
+				// Load the view
+				$controller->showView();
 			} catch(Exception $e) {
-				if ($e->getCode() == 404) {
-					Error::trigger("VIEW_NOT_FOUND");
-					return false;
-				} else {
-					if (Config::read("System.mode") == "development") {
-						echo "Caught exception: ".Error::getMessage();
-						echo "<br /><PRE>";
-						print_r($e->getTrace());
-						echo "</PRE>";
-					}
-				}
+				// Load error if something triggered an error
+				Error::processError($e);
 			}
 		}
 		

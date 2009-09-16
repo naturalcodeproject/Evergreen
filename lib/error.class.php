@@ -1,8 +1,12 @@
 <?php
 final class Error {
 	static private $registeredErrors = array();
+	
+	## Used to track the current error ##
+	static private $key;
 	static private $message;
 	static private $params;
+	static private $errorObj;
 	
 	final public static function register($key, $params) {
 		if (!is_array($params)) {
@@ -13,31 +17,46 @@ final class Error {
 	}
 	
 	final public static function trigger($message, $params = array()) {
-		self::clearAllBuffers();
 		if (array_key_exists($message, self::$registeredErrors)) {
+			$key = $message;
 			$params = self::$registeredErrors[$message];
 			$message = self::$registeredErrors[$message]['message'];
 		}
 		
+		self::$key = $key;
 		self::$message = $message;
 		self::$params = $params;
-		if (isset($params['code']) && $params['code'] == 404) {
-			if (isset($params['url'])) {
-				Error::loadURL($params['url']);
+		
+		throw new Exception(self::$message);
+	}
+	
+	final public static function processError($errorObj = null) {
+		self::clearAllBuffers();
+		if ($errorObj != null) {
+			self::$errorObj = $errorObj;
+		}
+		
+		if (isset(self::$params['code']) && array_key_exists(self::$params['code'], Config::read("Errors"))) {
+			if (isset(self::$params['url'])) {
+				Error::loadURL(self::$params['url']);
 			} else {
-				Error::loadURL(Config::read("Errors.404"));
+				Error::loadURL(Config::read("Errors.".self::$params['code']));
 			}
 		} else {
-			if (isset($params['url'])) {
-				Error::loadURL($params['url']);
+			if (isset(self::$params['url'])) {
+				Error::loadURL(self::$params['url']);
 			} else {
-				throw new Exception(self::$message);
+				include(Config::read("System.defaultErrorGEN"));
 			}
 		}
 	}
 	
 	final public static function getMessage() {
 		return self::$message;
+	}
+	
+	final public static function getTrace() {
+		return self::$errorObj->getTrace();
 	}
 	
 	final public static function clearAllBuffers() {
@@ -78,10 +97,10 @@ final class Error {
 				include(Config::read("System.defaultError404"));
 			} else {
 				try {
-					$controller->show_view();
+					$controller->showView();
 				} catch(Exception $e) {
 					if (Config::read("System.mode") == "development") {
-						echo "Caught exception: ".$e->getMessage();
+						include(Config::read("System.defaultErrorGeneral"));
 					}
 				}
 			}
