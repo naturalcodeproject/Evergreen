@@ -5,11 +5,16 @@ final class Evergreen {
 		spl_autoload_register(array('AutoLoaders', 'main'));
 		
 		## Register Error Handler Class ##
-		set_error_handler(array("System", "log_error"), ini_get("error_reporting"));
+		set_error_handler(array("System", "logError"), ini_get("error_reporting"));
 		
 		## Load Base Configuration ##
 		include(Config::read("System.physicalPath")."/config/config.php");
 		include(Config::read("System.physicalPath")."/config/errors.php");
+		
+		if (file_exists(Config::read("System.physicalPath")."/public/welcome.php")) {
+			include(Config::read("System.physicalPath")."/public/welcome.php");
+			exit;
+		}
 		
 		## URI Managment ##
 		Config::processURI();
@@ -34,10 +39,12 @@ final class Evergreen {
 					Error::trigger("VIEW_NOT_FOUND");
 					return false;
 				} else {
-					echo "Caught exception: ".Error::getMessage();
-                    echo "<br /><PRE>";
-                    print_r($e->getTrace());
-                    echo "</PRE>";
+					if (Config::read("System.mode") == "development") {
+						echo "Caught exception: ".Error::getMessage();
+						echo "<br /><PRE>";
+						print_r($e->getTrace());
+						echo "</PRE>";
+					}
 				}
 			}
 		}

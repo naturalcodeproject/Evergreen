@@ -27,41 +27,41 @@ class Formhandler {
 		$this->caller = $caller;
 	}
 	
-	private function properties_arr ($properties_str) {
-		$properties_arr = array();
-		$test = preg_split("/[\'\"] /i", trim($properties_str)." ");
+	private function propertiesArray ($propertiesString) {
+		$propertiesArray = array();
+		$test = preg_split("/[\'\"] /i", trim($propertiesString)." ");
 		foreach ($test as $item) {
 			if (preg_match($this->regex_properties, trim($item), $matches)) {
-				$properties_arr[strtolower($matches[1])] = $matches[2];
+				$propertiesArray[strtolower($matches[1])] = $matches[2];
 			}
 		}
-		return $properties_arr;
+		return $propertiesArray;
 	}
 	
-	private function properties_str ($properties_arr) {
-		$properties_string = array();
-		foreach ($properties_arr as $key => $item) {
-			$properties_string[] = "{$key}=\"{$item}\"";
+	private function propertiesString ($propertiesArray) {
+		$propertiesStringing = array();
+		foreach ($propertiesArray as $key => $item) {
+			$propertiesStringing[] = "{$key}=\"{$item}\"";
 		}
-		return implode(" ", $properties_string);
+		return implode(" ", $propertiesStringing);
 	}
 	
 	public function decode (&$content) {
 		## Newline Fix
 		$content = str_replace("\n", "<newline>", $content);
 		## Form Fix
-		$content = preg_replace("/<form\s*(.*?)[^(->)]>(.*?)<\\/form>/ixmse", "\$this->form_replace('\\1', '\\2')", $content);
+		$content = preg_replace("/<form\s*(.*?)[^(->)]>(.*?)<\\/form>/ixmse", "\$this->formReplace('\\1', '\\2')", $content);
 		## Back to Normal
 		$content = str_replace("<newline>", "\n", $content);
 	}
 	
-	private function form_replace ($attr, $insides) {
+	private function formReplace ($attr, $insides) {
 		## Fix Slashes
 		$attr = stripslashes($attr);
 		$insides = stripslashes($insides);
 		
 		## Set up Properties
-		$properties = $this->properties_arr($attr);
+		$properties = $this->propertiesArray($attr);
 		if (!empty($properties['update']) || !empty($properties['default']))  {
 			$properties['update'] = str_replace("\$this->", "\$this->caller->", $properties['update']);
 			$properties['default'] = str_replace("\$this->", "\$this->caller->", $properties['default']);
@@ -78,22 +78,22 @@ class Formhandler {
 		
 		## Set Up Elements
 		$this->current_form = $properties['name'];
-		$insides = preg_replace("/<(input)\s*(.*?)>/imsxe", "\$this->form_insides('\\1', '\\2', '')", $insides);
-		$insides = preg_replace("/<(textarea|select)\s*(.*?)>(.*?)<\\/([(textarea|select)]*?)>/imsxe", "\$this->form_insides('\\1', '\\2', '\\3')", $insides);
+		$insides = preg_replace("/<(input)\s*(.*?)>/imsxe", "\$this->formInsides('\\1', '\\2', '')", $insides);
+		$insides = preg_replace("/<(textarea|select)\s*(.*?)>(.*?)<\\/([(textarea|select)]*?)>/imsxe", "\$this->formInsides('\\1', '\\2', '\\3')", $insides);
 		
 		## Replace Form
 		$this->current_form = "";
-		return "<form ".$this->properties_str($properties).">
+		return "<form ".$this->propertiesString($properties).">
 				{$insides}</form>";
 	}
 	
-	private function form_insides ($type, $attr, $insides) {
+	private function formInsides ($type, $attr, $insides) {
 		$type = strtolower(stripslashes($type));
 		$attr = stripslashes($attr);
 		$insides = stripslashes($insides);
 		
 		## Properties Set Up
-		$properties = $this->properties_arr($attr);
+		$properties = $this->propertiesArray($attr);
 		
 		## Parse Name ##
 		$this->parsed_name = explode("[", str_replace("]", "", str_replace("\"", "", str_replace("'", "", str_replace("[]", "", $properties['name'])))));
@@ -105,13 +105,13 @@ class Formhandler {
 			switch ($properties['type']) {
 				case 'radio':
 					if (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['update']) && is_array($this->forms_arr[$this->current_form]['update'])) {
-						if ($this->get_form_name_value($this->forms_arr[$this->current_form]['update'], $this->parsed_name) == $properties['value'] || (is_array($this->get_form_name_value($this->forms_arr[$this->current_form]['update'], $this->parsed_name)) && in_array($properties['value'], $this->get_form_name_value($this->forms_arr[$this->current_form]['update'], $this->parsed_name)))) {
+						if ($this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name) == $properties['value'] || (is_array($this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name)) && in_array($properties['value'], $this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name)))) {
 							$properties['checked'] = "checked";
 						} else {
 							unset($properties['checked']);
 						}
 					} elseif (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['default']) && is_array($this->forms_arr[$this->current_form]['default'])) {
-						if ($this->get_form_name_value($this->forms_arr[$this->current_form]['default'], $this->parsed_name) == $properties['value'] || (is_array($this->get_form_name_value($this->forms_arr[$this->current_form]['default'], $this->parsed_name)) && in_array($properties['value'], $this->get_form_name_value($this->forms_arr[$this->current_form]['default'], $this->parsed_name)))) {
+						if ($this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name) == $properties['value'] || (is_array($this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name)) && in_array($properties['value'], $this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name)))) {
 							$properties['checked'] = "checked";
 						} else {
 							unset($properties['checked']);
@@ -120,13 +120,13 @@ class Formhandler {
 				break;
 				case 'checkbox':
 					if (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['update']) && is_array($this->forms_arr[$this->current_form]['update'])) {
-						if ($this->get_form_name_value($this->forms_arr[$this->current_form]['update'], $this->parsed_name) == $properties['value'] || (is_array($this->get_form_name_value($this->forms_arr[$this->current_form]['update'], $this->parsed_name)) && in_array($properties['value'], $this->get_form_name_value($this->forms_arr[$this->current_form]['update'], $this->parsed_name)))) {
+						if ($this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name) == $properties['value'] || (is_array($this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name)) && in_array($properties['value'], $this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name)))) {
 							$properties['checked'] = "checked";
 						} else {
 							unset($properties['checked']);
 						}
 					} elseif (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['default']) && is_array($this->forms_arr[$this->current_form]['default']) && isset($this->forms_arr[$this->current_form]['default'][$properties['name']])) {
-						if ($this->get_form_name_value($this->forms_arr[$this->current_form]['default'], $this->parsed_name) == $properties['value'] || (is_array($this->get_form_name_value($this->forms_arr[$this->current_form]['default'], $this->parsed_name)) && in_array($properties['value'], $this->get_form_name_value($this->forms_arr[$this->current_form]['default'], $this->parsed_name)))) {
+						if ($this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name) == $properties['value'] || (is_array($this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name)) && in_array($properties['value'], $this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name)))) {
 							$properties['checked'] = "checked";
 						} else {
 							unset($properties['checked']);
@@ -135,64 +135,64 @@ class Formhandler {
 				break;
 				default:
 					if (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['update']) && is_array($this->forms_arr[$this->current_form]['update'])) {
-						$properties['value'] = $this->get_form_name_value($this->forms_arr[$this->current_form]['update'], $this->parsed_name);
+						$properties['value'] = $this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name);
 					} elseif (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['default']) && is_array($this->forms_arr[$this->current_form]['default']) && isset($this->forms_arr[$this->current_form]['default'][$properties['name']])) {
-						$properties['value'] = $this->get_form_name_value($this->forms_arr[$this->current_form]['default'], $this->parsed_name);
+						$properties['value'] = $this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name);
 					}
 				break;
 			}
-			return "<{$type} ".$this->properties_str($properties).">";
+			return "<{$type} ".$this->propertiesString($properties).">";
 		} elseif ($type == "textarea" || $type == "select") {
 			if ($type == "select") {
 				$this->current_select = preg_replace("/(.+)\[\]/i", "\\1", str_replace(" ", "_", $properties['name']));
-				$insides = preg_replace("/<option (.*?)>(.*?)<\\/option>/imsxe", "\$this->select_insides(\"\\1\", \"\\2\")", $insides);
+				$insides = preg_replace("/<option (.*?)>(.*?)<\\/option>/imsxe", "\$this->selectInsides(\"\\1\", \"\\2\")", $insides);
 				$this->current_select = "";
 			} elseif ($type == "textarea") {
 				if (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['update']) && is_array($this->forms_arr[$this->current_form]['update'])) {
-					$insides = $this->get_form_name_value($this->forms_arr[$this->current_form]['update'], $this->parsed_name);
+					$insides = $this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name);
 				} elseif (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['default']) && is_array($this->forms_arr[$this->current_form]['default']) && isset($this->forms_arr[$this->current_form]['default'][$properties['name']])) {
-					$insides = $this->get_form_name_value($this->forms_arr[$this->current_form]['default'], $this->parsed_name);
+					$insides = $this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name);
 				}
 			}
-			return "<{$type} ".$this->properties_str($properties).">{$insides}</{$type}>";
+			return "<{$type} ".$this->propertiesString($properties).">{$insides}</{$type}>";
 		}
 	}
 	
-	private function select_insides ($attr, $insides) {
+	private function selectInsides ($attr, $insides) {
 		## Fix Slashes
 		$attr = stripslashes($attr);
 		$insides = stripslashes($insides);
 		
 		## Set up Properties
-		$properties = $this->properties_arr($attr);
+		$properties = $this->propertiesArray($attr);
 		
 		if (isset($this->forms_arr[$this->current_form]['update']) && is_array($this->forms_arr[$this->current_form]['update'])) {
-			if (($this->get_form_name_value($this->forms_arr[$this->current_form]['update'], $this->parsed_name) == $properties['value'] || $this->get_form_name_value($this->forms_arr[$this->current_form]['update'], $this->parsed_name) == $insides)  && !is_array($this->get_form_name_value($this->forms_arr[$this->current_form]['update'], $this->parsed_name))) {
+			if (($this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name) == $properties['value'] || $this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name) == $insides)  && !is_array($this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name))) {
 				$properties['selected'] = "selected";
-			} elseif (is_array($this->get_form_name_value($this->forms_arr[$this->current_form]['update'], $this->parsed_name)) && (in_array($properties['value'], $this->get_form_name_value($this->forms_arr[$this->current_form]['update'], $this->parsed_name)) || in_array($insides, $this->get_form_name_value($this->forms_arr[$this->current_form]['update'], $this->parsed_name)))) {
+			} elseif (is_array($this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name)) && (in_array($properties['value'], $this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name)) || in_array($insides, $this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name)))) {
 				$properties['selected'] = "selected";
 			} else {
 				unset($properties['selected']);
 			}
 		} elseif (isset($this->forms_arr[$this->current_form]['default']) && is_array($this->forms_arr[$this->current_form]['default'])) {
-			if (($this->get_form_name_value($this->forms_arr[$this->current_form]['default'], $this->parsed_name) == $properties['value'] || $this->get_form_name_value($this->forms_arr[$this->current_form]['default'], $this->parsed_name) == $insides)  && !is_array($this->get_form_name_value($this->forms_arr[$this->current_form]['default'], $this->parsed_name))) {
+			if (($this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name) == $properties['value'] || $this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name) == $insides)  && !is_array($this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name))) {
 				$properties['selected'] = "selected";
-			} elseif (is_array($this->get_form_name_value($this->forms_arr[$this->current_form]['default'], $this->parsed_name)) && (in_array($properties['value'], $this->get_form_name_value($this->forms_arr[$this->current_form]['default'], $this->parsed_name)) || in_array($insides, $this->get_form_name_value($this->forms_arr[$this->current_form]['default'], $this->parsed_name)))) {
+			} elseif (is_array($this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name)) && (in_array($properties['value'], $this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name)) || in_array($insides, $this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name)))) {
 				$properties['selected'] = "selected";
 			} else {
 				unset($properties['selected']);
 			}
 		}
 		
-		return "<option ".$this->properties_str($properties).">{$insides}</option>";
+		return "<option ".$this->propertiesString($properties).">{$insides}</option>";
 	}
 	
-	function get_form_name_value($haystack, $find, $position=0) {
+	function getFormNameValue($haystack, $find, $position=0) {
 		if ((count($find)-1) == $position) {
 			return $haystack[$find[$position]];
 		}
 		
-		return $this->get_form_name_value($haystack[$find[$position]], $find, $position+1);
+		return $this->getFormNameValue($haystack[$find[$position]], $find, $position+1);
 	}
 }
 ?>

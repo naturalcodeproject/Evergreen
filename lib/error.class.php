@@ -80,7 +80,9 @@ final class Error {
 				try {
 					$controller->show_view();
 				} catch(Exception $e) {
-					echo "Caught exception: ".$e->getMessage();
+					if (Config::read("System.mode") == "development") {
+						echo "Caught exception: ".$e->getMessage();
+					}
 				}
 			}
 			

@@ -39,7 +39,7 @@ final class System {
 		}
 	}
 	
-	public static function log_error($errno, $errstr, $errfile, $errline, $errcontext) {
+	public static function logError($errno, $errstr, $errfile, $errline, $errcontext) {
 		$type = '';
    		$display = false;
    		$notify = false;

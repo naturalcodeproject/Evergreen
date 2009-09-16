@@ -20,6 +20,8 @@ class Main_DeveloperController extends BranchController
 		//$hookhelper = System::load_branch_helper("hookhelper");
 		//$hookhelper->aFunction();
 		
+		var_dump(Config::read("Branch"));
+		
 		echo "<p>Hello World, <a href=\"[site]/developer/foobar\">click here</a></p>";
 		
 		echo "<p/>";

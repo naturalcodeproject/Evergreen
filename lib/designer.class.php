@@ -7,22 +7,10 @@ class Designer {
 		##############################
 		###       Constants        ###
 		##############################
+		
+		# Regular URL #
 		$uri_to_use = array();
-		/*
-		if (Config::read("Branch.name") != "" && Factory::get_config()->get_branch_current_route_uri() != "") {
-			# Branch Route URL #
-			$uri_to_use = Factory::get_config()->get_branch_request_uri();
-		} elseif (Config::read("Branch.name") != "" && Factory::get_config()->get_branch_uri_map() != "") {
-			# Branch URL #
-			$uri_to_use = array_merge(array("branch"=>Config::read("Branch.name")), Factory::get_config()->get_branch_uri_map());
-		} elseif (Factory::get_config()->get_current_route_uri() != "") {
-			# Route URL #
-			$uri_to_use = Factory::get_config()->get_request_uri();
-		} else {
-		*/
-			# Regular URL #
-			$uri_to_use = Config::read("URI.working");
-		//}
+		$uri_to_use = Config::read("URI.working");
 		
 		$config_base_uri = Config::read("URI.base");
 		$config_base_uri_prepend = Config::read("URI.prepend");
@@ -50,7 +38,7 @@ class Designer {
 		define("URI_CURRENT", implode("/", array_merge(explode("/", ((Config::read("Branch.name") != "") ? URI_BRANCH : URI_ROOT)), $current_uri_map)));
 	}
 	
-	public function do_fixes (&$content) {
+	public function doFixes (&$content) {
 		$this->linkFix($content);
 	}
 	

@@ -9,16 +9,19 @@ final class Config {
 	
 	private static function setup() {
 		if (!self::$isSetup) {
+			// Setup the System.version configuration setting
+			self::$config['System']['version'] = "1.0.0b1";
+			
 			// Setup the System.physicalPath configuration setting
-			self::$config['System.physicalPath'] = dirname(dirname(__FILE__));
+			self::$config['System']['physicalPath'] = dirname(dirname(__FILE__));
 			
 			// Setup the URI.base configuration setting
 			$base_uri = dirname($_SERVER['SCRIPT_NAME']);
 			$base_uri = ($base_uri{strlen($base_uri)-1} == '/') ? substr($base_uri, 0, strlen($base_uri)-1) : $base_uri;
-			self::$config['URI.base'] = $base_uri;
+			self::$config['URI']['base'] = $base_uri;
 			
 			// Setup the System.defaultError404 configuration setting
-			self::$config['System.defaultError404'] = self::$config['System.physicalPath']."/public/errors/404.php";
+			self::$config['System']['defaultError404'] = self::$config['System']['physicalPath']."/public/errors/404.php";
 		}
 		
 		// Indicate that the setup function has been run and doesnt need to be run again
@@ -27,12 +30,35 @@ final class Config {
 	
 	public static function register($key, $value) {
 		self::setup();
-		self::$config[$key] = $value;
+		$path = explode('.', $key);
+		$config_holder =& self::$config;
+		foreach($path as $i => $path_key) {
+			if ($i == (count($path) - 1)) {
+				$config_holder[$path_key] = $value;
+				return true;
+			} else {
+				if (!isset($config_holder[$path_key])) {
+					$config_holder[$path_key] = array();
+				}
+				$config_holder =& $config_holder[$path_key];
+			}
+		}
+		
+		return false;
 	}
 	
 	public static function read($key) {
 		self::setup();
-		return self::$config[$key];
+		$path = explode('.', $key);
+		$config_holder =& self::$config;
+		foreach($path as $i => $path_key) {
+			if ($i == (count($path) - 1)) {
+				return $config_holder[$path_key];
+			} else {
+				$config_holder =& $config_holder[$path_key];
+			}
+		}
+		return null;
 	}
 	
 	public static function registerRoute($definition, $action) {
@@ -136,7 +162,28 @@ final class Config {
 	public static function loadBranchConfig($branch_name) {
 		self::setup();
 		if (file_exists(self::read("System.physicalPath")."/branches/{$branch_name}/config/config.php")) {
+			// Load the branch configuration
 			include(self::read("System.physicalPath")."/branches/{$branch_name}/config/config.php");
+			
+			if (self::read("Branch.active") !== null && self::read("Branch.active") == false) {
+				// The branch is not active so don't load it
+				Error::trigger("BRANCH_INACTIVE");
+			}
+			
+			if (self::read("Branch.requiredSystemMode") !== null && self::read("Branch.requiredSystemMode") != self::read("System.mode")) {
+				// The system does not have the required mode so don't load the branch
+				Error::trigger("BRANCH_REQUIRED_SYSTEM_MODE");
+			}
+			
+			if (self::read("Branch.minimumSystemVersion") !== null && !version_compare(self::read("System.version"), self::read("Branch.minimumSystemVersion"), ">")) {
+				// The system version is lower than the branch's required minimum so don't load the branch
+				Error::trigger("BRANCH_MINIMUM_SYSTEM_VERSION");
+			}
+			
+			if (self::read("Branch.maximumSystemVersion") !== null && !version_compare(self::read("System.version"), self::read("Branch.maximumSystemVersion"), "<")) {
+				// The system version is higher than the branch's required maximum so don't load the branch
+				Error::trigger("BRANCH_MAXIMUM_SYSTEM_VERSION");
+			}
 		}
 	}
 	
