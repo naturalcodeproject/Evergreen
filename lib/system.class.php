@@ -13,7 +13,13 @@ final class System {
 	}
 	
 	final public static function model($name, $branch="") {
-		return self::load(array("name"=>$name, "type"=>"model", "branch"=>$branch));
+		$model = self::load(array("name"=>$name, "type"=>"model", "branch"=>$branch));
+
+        if (!$model) {
+            Error::trigger("MODEL_NOT_FOUND");
+        }
+
+        return $model;
 	}
 	
 	final public static function plugin($name, $branch="") {
