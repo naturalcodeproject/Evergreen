@@ -39,7 +39,7 @@
 					<h1>High Five</h1>
 
 					<?php
-						echo "Welcome to Evergreen version ".Config::read("System.version");;
+						echo "Welcome to Evergreen version ".Config::read("System.version");
 					?>
 
 
