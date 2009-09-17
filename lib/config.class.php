@@ -196,9 +196,12 @@ final class Config {
 	public static function checkRoutes($request_uri) {
 		self::setup();
 		foreach(self::$routes as $regex=>$destination) {
-			$regex = str_replace("/", "\/", $regex);
-			if (preg_match("/^{$regex}/i", $request_uri)) {
-				$new_uri = preg_replace("/{$regex}/i", "{$destination}", self::read("URI.working"));
+			$regex_fixed = str_replace("/", "\/", $regex);
+			if (preg_match("/^{$regex_fixed}/i", $request_uri) && !(self::read("Routes.current") !== null && array_key_exists($regex, self::read("Routes.current")))) {
+				if (self::read("Branch.name")) {
+					$regex_branch = "\/".self::read("Branch.name");
+				}
+				$new_uri = preg_replace("/^{$regex_branch}{$regex_fixed}/i", "{$destination}", self::read("URI.working"));
 				
 				$_SERVER['REQUEST_URI'] = $new_uri;
 				self::register("Routes.current", array($regex=>$destination));

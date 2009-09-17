@@ -1,71 +1,72 @@
 <?php
 final class Evergreen {
 	function __construct() {
-		## Register Autoloader Class ##
-		spl_autoload_register(array('AutoLoaders', 'main'));
-		
-		## Register Error Handler Class ##
-		set_error_handler(array("System", "logError"), ini_get("error_reporting"));
-		
-		## Load Base Configuration ##
-		if (file_exists(Config::read("System.physicalPath")."/config/config.php")) {
-			// Load in the config.php file
-			include(Config::read("System.physicalPath")."/config/config.php");
-		} else {
-			// Error if the config.php file isnt present in the config directory
-			echo "You are missing the configuration file and without it Evergreen cannot run.";
-			exit;
-		}
-		
-		## Load Base Errors ##
-		if (file_exists(Config::read("System.physicalPath")."/config/errors.php")) {
-			// Load in the errors.php file
-			include(Config::read("System.physicalPath")."/config/errors.php");
-		}
-		
-		## Check to see if the welcome content is present ##
-		if (file_exists(Config::read("System.physicalPath")."/public/welcome.php")) {
-			// Load the Designer class
-			$designer = new Designer();
+		try {
+			## Register Autoloader Class ##
+			spl_autoload_register(array('AutoLoaders', 'main'));
 			
-			// Load the welcome content and save the result to the $welcome_content variable
-			ob_start();
-				include(Config::read("System.physicalPath")."/public/welcome.php");
-			$welcome_content = ob_get_clean();
+			## Register Error Handler Class ##
+			set_error_handler(array("System", "logError"), ini_get("error_reporting"));
 			
-			// Do the Designer class fixes on the $welcome_content variable content
-			$designer->doFixes($welcome_content);
+			## Load Base Configuration ##
+			if (file_exists(Config::read("System.physicalPath")."/config/config.php")) {
+				// Load in the config.php file
+				include(Config::read("System.physicalPath")."/config/config.php");
+			} else {
+				// Error if the config.php file isnt present in the config directory
+				echo "You are missing the configuration file and without it Evergreen cannot run.";
+				exit;
+			}
 			
-			// Print out the welcome content
-			echo $welcome_content;
-			exit;
-		}
-		
-		## URI Managment ##
-		Config::processURI();
-		
-		## Load in Controller ##
-		if (Config::read("Branch.name")) {
-			## Unload Main Autoloader ##
-			spl_autoload_unregister(array('AutoLoaders', 'main'));
+			## Load Base Errors ##
+			if (file_exists(Config::read("System.physicalPath")."/config/errors.php")) {
+				// Load in the errors.php file
+				include(Config::read("System.physicalPath")."/config/errors.php");
+			}
 			
-			## Load Branch Autoloader ##
-			spl_autoload_register(array('AutoLoaders', 'branches'));
-		}
-		
-		## Load in the requested controller ##
-		if (($controller = System::load(array("name"=>reset(Config::read("URI.working")), "type"=>"controller", "branch"=>Config::read("Branch.name")))) === false) {
-			// The controller wasn’t found so trigger an error
-			Error::trigger("CONTROLLER_NOT_FOUND");
-			exit;
-		} else {
-			try {
+			## Check to see if the welcome content is present ##
+			if (file_exists(Config::read("System.physicalPath")."/public/welcome.php")) {
+				// Load the Designer class
+				$designer = new Designer();
+				
+				// Load the welcome content and save the result to the $welcome_content variable
+				ob_start();
+					include(Config::read("System.physicalPath")."/public/welcome.php");
+				$welcome_content = ob_get_clean();
+				
+				// Do the Designer class fixes on the $welcome_content variable content
+				$designer->doFixes($welcome_content);
+				
+				// Print out the welcome content
+				echo $welcome_content;
+				exit;
+			}
+			
+			## URI Managment ##
+			Config::processURI();
+			
+			## Load in Controller ##
+			if (Config::read("Branch.name")) {
+				## Unload Main Autoloader ##
+				spl_autoload_unregister(array('AutoLoaders', 'main'));
+				
+				## Load Branch Autoloader ##
+				spl_autoload_register(array('AutoLoaders', 'branches'));
+			}
+			
+			## Load in the requested controller ##
+			if (($controller = System::load(array("name"=>reset(Config::read("URI.working")), "type"=>"controller", "branch"=>Config::read("Branch.name")))) === false) {
+				// The controller wasn’t found so trigger an error
+				Error::trigger("CONTROLLER_NOT_FOUND");
+				exit;
+			} else {
 				// Load the view
 				$controller->showView();
-			} catch(Exception $e) {
-				// Load error if something triggered an error
-				Error::processError($e);
+				
 			}
+		} catch(Exception $e) {
+			// Load error if something triggered an error
+			Error::processError($e);
 		}
 		
 
