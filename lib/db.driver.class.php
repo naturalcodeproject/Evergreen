@@ -319,6 +319,18 @@ abstract class DB_Driver {
         }
     }
 
+    public function get_properties() {
+        $properties = array();
+
+        foreach($this->get_column_names() as $column_name) {
+            $property = $this->column_to_property($column_name);
+            $value = $this->model->$property;
+            $properties[$property] = $value;
+        }
+
+        return $properties;
+    }
+
     public function set_alias($alias) {
         $this->alias = $alias;
     }
@@ -835,28 +847,53 @@ abstract class DB_Driver {
         return $column_names;
     }
 
-    protected function get_column_values($primary_key_first=true, $type=null) {
+    protected function get_column_values($primary_key_first=true, $type=null, $onlyPrimaryKeys=false) {
         $values = array();
 
-        foreach($this->get_column_names() as $column_name) {
-            if ($type == null || $this->includeColumnInOperation($column_name, $type)) {
-                if ($primary_key_first || !in_array($column_name, $this->primary_key)) {
-                    $property = $this->column_to_property($column_name);
-                    $values[] = $this->model->$property;
-                }
-            }
-        }
-
-        if (!$primary_key_first) {
+        if ($onlyPrimaryKeys) {
             $primary_key = $this->get_primary_key();
             if (is_array($primary_key)) {
                 foreach($primary_key as $key) {
                     $property = $this->column_to_property($key);
-                    $values[] = $this->model->$property;
+                    $value = $this->model->$property;
+
+                    if (isset($this->$property) && $this->$property != $this->model->$property) {
+                        $value = $this->$property;
+                    }
+
+                    $values[] = $value;
                 }
             } else {
                 $property = $this->column_to_property($primary_key);
-                $values[] = $this->model->$property;
+                $value = $this->model->$property;
+
+                if (isset($this->$property) && $this->$property != $this->model->$property) {
+                    $value = $this->$property;
+                }
+
+                $values[] = $value;
+            }
+        } else {
+            foreach($this->get_column_names() as $column_name) {
+                if ($type == null || $this->includeColumnInOperation($column_name, $type)) {
+                    if ($primary_key_first || !in_array($column_name, $this->primary_key)) {
+                        $property = $this->column_to_property($column_name);
+                        $values[] = $this->model->$property;
+                    }
+                }
+            }
+
+            if (!$primary_key_first) {
+                $primary_key = $this->get_primary_key();
+                if (is_array($primary_key)) {
+                    foreach($primary_key as $key) {
+                        $property = $this->column_to_property($key);
+                        $values[] = $this->model->$property;
+                    }
+                } else {
+                    $property = $this->column_to_property($primary_key);
+                    $values[] = $this->model->$property;
+                }
             }
         }
 

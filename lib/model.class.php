@@ -233,6 +233,11 @@ class Model {
         $this->db_driver->set_properties($properties);
     }
 
+    public function getProperties() {
+        $this->setup_driver();
+        return $this->db_driver->get_properties();
+    }
+
     protected function preCreate() {}
     protected function preRetrieve() {}
     protected function preUpdate() {}

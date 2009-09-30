@@ -61,12 +61,31 @@ class DB_Driver_MySQL extends DB_Driver {
                     if ($index > 0) {
                         $where .= " AND ";
                     }
+
+                    $keyArray = explode('.', $key);
+                    $unAliasedKey = array_pop($keyArray);
+
                     $cur_id = $id[$index];
-                    $where .= "$key=$cur_id";
+                    if (array_key_exists($unAliasedKey, $id)) {
+                        $cur_id = $id[$unAliasedKey];
+                    }
+
+                    if (is_numeric($cur_id)) {
+                        $where .= "$key=$cur_id";
+                    } else {
+                        $cur_id = mysql_real_escape_string($cur_id);
+                        $where .= "$key='$cur_id'";
+                    }
+
                     $index++;
                 }
             } else {
-                $where .= "$primary_key=$id";
+                if (is_numeric($id)) {
+                    $where .= "$primary_key=$id";
+                } else {
+                    $id = mysql_real_escape_string($id);
+                    $where .= "$primary_key='$id'";
+                }
             }
 
             $statement = "SELECT " .
@@ -110,15 +129,12 @@ class DB_Driver_MySQL extends DB_Driver {
 
             $first = true;
             foreach($this->column_names as $column_name) {
-                if (!in_array($column_name, $this->primary_key)) {
-
-                    if ($this->includeColumnInOperation($column_name, FL_UPDATE)) {
-                        if (!$first) {
-                            $statement .= ", ";
-                        }
-                        $first = false;
-                        $statement .= "$column_name=?";
+                if ($this->includeColumnInOperation($column_name, FL_UPDATE)) {
+                    if (!$first) {
+                        $statement .= ", ";
                     }
+                    $first = false;
+                    $statement .= "$column_name=?";
                 }
             }
 
@@ -141,13 +157,19 @@ class DB_Driver_MySQL extends DB_Driver {
 
             $statement .= " LIMIT 1";
 
+            $columnValues = $this->get_column_values(true, FL_UPDATE);
+            $primaryKeyValues = $this->get_column_values(true, FL_UPDATE, true);
+            $values = array_merge($columnValues, $primaryKeyValues);
+
             /*echo "<PRE>";
             echo "UPDATE:\n";
             print_r($statement);
+            echo "\n";
+            print_r($values);
             echo "</PRE>";*/
 
             $stmt = $this->db->prepare($statement);
-            $stmt->execute($this->get_column_values(false, FL_UPDATE));
+            $stmt->execute($values);
             return true;
         } catch (Exception $e) {
             $this->model->addError(null, $e->getMessage(), ModelError::TYPE_DB_OPERATION_FAILED, $e->getTraceAsString());
