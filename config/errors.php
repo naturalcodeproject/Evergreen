@@ -15,5 +15,11 @@
 	Error::register('LOADER_MAXIMUM_SYSTEM_VERSION', array("message"=>"The helper or plugin you are trying to load has set a maximum system version requirement that is not being met by the system.", "code"=>"GEN"));
 
     ## Model Errors ##
-    Error::register('MODEL_NOT_FOUND', array("message"=>"The model you are trying to load was not found.", "code"=>"GEN"))
+    Error::register('MODEL_NOT_FOUND', array("message"=>"The model you are trying to load was not found.", "code"=>"GEN"));
+    
+    ## Helper Errors ##
+    Error::register('HELPER_NOT_FOUND', array("message"=>"The helper you are trying to load was not found.", "code"=>"GEN"));
+    
+    ## Plugin Errors ##
+    Error::register('PLUGIN_NOT_FOUND', array("message"=>"The plugin you are trying to load was not found.", "code"=>"GEN"));
 ?>

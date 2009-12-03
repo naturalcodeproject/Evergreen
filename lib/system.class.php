@@ -4,16 +4,50 @@ final class System {
 		if (empty($args['name'])) return NULL;
 		if (empty($args['type'])) return NULL;
 		
+		if ($args['branch'] == "MAIN") {
+			$args['branch'] = "";
+		}
+		
 		$load = new Loader($args['name'], $args['type'], $args['branch']);
 		return $load->load();
 	}
 	
+	final public static function exists($args) {
+		if (empty($args['name'])) return NULL;
+		if (empty($args['type'])) return NULL;
+		
+		if ($args['branch'] == "MAIN") {
+			$args['branch'] = "";
+		}
+		
+		$load = new Loader($args['name'], $args['type'], $args['branch']);
+		return $load->exists();
+	}
+	
 	final public static function helper($name, $branch="") {
-		return self::load(array("name"=>$name, "type"=>"helper", "branch"=>$branch));
+		if (Config::read("Branch.name") && empty($branch)) {
+			$helper = self::load(array("name"=>$name, "type"=>"helper", "branch"=>Config::read("Branch.name")));
+		}
+		
+		if (!$helper) {
+			$helper = self::load(array("name"=>$name, "type"=>"helper", "branch"=>$branch));
+		}
+		
+		if (!$helper) {
+            Error::trigger("HELPER_NOT_FOUND");
+        }
+        
+        return $helper;
 	}
 	
 	final public static function model($name, $branch="") {
-		$model = self::load(array("name"=>$name, "type"=>"model", "branch"=>$branch));
+		if (Config::read("Branch.name") && empty($branch)) {
+			$model = self::load(array("name"=>$name, "type"=>"model", "branch"=>Config::read("Branch.name")));
+		}
+		
+		if (!$model) {
+			$model = self::load(array("name"=>$name, "type"=>"model", "branch"=>$branch));
+		}
 
         if (!$model) {
             Error::trigger("MODEL_NOT_FOUND");
@@ -23,7 +57,19 @@ final class System {
 	}
 	
 	final public static function plugin($name, $branch="") {
-		return self::load(array("name"=>$name, "type"=>"plugin", "branch"=>$branch));
+		if (Config::read("Branch.name") && empty($branch)) {
+			$plugin = self::load(array("name"=>$name, "type"=>"plugin", "branch"=>Config::read("Branch.name")));
+		}
+		
+		if (!$plugin) {
+			$plugin = self::load(array("name"=>$name, "type"=>"plugin", "branch"=>$branch));
+		}
+		
+		if (!$plugin) {
+            Error::trigger("PLUGIN_NOT_FOUND");
+        }
+        
+        return $plugin;
 	}
 	
 	public static function logError($errno, $errstr, $errfile, $errline, $errcontext) {
