@@ -4,8 +4,3 @@
 	RewriteCond %{REQUEST_FILENAME} !-d
 	RewriteRule . index.php
 </IfModule>
-
-<Files ~ "^.*\.ini">
-    Order allow,deny
-    Deny from all
-</Files>
