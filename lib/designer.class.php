@@ -19,14 +19,14 @@ class Designer {
 		}
 		define("URI_ROOT", $config_base_uri.$config_base_uri_prepend);
 		if (Config::read("Branch.name") != "") {
-			define("URI_BRANCH", URI_ROOT."/".Config::read("Branch.name"));
+			define("URI_BRANCH", str_replace("//", "/", URI_ROOT."/".Config::read("Branch.name")));
 		}
-		define("URI_SKIN", implode("/", array_merge(explode("/", $config_base_uri), array("public"))));
+		define("URI_SKIN", str_replace("//", "/", implode("/", array_merge(explode("/", $config_base_uri), array("public")))));
 		
 		foreach($uri_to_use as $key => $item) {
 			$position = array_search($key, array_keys(Config::read("URI.working")));
 			$new_base = explode("/", URI_ROOT);
-			define("URI_".strtoupper($key), implode("/", array_merge($new_base, array_slice(Config::read("URI.working"), 0, ($position+1))))); 
+			define("URI_".strtoupper($key), str_replace("//", "/", implode("/", array_merge($new_base, array_slice(Config::read("URI.working"), 0, ($position+1)))))); 
 		}
 		
 		$current_uri_map = array();
@@ -35,7 +35,7 @@ class Designer {
 			if (!empty($item)) $current_uri_map[] = $item;
 		}
 		
-		define("URI_CURRENT", implode("/", array_merge(explode("/", ((Config::read("Branch.name") != "") ? URI_BRANCH : URI_ROOT)), $current_uri_map)));
+		define("URI_CURRENT", str_replace("//", "/", implode("/", array_merge(explode("/", ((Config::read("Branch.name") != "") ? URI_BRANCH : URI_ROOT)), $current_uri_map))));
 	}
 	
 	public function doFixes (&$content) {

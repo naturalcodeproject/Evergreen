@@ -114,7 +114,7 @@ abstract class Controller {
 		if (empty($controller)) {
 			$controller = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
 		}
-		if ((!strlen(Config::read("Branch.name")) && (@include("views/".strtolower($controller)."/{$name}.php")) == true) || (strlen(Config::read("Branch.name")) && (@include("branches/".Config::read("Branch.name")."/views/".strtolower($controller)."/{$name}.php")) == true)) {
+		if ((!strlen(Config::read("Branch.name")) && file_exists(Config::read("System.physicalPath")."/views/".strtolower($controller)."/{$name}.php") && (include(Config::read("System.physicalPath")."/views/".strtolower($controller)."/{$name}.php")) == true) || (strlen(Config::read("Branch.name")) && file_exists(Config::read("System.physicalPath")."/branches/".Config::read("Branch.name")."/views/".strtolower($controller)."/{$name}.php") && (include(Config::read("System.physicalPath")."/branches/".Config::read("Branch.name")."/views/".strtolower($controller)."/{$name}.php")) == true)) {
 			return true;
 		} else {
 			return false;
@@ -134,10 +134,10 @@ abstract class Controller {
 	
 	final protected function renderLayout ($name) {
 		$content_for_layout = $this->content_for_layout;
-		if (strlen(Config::read("Branch.name")) && (@include("branches/".Config::read("Branch.name")."/views/layouts/{$name}.php")) == true) {
+		if (strlen(Config::read("Branch.name")) && file_exists(Config::read("System.physicalPath")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php") && (include(Config::read("System.physicalPath")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php")) == true) {
 			return 1;
 		} else {
-			if ((@include("views/layouts/{$name}.php")) == true) {
+			if (file_exists(Config::read("System.physicalPath")."/views/layouts/{$name}.php") && (include(Config::read("System.physicalPath")."/views/layouts/{$name}.php")) == true) {
 				return true;
 			} else {
 				return false;
