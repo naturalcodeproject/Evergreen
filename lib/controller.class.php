@@ -66,7 +66,7 @@ abstract class Controller {
 					}
 				}
 				
-				if (isset($this->filter_except) && is_array($this->filter_only[1]) && !in_array($this->view_to_load, $this->filter_only[1])) {
+				if (isset($this->filter_except) && is_array($this->filter_except[1]) && !in_array($this->view_to_load, $this->filter_except[1])) {
 					if (!empty($this->filter_except[0]) && !is_array($this->filter_except[0])) {
 						$this->{$this->filter_except[0]}();
 					}
