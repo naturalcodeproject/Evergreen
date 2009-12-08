@@ -91,6 +91,8 @@ class Designer {
 			break;
 		}
 		
+		$return = str_replace("//", "/", $return);
+		
 		return $link[1].((!empty($return)) ? $return : $link[2]);
 	}
 	
