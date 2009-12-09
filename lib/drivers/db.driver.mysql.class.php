@@ -241,7 +241,7 @@ class DB_Driver_MySQL extends DB_Driver {
                     if (!$first) {
                         $statement .= ', ';
                     } else {
-                        $statement .= 'ORDER BY ';
+                        $statement .= ' ORDER BY ';
                         $first = false;
                     }
 
