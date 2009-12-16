@@ -31,19 +31,19 @@ class Loader {
 	private function getPath() {
 		switch ($this->class_type) {
 			case 'helper':
-				return Config::read("System.physicalPath").((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/helpers/{$this->original_class_name}.php";
+				return Config::read("Path.physical").((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/helpers/{$this->original_class_name}.php";
 			break;
 			
 			case 'controller':
-				return Config::read("System.physicalPath").((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/controllers/{$this->original_class_name}.php";
+				return Config::read("Path.physical").((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/controllers/{$this->original_class_name}.php";
 			break;
 			
 			case 'model':
-				return Config::read("System.physicalPath").((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/models/{$this->original_class_name}.php";
+				return Config::read("Path.physical").((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/models/{$this->original_class_name}.php";
 			break;
 			
 			case 'plugin':
-				return Config::read("System.physicalPath").((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/plugins/{$this->original_class_name}/{$this->original_class_name}.php";
+				return Config::read("Path.physical").((strlen($this->branch_to_use)) ? "/branches/".$this->branch_to_use : "")."/plugins/{$this->original_class_name}/{$this->original_class_name}.php";
 			break;
 		}
 	}

@@ -12,8 +12,8 @@ final class Config {
 			// Setup the System.version configuration setting
 			self::$config['System']['version'] = "1.0.0b1";
 			
-			// Setup the System.physicalPath configuration setting
-			self::$config['System']['physicalPath'] = dirname(dirname(__FILE__));
+			// Setup the Path.physical configuration setting
+			self::$config['Path']['physical'] = dirname(dirname(__FILE__));
 			
 			// Setup the URI.base configuration setting
 			$base_uri = dirname($_SERVER['SCRIPT_NAME']);
@@ -21,31 +21,38 @@ final class Config {
 			self::$config['URI']['base'] = $base_uri;
 			
 			// Setup the System.defaultError's configuration setting
-			self::$config['System']['defaultError404'] = self::$config['System']['physicalPath']."/public/errors/404.php";
-			self::$config['System']['defaultErrorGEN'] = self::$config['System']['physicalPath']."/public/errors/general.php";
+			self::$config['System']['defaultError404'] = self::$config['Path']['physical']."/public/errors/404.php";
+			self::$config['System']['defaultErrorGEN'] = self::$config['Path']['physical']."/public/errors/general.php";
 		}
 		
 		// Indicate that the setup function has been run and doesnt need to be run again
 		self::$isSetup = true;
 	}
 	
-	public static function register($key, $value) {
+	public static function register($name, $value = "") {
 		self::setup();
-		$path = explode('.', $key);
-		$config_holder =& self::$config;
-		foreach($path as $i => $path_key) {
-			if ($i == (count($path) - 1)) {
-				$config_holder[$path_key] = $value;
-				return true;
-			} else {
-				if (!isset($config_holder[$path_key])) {
-					$config_holder[$path_key] = array();
-				}
-				$config_holder =& $config_holder[$path_key];
-			}
+		if (!is_array($name)) {
+			$name = array(
+				$name => $value
+			);
 		}
 		
-		return false;
+		foreach($name as $key => $value) {
+			$path = explode('.', $key);
+			$config_holder =& self::$config;
+			foreach($path as $i => $path_key) {
+				if ($i == (count($path) - 1)) {
+					$config_holder[$path_key] = $value;
+					break;
+				} else {
+					if (!isset($config_holder[$path_key])) {
+						$config_holder[$path_key] = array();
+					}
+					$config_holder =& $config_holder[$path_key];
+				}
+			}
+		}
+		return true;
 	}
 	
 	public static function read($key) {
@@ -117,12 +124,12 @@ final class Config {
 		$count = 0;
 		
 		foreach(self::read("URI.map") as $key => $item) {
-			if ($url_vals[0] == $default_controller && !file_exists(self::read("System.physicalPath")."/controllers/".$url_vals[1].".php") &&  !is_dir(self::read("System.physicalPath")."/branches/".$url_vals[$count])) {
+			if ($url_vals[0] == $default_controller && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[1].".php") &&  !is_dir(self::read("Path.physical")."/branches/".$url_vals[$count])) {
 				header("Location: ".self::read("URI.base")."/".implode("/", array_slice($url_vals, 1)));
 			}
-			if ($count == 0 && !file_exists(self::read("System.physicalPath")."/branches/".$branch_name."/controllers/".$url_vals[$count].".php") && !empty($branch_name)) {
+			if ($count == 0 && !file_exists(self::read("Path.physical")."/branches/".$branch_name."/controllers/".$url_vals[$count].".php") && !empty($branch_name)) {
 				$url_vals = array_merge(array($item), $url_vals);
-			} elseif ($count == 0 && !file_exists(self::read("System.physicalPath")."/controllers/".$url_vals[$count].".php") && empty($branch_name)) {
+			} elseif ($count == 0 && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[$count].".php") && empty($branch_name)) {
 				$url_vals = array_merge(array($item), $url_vals);
 			}
 			
@@ -140,17 +147,44 @@ final class Config {
 			$uri_params[reset(array_slice(array_keys($uri_params), 1, 1))] = str_replace("-", "_", $uri_params[reset(array_slice(array_keys($uri_params), 1, 1))]);
 		}
 		
-		if (!$return) {
-			self::register("URI.working", $uri_params);
-			return false;
-		} else {
-			self::register("URI.working", $uri_params);
-			return $uri_params;
+		
+		self::register("URI.working", $uri_params);
+		
+		// Setup the Param configuration setting
+		foreach(self::read("URI.working") as $param => $value) {
+			self::register("Param.".$param, $value);
 		}
+		
+		// Setup the additional Path configuration settings based off the URI.map, the Skin, and the Branch
+		self::register("Path.site", self::read("URI.base").self::read("URI.prepend"));
+		if (self::read("Branch.name") != "") {
+			self::register("Path.branch", str_replace("//", "/", self::read("Path.site")."/".self::read("Branch.name")));
+		}
+		self::register("Path.skin", str_replace("//", "/", implode("/", array_merge(explode("/", self::read("URI.base")), array("public")))));
+		self::register("Path.root", str_replace("//", "/", self::read("URI.base")));
+		
+		foreach(self::read("URI.working") as $key => $value) {
+			if (empty($value)) {
+				continue;
+			}
+			
+			$position = array_search($key, array_keys(self::read("URI.working")));
+			self::register("Path.".$key, str_replace("//", "/", implode("/", array_merge(explode("/", self::read("Path.site")), array_slice(self::read("URI.working"), 0, ($position+1))))));
+		}
+		
+		$current_uri_map = array();
+		
+		foreach(self::read("URI.working") as $key => $item) {
+			if (!empty($item)) $current_uri_map[] = $item;
+		}
+		
+		self::register("Path.current", str_replace("//", "/", implode("/", array_merge(explode("/", ((self::read("Branch.name") != "") ? self::read("Path.branch") : self::read("Path.site"))), $current_uri_map))));
+		
+		return true;
 	}
 	
 	public static function checkForBranch($url_vals) {
-		if (is_array($url_vals) && is_dir(self::read("System.physicalPath")."/branches/".$url_vals[0]) && !file_exists(self::read("System.physicalPath")."/controllers/".$url_vals[0].".php")) {
+		if (is_array($url_vals) && is_dir(self::read("Path.physical")."/branches/".$url_vals[0]) && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[0].".php")) {
 			self::register("Branch.name", $url_vals[0]);
 			self::loadBranchConfig(self::read("Branch.name"));
 			array_shift($url_vals);
@@ -162,14 +196,14 @@ final class Config {
 	
 	public static function loadBranchConfig($branch_name) {
 		self::setup();
-		if (file_exists(self::read("System.physicalPath")."/branches/{$branch_name}/config/config.php")) {
+		if (file_exists(self::read("Path.physical")."/branches/{$branch_name}/config/config.php")) {
 			// Load the branch configuration
-			include(self::read("System.physicalPath")."/branches/{$branch_name}/config/config.php");
+			include(self::read("Path.physical")."/branches/{$branch_name}/config/config.php");
 		}
 		
-		if (file_exists(self::read("System.physicalPath")."/branches/{$branch_name}/config/errors.php")) {
+		if (file_exists(self::read("Path.physical")."/branches/{$branch_name}/config/errors.php")) {
 			// Load the branch errors
-			include(self::read("System.physicalPath")."/branches/{$branch_name}/config/errors.php");
+			include(self::read("Path.physical")."/branches/{$branch_name}/config/errors.php");
 		}
 		
 		if (self::read("Branch.active") !== null && self::read("Branch.active") == false) {

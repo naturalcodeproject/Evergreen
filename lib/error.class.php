@@ -36,11 +36,11 @@ final class Error {
 			self::$errorObj = $errorObj;
 		}
 		
-		if (isset(self::$params['code']) && array_key_exists(self::$params['code'], Config::read("Errors"))) {
+		if (isset(self::$params['code']) && array_key_exists(self::$params['code'], Config::read("Error"))) {
 			if (isset(self::$params['url'])) {
 				Error::loadURL(self::$params['url']);
 			} else {
-				Error::loadURL(Config::read("Errors.".self::$params['code']));
+				Error::loadURL(Config::read("Error.".self::$params['code']));
 			}
 		} else {
 			if (isset(self::$params['url'])) {

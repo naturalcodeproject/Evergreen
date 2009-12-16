@@ -9,9 +9,9 @@ final class Evergreen {
 			set_error_handler(array("System", "logError"), ini_get("error_reporting"));
 			
 			## Load Base Configuration ##
-			if (file_exists(Config::read("System.physicalPath")."/config/config.php")) {
+			if (file_exists(Config::read("Path.physical")."/config/config.php")) {
 				// Load in the config.php file
-				include(Config::read("System.physicalPath")."/config/config.php");
+				include(Config::read("Path.physical")."/config/config.php");
 			} else {
 				// Error if the config.php file isnt present in the config directory
 				echo "You are missing the configuration file and without it Evergreen cannot run.";
@@ -19,19 +19,19 @@ final class Evergreen {
 			}
 			
 			## Load Base Errors ##
-			if (file_exists(Config::read("System.physicalPath")."/config/errors.php")) {
+			if (file_exists(Config::read("Path.physical")."/config/errors.php")) {
 				// Load in the errors.php file
-				include(Config::read("System.physicalPath")."/config/errors.php");
+				include(Config::read("Path.physical")."/config/errors.php");
 			}
 			
 			## Check to see if the welcome content is present ##
-			if (file_exists(Config::read("System.physicalPath")."/public/welcome.php")) {
+			if (file_exists(Config::read("Path.physical")."/public/welcome.php")) {
 				// Load the Designer class
 				$designer = new Designer();
 				
 				// Load the welcome content and save the result to the $welcome_content variable
 				ob_start();
-					include(Config::read("System.physicalPath")."/public/welcome.php");
+					include(Config::read("Path.physical")."/public/welcome.php");
 				$welcome_content = ob_get_clean();
 				
 				// Do the Designer class fixes on the $welcome_content variable content
@@ -56,7 +56,7 @@ final class Evergreen {
 			
 			## Load in the requested controller ##
 			if (($controller = System::load(array("name"=>reset(Config::read("URI.working")), "type"=>"controller", "branch"=>Config::read("Branch.name")))) === false) {
-				// The controller wasn’t found so trigger an error
+				// The controller wasn't found so trigger an error
 				Error::trigger("CONTROLLER_NOT_FOUND");
 				exit;
 			} else {
@@ -79,8 +79,8 @@ class AutoLoaders {
 		self::baseIncludes($class_name);
 		
 		## Controller Include ##
-		if (file_exists(Config::read("System.physicalPath")."/controllers/{$class_name}.php")) {
-			include_once(Config::read("System.physicalPath")."/controllers/{$class_name}.php");
+		if (file_exists(Config::read("Path.physical")."/controllers/{$class_name}.php")) {
+			include_once(Config::read("Path.physical")."/controllers/{$class_name}.php");
 		}
 	}
 	
@@ -90,8 +90,8 @@ class AutoLoaders {
 		self::baseIncludes($class_name);
 		
 		## Branch Controller Include ##
-		if (file_exists(Config::read("System.physicalPath")."/branches/{$branch_name}/controllers/{$class_name}.php")) {
-			include_once(Config::read("System.physicalPath")."/branches/{$branch_name}/controllers/{$class_name}.php");
+		if (file_exists(Config::read("Path.physical")."/branches/{$branch_name}/controllers/{$class_name}.php")) {
+			include_once(Config::read("Path.physical")."/branches/{$branch_name}/controllers/{$class_name}.php");
 		}
 	}
 	
@@ -104,8 +104,8 @@ class AutoLoaders {
         require_once("lib/db.driver.class.php");
 		
 		## Other Lib Includes ##
-		if (file_exists(Config::read("System.physicalPath")."/lib/{$class_name}.class.php")) {
-			require_once(Config::read("System.physicalPath")."/lib/{$class_name}.class.php");
+		if (file_exists(Config::read("Path.physical")."/lib/{$class_name}.class.php")) {
+			require_once(Config::read("Path.physical")."/lib/{$class_name}.class.php");
 		}
 	}
 	

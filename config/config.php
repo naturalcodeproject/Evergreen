@@ -3,21 +3,23 @@
 	Config::register("System.mode", "development");
 	
 	## URI Setup ##
-	Config::register("URI.useModRewrite", true);
-	Config::register("URI.useDashes", true);
-	Config::register("URI.forceDashes", true);
+	Config::register(array(
+		"URI.useModRewrite" => true,
+		"URI.useDashes" => true,
+		"URI.forceDashes" => true
+	));
 	
-	Config::register("URI.map", array(
+	Config::register(array("URI.map" => array(
 		"controller"=>"main",
 		"view"=>"index",
 		"action"=>"",
 		"id"=>""
-	));
+	)));
 	
 	## Errors Setup ##
-	Config::register("Errors.generalErrorMessage", "An error occured. Please contact admin@example.com");
-	Config::register("Errors.logDirectory", "public/log");
-	Config::register("Errors.404", "/error404");
+	Config::register("Error.generalErrorMessage", "An error occured. Please contact admin@example.com");
+	Config::register("Error.logDirectory", "public/log");
+	Config::register("Error.404", "/error404");
 	
 	## Database Setup ##
 	Config::register("Database.host", "localhost");

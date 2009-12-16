@@ -65,8 +65,8 @@ class Formhandler {
 		if (!empty($properties['update']) || !empty($properties['default']))  {
 			$properties['update'] = str_replace("\$this->", "\$this->caller->", $properties['update']);
 			$properties['default'] = str_replace("\$this->", "\$this->caller->", $properties['default']);
-			@eval("\$properties['update'] = ".$properties['update'].";");
-			@eval("\$properties['default'] = ".$properties['default'].";");
+			eval("\$properties['update'] = ".$properties['update'].";");
+			eval("\$properties['default'] = ".$properties['default'].";");
 			if (!empty($properties['default'])) $this->forms_arr[$properties['name']]['default'] = $properties['default'];
 			if (!empty($properties['update'])) $this->forms_arr[$properties['name']]['update'] = $properties['update'];
 			

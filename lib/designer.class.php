@@ -1,42 +1,6 @@
 <?php
 class Designer {
-	function __construct () {
-		$view_info = Config::read("URI.working");
-		$main_uri_names = array();
-		
-		##############################
-		###       Constants        ###
-		##############################
-		
-		# Regular URL #
-		$uri_to_use = array();
-		$uri_to_use = Config::read("URI.working");
-		
-		$config_base_uri = Config::read("URI.base");
-		$config_base_uri_prepend = Config::read("URI.prepend");
-		if (empty($config_base_uri)) {
-			$config_base_uri = "/";
-		}
-		define("URI_ROOT", $config_base_uri.$config_base_uri_prepend);
-		if (Config::read("Branch.name") != "") {
-			define("URI_BRANCH", str_replace("//", "/", URI_ROOT."/".Config::read("Branch.name")));
-		}
-		define("URI_SKIN", str_replace("//", "/", implode("/", array_merge(explode("/", $config_base_uri), array("public")))));
-		
-		foreach($uri_to_use as $key => $item) {
-			$position = array_search($key, array_keys(Config::read("URI.working")));
-			$new_base = explode("/", URI_ROOT);
-			define("URI_".strtoupper($key), str_replace("//", "/", implode("/", array_merge($new_base, array_slice(Config::read("URI.working"), 0, ($position+1)))))); 
-		}
-		
-		$current_uri_map = array();
-		
-		foreach($uri_to_use as $key => $item) {
-			if (!empty($item)) $current_uri_map[] = $item;
-		}
-		
-		define("URI_CURRENT", str_replace("//", "/", implode("/", array_merge(explode("/", ((Config::read("Branch.name") != "") ? URI_BRANCH : URI_ROOT)), $current_uri_map))));
-	}
+	function __construct () { }
 	
 	public function doFixes (&$content) {
 		$this->linkFix($content);
@@ -49,22 +13,22 @@ class Designer {
 		
 		switch ($link_arr[0]) {
 			case "[current]":
-				$new_base = explode("/", URI_CURRENT);
+				$new_base = explode("/", Config::read("Path.current"));
 				$return = implode("/", (($up_link_count) ? array_slice($new_base, 0, -$up_link_count) : $new_base)) . implode("/", array_pad(array_slice($link_arr, $up_link_count+1), -(count(array_slice($link_arr, $up_link_count+1))+1), ""));
 			break;
 			
 			case "[site]":
-				$new_base = explode("/", URI_ROOT);
+				$new_base = explode("/", Config::read("Path.site"));
 				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
 			break;
 			
 			case "[skin]":
-				$new_base = explode("/", URI_SKIN);
+				$new_base = explode("/", Config::read("Path.skin"));
 				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
 			break;
 			
 			case "[root]":
-				$new_base = explode("/", dirname(URI_SKIN));
+				$new_base = explode("/", dirname(Config::read("Path.skin")));
 				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
 			break;
 			
@@ -80,7 +44,7 @@ class Designer {
 					
 					if ($link_arr[0] == $tmp_key) {
 						$position = array_search($key, array_keys($working_uri));
-						$new_base = explode("/", URI_ROOT);
+						$new_base = explode("/", Config::read("Path.site"));
 						
 						$new_url = array_merge( array_merge($new_base, array_slice($working_uri, 0, ($position+1))), array_pad(array_slice($link_arr, $up_link_count+1), -(count(array_slice($link_arr, $up_link_count+1))), "") );
 						

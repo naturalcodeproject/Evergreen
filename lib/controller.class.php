@@ -12,10 +12,8 @@
 abstract class Controller {
 	protected $view_to_load;
 	protected $params;
-	protected $settings;
 	protected $formhandler;
-	protected $branch_name;
-	protected $config;
+	protected $designer;
 	private $view_overridden = false;
 	
 	final function __construct () {
@@ -56,19 +54,19 @@ abstract class Controller {
 			if (isset($this->filter) || isset($this->filter_only) || isset($this->filter_except)) {
 				if (isset($this->filter)) {
 					if (!empty($this->filter) && !is_array($this->filter)) {
-						$this->{$this->filter}();
+						call_user_func(array($this, $this->filter));
 					}
 				}
 				
 				if (isset($this->filter_only) && is_array($this->filter_only[1]) && in_array($this->view_to_load, $this->filter_only[1])) {
 					if (!empty($this->filter_only[0]) && !is_array($this->filter_only[0])) {
-						$this->{$this->filter_only[0]}();
+						call_user_func(array($this, $this->filter_only[0]));
 					}
 				}
 				
 				if (isset($this->filter_except) && is_array($this->filter_except[1]) && !in_array($this->view_to_load, $this->filter_except[1])) {
 					if (!empty($this->filter_except[0]) && !is_array($this->filter_except[0])) {
-						$this->{$this->filter_except[0]}();
+						call_user_func(array($this, $this->filter_except[0]));
 					}
 				}
 			}
@@ -114,7 +112,7 @@ abstract class Controller {
 		if (empty($controller)) {
 			$controller = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
 		}
-		if ((!strlen(Config::read("Branch.name")) && file_exists(Config::read("System.physicalPath")."/views/".strtolower($controller)."/{$name}.php") && (include(Config::read("System.physicalPath")."/views/".strtolower($controller)."/{$name}.php")) == true) || (strlen(Config::read("Branch.name")) && file_exists(Config::read("System.physicalPath")."/branches/".Config::read("Branch.name")."/views/".strtolower($controller)."/{$name}.php") && (include(Config::read("System.physicalPath")."/branches/".Config::read("Branch.name")."/views/".strtolower($controller)."/{$name}.php")) == true)) {
+		if ((!strlen(Config::read("Branch.name")) && file_exists(Config::read("Path.physical")."/views/".strtolower($controller)."/{$name}.php") && (include(Config::read("Path.physical")."/views/".strtolower($controller)."/{$name}.php")) == true) || (strlen(Config::read("Branch.name")) && file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".strtolower($controller)."/{$name}.php") && (include(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".strtolower($controller)."/{$name}.php")) == true)) {
 			return true;
 		} else {
 			return false;
@@ -127,17 +125,16 @@ abstract class Controller {
 		if (method_exists($this, $name)) {
 			return true;
 		} else {
-			Error::trigger("VIEW_NOT_FOUND");
 			return false;
 		}
 	}
 	
 	final protected function renderLayout ($name) {
 		$content_for_layout = $this->content_for_layout;
-		if (strlen(Config::read("Branch.name")) && file_exists(Config::read("System.physicalPath")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php") && (include(Config::read("System.physicalPath")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php")) == true) {
+		if (strlen(Config::read("Branch.name")) && file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php") && (include(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php")) == true) {
 			return 1;
 		} else {
-			if (file_exists(Config::read("System.physicalPath")."/views/layouts/{$name}.php") && (include(Config::read("System.physicalPath")."/views/layouts/{$name}.php")) == true) {
+			if (file_exists(Config::read("Path.physical")."/views/layouts/{$name}.php") && (include(Config::read("Path.physical")."/views/layouts/{$name}.php")) == true) {
 				return true;
 			} else {
 				return false;

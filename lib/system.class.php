@@ -113,7 +113,7 @@ final class System {
 		}
 
 		if($notify) {
-			$log_file = Config::read("System.physicalPath")."/".Config::read("Errors.logDirectory")."/error.log";
+			$log_file = Config::read("Path.physical")."/".Config::read("Errors.logDirectory")."/error.log";
 			$date = date('Y-m-d');
 			$log_file .= ".$date";
 		
