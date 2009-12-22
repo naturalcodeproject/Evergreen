@@ -74,7 +74,7 @@ final class Error {
 			TODO : Check for an external url
 		*/
 		if (!empty($url)) {
-			$url = str_replace(URI_ROOT, "", $url);
+			$url = str_replace(Config::read('Path.root'), "", $url);
 			Config::register("URI.working", $url);
 			Config::register("Branch.name", "");
 			Config::processURI();

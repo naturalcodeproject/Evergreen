@@ -61,7 +61,7 @@ final class Config {
 		$config_holder =& self::$config;
 		foreach($path as $i => $path_key) {
 			if ($i == (count($path) - 1)) {
-				return $config_holder[$path_key];
+				return (isset($config_holder[$path_key])) ? $config_holder[$path_key] : null;
 			} else {
 				$config_holder =& $config_holder[$path_key];
 			}
@@ -124,16 +124,18 @@ final class Config {
 		$count = 0;
 		
 		foreach(self::read("URI.map") as $key => $item) {
-			if ($url_vals[0] == $default_controller && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[1].".php") &&  !is_dir(self::read("Path.physical")."/branches/".$url_vals[$count])) {
+			/*	I'm not sure what this is but $default_controller doesn't exist so the statement is never true.
+				I'm assuming it can be commented out
+			if (!empty($url_vals) && $url_vals[0] == $default_controller && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[1].".php") &&  !is_dir(self::read("Path.physical")."/branches/".$url_vals[$count])) {
 				header("Location: ".self::read("URI.base")."/".implode("/", array_slice($url_vals, 1)));
-			}
-			if ($count == 0 && !file_exists(self::read("Path.physical")."/branches/".$branch_name."/controllers/".$url_vals[$count].".php") && !empty($branch_name)) {
+			}*/
+			if ($count == 0 && !empty($url_vals[$count]) && !file_exists(self::read("Path.physical")."/branches/".$branch_name."/controllers/".$url_vals[$count].".php") && !empty($branch_name)) {
 				$url_vals = array_merge(array($item), $url_vals);
-			} elseif ($count == 0 && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[$count].".php") && empty($branch_name)) {
+			} elseif ($count == 0 && !empty($url_vals[$count]) && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[$count].".php") && empty($branch_name)) {
 				$url_vals = array_merge(array($item), $url_vals);
 			}
 			
-			$uri_params[$key] = ((!empty($item) && empty($url_vals[$count])) ? $item : $url_vals[$count]);
+			$uri_params[$key] = ((!empty($item) && empty($url_vals[$count])) ? $item : ((!empty($url_vals[$count])) ? $url_vals[$count] : null));
 			$count++;
 		}
 		
@@ -184,7 +186,7 @@ final class Config {
 	}
 	
 	public static function checkForBranch($url_vals) {
-		if (is_array($url_vals) && is_dir(self::read("Path.physical")."/branches/".$url_vals[0]) && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[0].".php")) {
+		if (is_array($url_vals) && !empty($url_vals) && is_dir(self::read("Path.physical")."/branches/".$url_vals[0]) && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[0].".php")) {
 			self::register("Branch.name", $url_vals[0]);
 			self::loadBranchConfig(self::read("Branch.name"));
 			array_shift($url_vals);
@@ -230,6 +232,7 @@ final class Config {
 	public static function checkRoutes($request_uri) {
 		self::setup();
 		foreach(self::$routes as $regex=>$destination) {
+			$regex_branch = '';
 			$regex_fixed = str_replace("/", "\/", $regex);
 			if (preg_match("/^{$regex_fixed}/i", $request_uri) && !(self::read("Routes.current") !== null && array_key_exists($regex, self::read("Routes.current")))) {
 				if (self::read("Branch.name")) {

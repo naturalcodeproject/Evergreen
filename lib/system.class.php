@@ -25,6 +25,8 @@ final class System {
 	}
 	
 	final public static function helper($name, $branch="") {
+		$helper = false;
+		
 		if (Config::read("Branch.name") && empty($branch)) {
 			$helper = self::load(array("name"=>$name, "type"=>"helper", "branch"=>Config::read("Branch.name")));
 		}

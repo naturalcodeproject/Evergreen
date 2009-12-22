@@ -63,10 +63,16 @@ class Formhandler {
 		## Set up Properties
 		$properties = $this->propertiesArray($attr);
 		if (!empty($properties['update']) || !empty($properties['default']))  {
-			$properties['update'] = str_replace("\$this->", "\$this->caller->", $properties['update']);
-			$properties['default'] = str_replace("\$this->", "\$this->caller->", $properties['default']);
-			eval("\$properties['update'] = ".$properties['update'].";");
-			eval("\$properties['default'] = ".$properties['default'].";");
+			if (isset($properties['update'])) {
+				$properties['update'] = str_replace("\$this->", "\$this->caller->", $properties['update']);
+				eval("\$properties['update'] = ".$properties['update'].";");
+			}
+			
+			if (isset($properties['default'])) {
+				$properties['default'] = str_replace("\$this->", "\$this->caller->", $properties['default']);
+				eval("\$properties['default'] = ".$properties['default'].";");
+			}
+			
 			if (!empty($properties['default'])) $this->forms_arr[$properties['name']]['default'] = $properties['default'];
 			if (!empty($properties['update'])) $this->forms_arr[$properties['name']]['update'] = $properties['update'];
 			
@@ -94,6 +100,10 @@ class Formhandler {
 		
 		## Properties Set Up
 		$properties = $this->propertiesArray($attr);
+		
+		if (empty($properties['name'])) {
+			$properties['name'] = '';
+		}
 		
 		## Parse Name ##
 		$this->parsed_name = explode("[", str_replace("]", "", str_replace("\"", "", str_replace("'", "", str_replace("[]", "", $properties['name'])))));
@@ -189,7 +199,7 @@ class Formhandler {
 	
 	function getFormNameValue($haystack, $find, $position=0) {
 		if ((count($find)-1) == $position) {
-			return $haystack[$find[$position]];
+			return isset($haystack[$find[$position]]) ? $haystack[$find[$position]] : null;
 		}
 		
 		return $this->getFormNameValue($haystack[$find[$position]], $find, $position+1);

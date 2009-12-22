@@ -10,7 +10,7 @@ class Main_DeveloperController extends BranchController
 		//$hookhelper->aFunction();
 		echo "<br />";
 		//$hookhelper = System::from_branch()->load_helper("somethingelse");
-		echo URI_SKIN;
+		echo Config::read('Path.skin');
 		echo "<br />";
 		//$hookhelper = System::helper('somethingelse')->from_branch()->load();
 		//$hookhelper->aFunction();
