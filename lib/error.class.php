@@ -52,7 +52,11 @@ final class Error {
 	}
 	
 	final public static function getMessage() {
-		return self::$message;
+		if (!empty(self::$message)) {
+			return self::$message;
+		} else {
+			return get_class(self::$errorObj) . ' ' . self::$errorObj->getMessage();
+		}
 	}
 	
 	final public static function getTrace() {
