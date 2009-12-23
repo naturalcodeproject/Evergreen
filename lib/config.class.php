@@ -124,11 +124,10 @@ final class Config {
 		$count = 0;
 		
 		foreach(self::read("URI.map") as $key => $item) {
-			/*	I'm not sure what this is but $default_controller doesn't exist so the statement is never true.
-				I'm assuming it can be commented out
-			if (!empty($url_vals) && $url_vals[0] == $default_controller && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[1].".php") &&  !is_dir(self::read("Path.physical")."/branches/".$url_vals[$count])) {
+			if ($count == 0 && !empty($url_vals) && $url_vals[0] == reset(self::read('URI.map')) && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[1].".php") &&  !is_dir(self::read("Path.physical")."/branches/".$url_vals[$count])) {				
 				header("Location: ".self::read("URI.base")."/".implode("/", array_slice($url_vals, 1)));
-			}*/
+				exit;
+			}
 			if ($count == 0 && !empty($url_vals[$count]) && !file_exists(self::read("Path.physical")."/branches/".$branch_name."/controllers/".$url_vals[$count].".php") && !empty($branch_name)) {
 				$url_vals = array_merge(array($item), $url_vals);
 			} elseif ($count == 0 && !empty($url_vals[$count]) && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[$count].".php") && empty($branch_name)) {
