@@ -124,7 +124,7 @@ final class Config {
 		$count = 0;
 		
 		foreach(self::read("URI.map") as $key => $item) {
-			if ($count == 0 && !empty($url_vals) && $url_vals[0] == reset(self::read('URI.map')) && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[1].".php") &&  !is_dir(self::read("Path.physical")."/branches/".$url_vals[$count])) {				
+			if ($count == 0 && self::read("Routes.current") == null && !empty($url_vals) && $url_vals[0] == reset(self::read('URI.map')) && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[1].".php") &&  !is_dir(self::read("Path.physical")."/branches/".$url_vals[$count])) {				
 				header("Location: ".self::read("URI.base")."/".implode("/", array_slice($url_vals, 1)));
 				exit;
 			}

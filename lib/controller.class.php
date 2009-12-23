@@ -85,7 +85,9 @@ abstract class Controller {
 			}
 			
 			ob_start();
-				call_user_func(array($this, strtolower($this->view_to_load)));
+				if (call_user_func(array($this, $this->view_to_load)) === false) {
+					Error::trigger("VIEW_NOT_FOUND");
+				}
 				if (!$this->view_overridden) $this->getView($this->view_to_load);
 			$this->content_for_layout = ob_get_clean();
 			

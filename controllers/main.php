@@ -38,6 +38,10 @@ class Main_Controller extends ApplicationController {
 		// 		var_dump(Factory::get_config()->get_working_uri());
 	}
 	
+	public function mypage($post) {
+		echo "string";
+	}
+	
 	public function another_default() {
 		echo "this is another default";
 	}
