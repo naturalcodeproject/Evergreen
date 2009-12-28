@@ -104,7 +104,7 @@ final class Config {
 		if (count($url_vals) > 0 && empty($url_vals[count($url_vals)-1])) {
 			unset($url_vals[count($url_vals)-1]);
 			
-			if (!is_array(self::read("Routes.current"))) {
+			if (!is_array(self::read("Route.current"))) {
 				header("HTTP/1.1 301 Moved Permanently");
 				header("Location: ".self::read("URI.base")."/".implode("/", $url_vals));
 				header("Connection: close");
@@ -122,16 +122,24 @@ final class Config {
 		}
 		
 		$count = 0;
+		$isDefaultController = false;
 		
 		foreach(self::read("URI.map") as $key => $item) {
-			if ($count == 0 && self::read("Routes.current") == null && !empty($url_vals) && $url_vals[0] == reset(self::read('URI.map')) && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[1].".php") &&  !is_dir(self::read("Path.physical")."/branches/".$url_vals[$count])) {				
-				header("Location: ".self::read("URI.base")."/".implode("/", array_slice($url_vals, 1)));
+			if ($count == 0 && self::read("Route.current") == null && !empty($url_vals) && $url_vals[0] == reset(self::read('URI.map')) && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[1].".php") &&  !is_dir(self::read("Path.physical")."/branches/".$url_vals[$count])) {
+				header("HTTP/1.1 301 Moved Permanently");
+				header("Location: ".self::read("URI.base") . ((self::read("Branch.name")) ? "/" . self::read("Branch.name") : "") ."/".implode("/", array_slice($url_vals, 1)));
+				header("Connection: close");
 				exit;
 			}
+			
 			if ($count == 0 && !empty($url_vals[$count]) && !file_exists(self::read("Path.physical")."/branches/".$branch_name."/controllers/".$url_vals[$count].".php") && !empty($branch_name)) {
 				$url_vals = array_merge(array($item), $url_vals);
 			} elseif ($count == 0 && !empty($url_vals[$count]) && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[$count].".php") && empty($branch_name)) {
 				$url_vals = array_merge(array($item), $url_vals);
+			}
+			
+			if ($count == 0 && !empty($url_vals) && $url_vals[0] == reset(self::read('URI.map'))) {
+				$isDefaultController = true;
 			}
 			
 			$uri_params[$key] = ((!empty($item) && empty($url_vals[$count])) ? $item : ((!empty($url_vals[$count])) ? $url_vals[$count] : null));
@@ -148,7 +156,6 @@ final class Config {
 			$uri_params[reset(array_slice(array_keys($uri_params), 1, 1))] = str_replace("-", "_", $uri_params[reset(array_slice(array_keys($uri_params), 1, 1))]);
 		}
 		
-		
 		self::register("URI.working", $uri_params);
 		
 		// Setup the Param configuration setting
@@ -156,6 +163,12 @@ final class Config {
 			self::register("Param.".$param, $value);
 		}
 		
+		
+		if (self::read("URI.useModRewrite")) {
+			$uri_paths = explode("/", $_SERVER['REQUEST_URI']);
+		} else {
+			$uri_paths = explode("/", $_GET['url']);
+		}
 		// Setup the additional Path configuration settings based off the URI.map, the Skin, and the Branch
 		self::register("Path.site", self::read("URI.base").self::read("URI.prepend"));
 		if (self::read("Branch.name") != "") {
@@ -164,18 +177,24 @@ final class Config {
 		self::register("Path.skin", str_replace("//", "/", implode("/", array_merge(explode("/", self::read("URI.base")), array("public")))));
 		self::register("Path.root", str_replace("//", "/", self::read("URI.base")));
 		
+		$count = 0;
 		foreach(self::read("URI.working") as $key => $value) {
 			if (empty($value)) {
 				continue;
 			}
-			
+			if ($count == 0 && $isDefaultController) {
+				$uri_paths_by_map = array_merge(array(), $uri_paths);
+			} else {
+				$uri_paths_by_map = $uri_paths;
+			}
 			$position = array_search($key, array_keys(self::read("URI.working")));
-			self::register("Path.".$key, str_replace("//", "/", implode("/", array_merge(explode("/", self::read("Path.site")), array_slice(self::read("URI.working"), 0, ($position+1))))));
+			self::register("Path.".$key, str_replace("//", "/", implode("/", array_merge(explode("/", self::read("Path.site")), array_slice($uri_paths_by_map, 0, ($position+1))))));
+			$count++;
 		}
 		
 		$current_uri_map = array();
 		
-		foreach(self::read("URI.working") as $key => $item) {
+		foreach($uri_paths as $item) {
 			if (!empty($item)) $current_uri_map[] = $item;
 		}
 		
@@ -233,14 +252,14 @@ final class Config {
 		foreach(self::$routes as $regex=>$destination) {
 			$regex_branch = '';
 			$regex_fixed = str_replace("/", "\/", $regex);
-			if (preg_match("/^{$regex_fixed}/i", $request_uri) && !(self::read("Routes.current") !== null && array_key_exists($regex, self::read("Routes.current")))) {
+			if (preg_match("/^{$regex_fixed}/i", $request_uri) && !(self::read("Route.current") !== null && array_key_exists($regex, self::read("Route.current")))) {
 				if (self::read("Branch.name")) {
 					$regex_branch = "\/".self::read("Branch.name");
 				}
 				$new_uri = preg_replace("/^{$regex_branch}{$regex_fixed}/i", "{$destination}", self::read("URI.working"));
 				
 				$_SERVER['REQUEST_URI'] = $new_uri;
-				self::register("Routes.current", array($regex=>$destination));
+				self::register("Route.current", array($regex=>$destination));
 				self::register("URI.working", $new_uri);
 				self::processURI();
 				return true;
