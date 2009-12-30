@@ -23,6 +23,13 @@ final class Config {
 			// Setup the System.defaultError's configuration setting
 			self::$config['System']['defaultError404'] = self::$config['Path']['physical']."/public/errors/404.php";
 			self::$config['System']['defaultErrorGEN'] = self::$config['Path']['physical']."/public/errors/general.php";
+			
+			// Setup Configuration defaults
+			self::$config['URI']['useModRewrite'] = true;
+			self::$config['URI']['useDashes'] = true;
+			self::$config['URI']['forceDashes'] = true;
+			self::$config['Error']['generalErrorMessage'] = "An error occured. Please contact admin@example.com";
+			self::$config['Error']['logDirectory'] = "public/log";
 		}
 		
 		// Indicate that the setup function has been run and doesnt need to be run again
@@ -76,6 +83,11 @@ final class Config {
 	
 	public static function processURI() {
 		self::setup();
+		
+		if (!is_array(self::read("URI.map")) || count(self::read("URI.map")) < 2) {
+			Error::trigger("NO_URI_MAP");
+		}
+		
 		if (!self::read("URI.working")) {
 			if (self::read("URI.useModRewrite")) {
 				if (strpos($_SERVER['REQUEST_URI'], "?")) $_SERVER['REQUEST_URI'] = substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], "?"));

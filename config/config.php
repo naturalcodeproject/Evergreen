@@ -17,9 +17,10 @@
 	)));
 	
 	## Errors Setup ##
-	Config::register("Error.generalErrorMessage", "An error occured. Please contact admin@example.com");
+	//Config::register("Error.generalErrorMessage", "An error occured. Please contact admin@example.com");
 	Config::register("Error.logDirectory", "public/log");
 	Config::register("Error.404", "/error404");
+	//Config::register("Error.404", "https://www.google.com");
 	
 	## Database Setup ##
 	Config::register("Database.host", "localhost");

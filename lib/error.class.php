@@ -74,10 +74,8 @@ final class Error {
 		if (isset(self::$params['code']) && self::$params['code'] == 404) {
 			header("HTTP/1.0 404 Not Found");
 		}
-		/*
-			TODO : Check for an external url
-		*/
-		if (!empty($url)) {
+		
+		if (!empty($url) && !preg_match("/^(http:|https:|ftp:)/im", $url)) {
 			$url = str_replace(Config::read('Path.root'), "", $url);
 			Config::register("URI.working", $url);
 			Config::register("Branch.name", "");
@@ -104,7 +102,7 @@ final class Error {
 					$controller->showView();
 				} catch(Exception $e) {
 					if (Config::read("System.mode") == "development") {
-						include(Config::read("System.defaultErrorGeneral"));
+						include(Config::read("System.defaultErrorGEN"));
 					}
 				}
 			}
