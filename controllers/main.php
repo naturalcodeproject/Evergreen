@@ -44,15 +44,6 @@ class Main_Controller extends ApplicationController {
 	
 	public function another_default() {
 		echo "this is another default<br />";
-		echo "site: " . Config::read("Path.site")."<br />";
-		echo "controller: " . Config::read("Path.controller")."<br />";
-		echo "view: " . Config::read("Path.view")."<br />";
-		echo "action: " . Config::read("Path.action")."<br />";
-		echo "id: " . Config::read("Path.id")."<br />";
-		echo "current: " . Config::read("Path.current")."<br />";
-		echo "physical: " . Config::read("Path.physical")."<br />";
-		echo "skin: " . Config::read("Path.skin")."<br />";
-		echo "root: " . Config::read("Path.root")."<br />";
 	}
 	
 	public function custom_error()

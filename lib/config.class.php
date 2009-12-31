@@ -25,6 +25,7 @@ final class Config {
 			self::$config['System']['defaultErrorGEN'] = self::$config['Path']['physical']."/public/errors/general.php";
 			
 			// Setup Configuration defaults
+			self::$config['URI']['prependIdentifier'] = "url";
 			self::$config['URI']['useModRewrite'] = true;
 			self::$config['URI']['useDashes'] = true;
 			self::$config['URI']['forceDashes'] = true;
@@ -96,8 +97,23 @@ final class Config {
 				self::register("URI.prepend", "");
 				self::register("URI.working", $_SERVER['REQUEST_URI']);
 			} else {
-				self::register("URI.prepend", "/index.php?url=");
-				self::register("URI.working", $_GET['url']);
+				if (!is_string(self::read("URI.prependIdentifier")) || !strlen(self::read("URI.prependIdentifier"))) {
+					Error::trigger("NO_PREPEND_IDENTIFIER");
+				}
+				
+				$queryParts = explode("&", $_SERVER['QUERY_STRING']);
+				
+				foreach($queryParts as $key => $value) {
+					if (preg_match("/" . self::read("URI.prependIdentifier") . "=(.*)/i", $value)) {
+						unset($queryParts[$key]);
+						break;
+					}
+				}
+				
+				$_SERVER['QUERY_STRING'] = implode("&", $queryParts);
+				
+				self::register("URI.prepend", "/index.php?" . self::read("URI.prependIdentifier") . "=");
+				self::register("URI.working", $_GET[self::read("URI.prependIdentifier")]);
 			}
 		}
 		
@@ -115,12 +131,13 @@ final class Config {
 		
 		if (count($url_vals) > 0 && empty($url_vals[count($url_vals)-1])) {
 			unset($url_vals[count($url_vals)-1]);
-			
 			if (!is_array(self::read("Route.current"))) {
-				header("HTTP/1.1 301 Moved Permanently");
-				header("Location: ".self::read("URI.base")."/".implode("/", $url_vals));
-				header("Connection: close");
-				exit;
+				if (empty($_POST)) {
+					header("HTTP/1.1 301 Moved Permanently");
+					header("Location: ".self::read("URI.base").self::read("URI.prepend")."/".implode("/", $url_vals) . ((!empty($_SERVER['QUERY_STRING'])) ? ((!self::read("URI.useModRewrite")) ? "&" . $_SERVER['QUERY_STRING'] : "?" . $_SERVER['QUERY_STRING']) : ""));
+					header("Connection: close");
+					exit;
+				}
 			}
 		}
 		
@@ -138,10 +155,12 @@ final class Config {
 		
 		foreach(self::read("URI.map") as $key => $item) {
 			if ($count == 0 && self::read("Route.current") == null && !empty($url_vals) && $url_vals[0] == reset(self::read('URI.map')) && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[1].".php") &&  !is_dir(self::read("Path.physical")."/branches/".$url_vals[$count])) {
-				header("HTTP/1.1 301 Moved Permanently");
-				header("Location: ".self::read("URI.base") . ((self::read("Branch.name")) ? "/" . self::read("Branch.name") : "") ."/".implode("/", array_slice($url_vals, 1)));
-				header("Connection: close");
-				exit;
+				if (empty($_POST)) {
+					header("HTTP/1.1 301 Moved Permanently");
+					header("Location: ".self::read("URI.base") . self::read("URI.prepend") . ((self::read("Branch.name")) ? "/" . self::read("Branch.name") : "") ."/".implode("/", array_slice($url_vals, 1)) . ((!empty($_SERVER['QUERY_STRING'])) ? ((!self::read("URI.useModRewrite")) ? "&" . $_SERVER['QUERY_STRING'] : "?" . $_SERVER['QUERY_STRING']) : ""));
+					header("Connection: close");
+					exit;
+				}
 			}
 			
 			if ($count == 0 && !empty($url_vals[$count]) && !file_exists(self::read("Path.physical")."/branches/".$branch_name."/controllers/".$url_vals[$count].".php") && !empty($branch_name)) {
@@ -169,7 +188,8 @@ final class Config {
 		}
 		
 		self::register("URI.working", $uri_params);
-		
+		var_dump(self::read("URI.working"));
+		var_dump(self::read("Route.current"));
 		// Setup the Param configuration setting
 		foreach(self::read("URI.working") as $param => $value) {
 			self::register("Param.".$param, $value);
@@ -179,7 +199,7 @@ final class Config {
 		if (self::read("URI.useModRewrite")) {
 			$uri_paths = explode("/", $_SERVER['REQUEST_URI']);
 		} else {
-			$uri_paths = explode("/", $_GET['url']);
+			$uri_paths = explode("/", $_GET[self::read("URI.prependIdentifier")]);
 		}
 		// Setup the additional Path configuration settings based off the URI.map, the Skin, and the Branch
 		self::register("Path.site", self::read("URI.base").self::read("URI.prepend"));
@@ -200,6 +220,9 @@ final class Config {
 				$uri_paths_by_map = $uri_paths;
 			}
 			$position = array_search($key, array_keys(self::read("URI.working")));
+			if (self::read("Branch.name") != "") {
+				$position++;
+			}
 			self::register("Path.".$key, str_replace("//", "/", implode("/", array_merge(explode("/", self::read("Path.site")), array_slice($uri_paths_by_map, 0, ($position+1))))));
 			$count++;
 		}
@@ -210,7 +233,7 @@ final class Config {
 			if (!empty($item)) $current_uri_map[] = $item;
 		}
 		
-		self::register("Path.current", str_replace("//", "/", implode("/", array_merge(explode("/", ((self::read("Branch.name") != "") ? self::read("Path.branch") : self::read("Path.site"))), $current_uri_map))));
+		self::register("Path.current", str_replace("//", "/", implode("/", array_merge(array(self::read("Path.site")), $current_uri_map))));
 		
 		return true;
 	}
@@ -268,10 +291,14 @@ final class Config {
 				if (self::read("Branch.name")) {
 					$regex_branch = "\/".self::read("Branch.name");
 				}
-				$new_uri = preg_replace("/^{$regex_branch}{$regex_fixed}/i", "{$destination}", self::read("URI.working"));
+				$new_uri = str_replace("//", "/", preg_replace("/^{$regex_branch}{$regex_fixed}/i", "{$destination}", self::read("URI.working")));
 				
-				$_SERVER['REQUEST_URI'] = $new_uri;
-				self::register("Route.current", array($regex=>$destination));
+				if (self::read("URI.useModRewrite")) {
+					$_SERVER['REQUEST_URI'] = $new_uri;
+				} else {
+					$_GET[self::read("URI.prependIdentifier")] = $new_uri;
+				}
+				self::register("Route.current", array( $regex => $destination, "newWorkingURI" => $new_uri ));
 				self::register("URI.working", $new_uri);
 				self::processURI();
 				return true;

@@ -40,7 +40,20 @@
 		URI_VIEW=<?php //echo URI_VIEW;?><br>
 		URI_CONTROLLER=<?php //echo URI_CONTROLLER;?><br>
 	-->
-	
+	<div style="text-align: left; background-color: #eeeeee; padding: 10px;">
+	<?php
+		echo "site: " . Config::read("Path.site")."<br />";
+		echo "branch: " . Config::read("Path.branch")."<br />";
+		echo "controller: " . Config::read("Path.controller")."<br />";
+		echo "view: " . Config::read("Path.view")."<br />";
+		echo "action: " . Config::read("Path.action")."<br />";
+		echo "id: " . Config::read("Path.id")."<br />";
+		echo "current: " . Config::read("Path.current")."<br />";
+		echo "physical: " . Config::read("Path.physical")."<br />";
+		echo "skin: " . Config::read("Path.skin")."<br />";
+		echo "root: " . Config::read("Path.root")."<br />";
+	?>
+	</div>
 </body>
 </html>
 

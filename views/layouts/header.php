@@ -25,6 +25,7 @@
 	<!-- <li><a href="[site]/test" class="<?php echo isset($this->link3_selected) ? $this->link3_selected : '';?>">Evergreen Route</a></li> -->
 	<li><a href="[site]/developer/formtest" class="<?php echo isset($this->link3_selected) ? $this->link3_selected : '';?>">Form Test</a></li>
 	<li><a href="[site]/thisdoesntexist" class="<?php echo isset($this->link3_selected) ? $this->link3_selected : '';?>">Error 404</a></li>
+	<li><a href="[site]/another-default" class="<?php echo isset($this->link3_selected) ? $this->link3_selected : '';?>">Another Default</a></li>
   </ul>
 </div>
 	

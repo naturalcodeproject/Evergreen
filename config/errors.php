@@ -1,6 +1,7 @@
 <?php
 	## General Errors ##
 	Error::register('NO_URI_MAP', array("message"=>"The framework could not run because there is either no URI.map variable defined or the one defined isn't sufficient.", "code"=>"GEN"));
+	Error::register('NO_PREPEND_IDENTIFIER', array("message"=>"The framework could not run because the option 'URI.useModRewrite' has been set to false and the option 'URI.prependIdentifier' has been overridden with an invalid or null value.", "code"=>"GEN"));
 	Error::register('CONTROLLER_NOT_FOUND', array("message"=>"The controller that you were looking for was not found.", "code"=>404));
 	Error::register('VIEW_NOT_FOUND', array("message"=>"The view you were looking for was not found.", "code"=>404));
 	

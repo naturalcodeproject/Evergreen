@@ -57,6 +57,13 @@ class Designer {
 		
 		$return = str_replace("//", "/", $return);
 		
+		if (!Config::read("URI.useModRewrite") && !empty($return)) {
+			if (substr_count($return, "?", 0) > 1) {
+				$return = strrev(preg_replace("/\?/i", "&", strrev($return), (substr_count($return, "?", 0) - 1)));
+			}
+
+		}
+		
 		return $link[1].((!empty($return)) ? $return : $link[2]);
 	}
 	

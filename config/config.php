@@ -16,6 +16,8 @@
 		"id"=>""
 	)));
 	
+	//Config::register("URI.prependIdentifier", "another");
+	
 	## Errors Setup ##
 	//Config::register("Error.generalErrorMessage", "An error occured. Please contact admin@example.com");
 	Config::register("Error.logDirectory", "public/log");
