@@ -165,8 +165,13 @@ class Formhandler {
 			} elseif ($type == "textarea") {
 				if (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['update']) && is_array($this->forms_arr[$this->current_form]['update'])) {
 					$insides = $this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name);
-				} elseif (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['default']) && is_array($this->forms_arr[$this->current_form]['default']) && isset($this->forms_arr[$this->current_form]['default'][$properties['name']])) {
-					$insides = $this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name);
+				} elseif (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['default']) && is_array($this->forms_arr[$this->current_form]['default'])) {
+					$value = $this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name);
+					
+					// check to see if the above method found a value before we set it in the form
+					if ($value != null) {
+						$insides = $value;
+					}
 				}
 			}
 			return "<{$type} ".$this->propertiesString($properties).">{$insides}</{$type}>";
