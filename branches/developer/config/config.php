@@ -7,6 +7,15 @@
 	Config::register("Branch.minimumSystemVersion", "1.0.0b");
 	//Config::register("Branch.maximumSystemVersion", "1.0.0");
 	
+	/*
+Config::register("URI.map", array(
+		"controller"=>"tester",
+		"view"=>"index",
+		"action"=>"",
+		"id"=>""
+	));
+*/
+	
 	Config::register("Errors.404", "/anothererror");
 	
 	## Database Setup ##
