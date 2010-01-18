@@ -32,6 +32,11 @@
 	Config::register("Database.driver", "MySQL");
 	
 	## Routes ##
+	Config::registerRoute("/pickles/*", array(
+		"branch" => "developer",
+		"view" => "pickles"
+	));
+	
 	Config::registerRoute("/oranges/*", array(
 		"branch" => "developer",
 		"view" => "oranges"

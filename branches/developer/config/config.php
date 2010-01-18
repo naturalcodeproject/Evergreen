@@ -26,5 +26,8 @@ Config::register("URI.map", array(
 	Config::register("Database.driver", "MySQL");
 	
 	## Routes ##
-	Config::registerRoute("/apples(.*)", "/main/foobar/$1");
+	Config::registerRoute("/apples/*", array(
+		"controller" => "main",
+		"view" => "foobar"
+	));
 ?>

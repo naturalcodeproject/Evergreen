@@ -324,6 +324,16 @@ final class Config {
 					}
 				}
 				
+				// Check if in a branch already
+				if (!isset($destination['branch']) && self::read("Branch.name")) {
+					$destination['branch'] = self::read("Branch.name");
+				}
+				
+				// Check if the route is trying to load from main
+				if (isset($destination['branch']) && $destination['branch'] == "MAIN") {
+					unset($destination['branch']);
+				}
+				
 				// Check if routing to a branch, unset it from the destination, and load in the branch config
 				if (!empty($destination['branch'])) {
 					$branch = $destination['branch'];
