@@ -4,7 +4,7 @@
 	
 	## URI Setup ##
 	Config::register(array(
-		"URI.useModRewrite" => false,
+		"URI.useModRewrite" => true,
 		"URI.useDashes" => true,
 		"URI.forceDashes" => true
 	));
@@ -45,8 +45,9 @@
 	Config::registerRoute("/oranges2/:action/*", array(
 		"branch" => "developer",
 		"view" => "oranges",
+		"action" => "list",
 		"id" => "hello"
 	), array(
-		//"action" => "(.+)"
+		"action" => "(edit|delete|create)"
 	));
 ?>

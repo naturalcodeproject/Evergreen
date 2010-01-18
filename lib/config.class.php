@@ -84,6 +84,12 @@ final class Config {
 	
 	public static function registerRoute($definition, $action, $validation=array()) {
 		self::setup();
+		
+		// Check if in a branch and make it so the route loads up data for the branch by default
+		if (!isset($action['branch']) && self::read("Branch.name")) {
+			$action = array_merge(array('branch' => self::read("Branch.name")), $action);
+		}
+		
 		self::$routes[hash("sha256", $definition)] = array(
 			"definition" => $definition,
 			"destination" => $action,
@@ -318,15 +324,14 @@ final class Config {
 				if (!empty($route['validation'])) {
 					foreach($route['validation'] as $name => $regex) {
 						//$regex = preg_quote($regex, '/');
+						if ($combinedMatches[$name] == NULL && isset($destination[$name])) {
+							continue;
+						}
+						
 						if (array_key_exists($name, $combinedMatches) && !preg_match('/^'.$regex.'$/i', $combinedMatches[$name])) {
 							return false;
 						}
 					}
-				}
-				
-				// Check if in a branch already
-				if (!isset($destination['branch']) && self::read("Branch.name")) {
-					$destination['branch'] = self::read("Branch.name");
 				}
 				
 				// Check if the route is trying to load from main
@@ -348,6 +353,13 @@ final class Config {
 				if (!empty($combinedMatches['wildcard'])) {
 					$wildcard_matches = explode("/", $combinedMatches['wildcard']);
 					unset($combinedMatches['wildcard']);
+				}
+				
+				// Clean up Null's from matches so that defaults aren't overridden
+				foreach($combinedMatches as $key => $value) {
+					if ($value == NULL) {
+						unset($combinedMatches[$key]);
+					}
 				}
 				
 				// Build the new URI array that has been defined by the route
@@ -396,7 +408,7 @@ final class Config {
 				$parsed[] = '(?:/([^\/]*))?';
 				$positions[] = $namedMatches[1];
 			} else {
-				$parsed[] = '(?:/('.$element.'))';
+				$parsed[] = '(?:/('.preg_quote($element, '/').'))';
 				$positions[] = $element;
 			}
 		}
