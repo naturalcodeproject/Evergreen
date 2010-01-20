@@ -25,6 +25,7 @@ final class Config {
 			self::$config['System']['defaultErrorGEN'] = self::$config['Path']['physical']."/public/errors/general.php";
 			
 			// Setup Configuration defaults
+			self::$config['System']['mode'] = "development";
 			self::$config['URI']['prependIdentifier'] = "url";
 			self::$config['URI']['useModRewrite'] = true;
 			self::$config['URI']['useDashes'] = true;
