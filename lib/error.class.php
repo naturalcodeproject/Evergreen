@@ -95,7 +95,7 @@ final class Error {
 				spl_autoload_register(array('AutoLoaders', 'main'));
 			}
 			
-			if (($controller = System::load(array("name"=>reset(Config::read("URI.working")), "type"=>"controller", "branch"=>Config::read("Branch.name")))) === false) {
+			if (($controller = System::load(array("name"=>reset(Config::loadableURI(Config::read("URI.working"))), "type"=>"controller", "branch"=>Config::read("Branch.name")))) === false) {
 				include(Config::read("System.defaultError404"));
 			} else {
 				try {

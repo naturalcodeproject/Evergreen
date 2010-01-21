@@ -55,7 +55,7 @@ final class Evergreen {
 			}
 			
 			## Load in the requested controller ##
-			if (($controller = System::load(array("name"=>reset(Config::read("URI.working")), "type"=>"controller", "branch"=>Config::read("Branch.name")))) === false) {
+			if (($controller = System::load(array("name"=>reset(Config::loadableURI(Config::read("URI.working"))), "type"=>"controller", "branch"=>Config::read("Branch.name")))) === false) {
 				// The controller wasn't found so trigger an error
 				Error::trigger("CONTROLLER_NOT_FOUND");
 				exit;
