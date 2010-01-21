@@ -11,14 +11,14 @@
 
 abstract class Controller {
 	protected $view_to_load;
-	protected $params;
 	protected $formhandler;
 	protected $designer;
+	private $params;
 	private $view_overridden = false;
 	
 	final function __construct () {
 		## Construct Code ##
-		$this->params = Config::read("URI.working");
+		$this->params = Config::loadableURI(Config::read("URI.working"));
 		if (!strlen(reset(array_slice($this->params, 1, 1)))) {
 			$this->params[reset(array_slice(array_keys($this->params), 1, 1))] = reset(array_slice(Config::read("URI.map"), 1, 1));
 		}
@@ -72,15 +72,20 @@ abstract class Controller {
 			}
 			
 			if (isset($this->bounceback) && !$this->viewExists($this->view_to_load)) {
-				$view = $this->view_to_load;
-				$values = array_values($this->params);
-				$this->params = array_combine(array_keys($this->params), array_slice(array_merge(array($values[0]), array($this->bounceback['bounce']),array_slice($values, 1)), 0, count(array_keys($this->params))));
+				$values = array_values(Config::read('URI.working'));
+				$this->params = array_combine(array_keys(Config::read('URI.working')), array_slice(array_merge(array($values[0]), array($this->bounceback['bounce']),array_slice($values, 1)), 0, count(array_keys(Config::read('URI.working')))));
+				Config::register('Param', $this->params);
+				$this->params = Config::loadableURI($this->params);
+				$this->view_to_load = $this->params[reset(array_slice(array_keys($this->params), 1, 1))];
 				
-				if (!call_user_func(array($this, $this->bounceback['check']))) {
-					if (!$this->viewExists($view)) {
-						$error = true;
-						Error::trigger("VIEW_NOT_FOUND");
-					}
+				if (!$this->viewExists($this->view_to_load)) {
+					$error = true;
+					Error::trigger("VIEW_NOT_FOUND");
+				}
+				
+				if (call_user_func(array($this, $this->bounceback['check'])) === false) {
+					$error = true;
+					Error::trigger("VIEW_NOT_FOUND");
 				}
 			}
 			

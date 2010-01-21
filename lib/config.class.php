@@ -193,22 +193,10 @@ final class Config {
 			$count++;
 		}
 		
-		if(self::read("URI.useDashes") || self::read("URI.forceDashes")) {
-			if (self::read("URI.forceDashes")) {
-				$uri_params[reset(array_slice(array_keys($uri_params), 0, 1))] = str_replace("_", "", $uri_params[reset(array_slice(array_keys($uri_params), 0, 1))]);
-				$uri_params[reset(array_slice(array_keys($uri_params), 1, 1))] = str_replace("_", "", $uri_params[reset(array_slice(array_keys($uri_params), 1, 1))]);
-			}
-			
-			$uri_params[reset(array_slice(array_keys($uri_params), 0, 1))] = str_replace("-", "_", $uri_params[reset(array_slice(array_keys($uri_params), 0, 1))]);
-			$uri_params[reset(array_slice(array_keys($uri_params), 1, 1))] = str_replace("-", "_", $uri_params[reset(array_slice(array_keys($uri_params), 1, 1))]);
-		}
-		
 		self::register("URI.working", $uri_params);
 		
 		// Setup the Param configuration setting
-		foreach(self::read("URI.working") as $param => $value) {
-			self::register("Param.".$param, $value);
-		}
+		self::register("Param", $uri_params);
 		
 		
 		if (self::read("URI.useModRewrite")) {
@@ -252,6 +240,20 @@ final class Config {
 		self::register("Path.current", str_replace("//", "/", implode("/", array_merge(array(self::read("Path.site")), $current_uri_map))));
 		
 		return true;
+	}
+	
+	public static function loadableURI($uri_params) {
+		if(self::read("URI.useDashes") || self::read("URI.forceDashes")) {
+			if (self::read("URI.forceDashes")) {
+				$uri_params[reset(array_slice(array_keys($uri_params), 0, 1))] = str_replace("_", "", $uri_params[reset(array_slice(array_keys($uri_params), 0, 1))]);
+				$uri_params[reset(array_slice(array_keys($uri_params), 1, 1))] = str_replace("_", "", $uri_params[reset(array_slice(array_keys($uri_params), 1, 1))]);
+			}
+
+			$uri_params[reset(array_slice(array_keys($uri_params), 0, 1))] = str_replace("-", "_", $uri_params[reset(array_slice(array_keys($uri_params), 0, 1))]);
+			$uri_params[reset(array_slice(array_keys($uri_params), 1, 1))] = str_replace("-", "_", $uri_params[reset(array_slice(array_keys($uri_params), 1, 1))]);
+		}
+
+		return $uri_params;
 	}
 	
 	public static function isBranch($branch_name) {
