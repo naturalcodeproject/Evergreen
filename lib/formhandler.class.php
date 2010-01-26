@@ -154,6 +154,8 @@ class Formhandler {
 							$properties['value'] = $value;
 						}
 					}
+					
+					$properties['value'] = stripslashes(htmlspecialchars($properties['value']));
 				break;
 			}
 			return "<{$type} ".$this->propertiesString($properties).">";
@@ -173,7 +175,10 @@ class Formhandler {
 						$insides = $value;
 					}
 				}
+				
+				$insides = stripslashes(htmlspecialchars($insides));
 			}
+			
 			return "<{$type} ".$this->propertiesString($properties).">{$insides}</{$type}>";
 		}
 	}
