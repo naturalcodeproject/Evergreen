@@ -44,7 +44,7 @@ class Designer {
 					
 					if ($link_arr[0] == $tmp_key) {
 						$position = array_search($key, array_keys($working_uri));
-						$new_base = explode("/", Config::read("Path.site"));
+						$new_base = explode("/", Config::read("Path."+$key));
 						
 						$new_url = array_merge( array_merge($new_base, array_slice($working_uri, 0, ($position+1))), array_pad(array_slice($link_arr, $up_link_count+1), -(count(array_slice($link_arr, $up_link_count+1))), "") );
 						

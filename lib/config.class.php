@@ -208,7 +208,7 @@ final class Config {
 		// Setup the additional Path configuration settings based off the URI.map, the Skin, and the Branch
 		self::register("Path.site", self::read("URI.base").self::read("URI.prepend"));
 		if (self::read("Branch.name") != "") {
-			self::register("Path.branch", str_replace("//", "/", self::read("Path.site")."/".self::read("Branch.name")));
+			self::register("Path.branch", str_replace("//", "/", self::read("Path.site")."/branches/".self::read("Branch.name")));
 		}
 		self::register("Path.skin", str_replace("//", "/", implode("/", array_merge(explode("/", self::read("URI.base")), array("public")))));
 		self::register("Path.root", str_replace("//", "/", self::read("URI.base")));
