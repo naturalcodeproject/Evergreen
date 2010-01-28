@@ -28,7 +28,17 @@ class Designer {
 			break;
 			
 			case "[root]":
-				$new_base = explode("/", dirname(Config::read("Path.skin")));
+				$new_base = explode("/", Config::read("Path.root"));
+				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
+			break;
+			
+			case "[branch.skin]":
+				$new_base = explode("/", Config::read("Path.branchSkin"));
+				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
+			break;
+			
+			case "[branch.root]":
+				$new_base = explode("/", Config::read("Path.branchRoot"));
 				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
 			break;
 			
@@ -44,7 +54,7 @@ class Designer {
 					
 					if ($link_arr[0] == $tmp_key) {
 						$position = array_search($key, array_keys($working_uri));
-						$new_base = explode("/", Config::read("Path."+$key));
+						$new_base = explode("/", Config::read("Path.root"));
 						
 						$new_url = array_merge( array_merge($new_base, array_slice($working_uri, 0, ($position+1))), array_pad(array_slice($link_arr, $up_link_count+1), -(count(array_slice($link_arr, $up_link_count+1))), "") );
 						

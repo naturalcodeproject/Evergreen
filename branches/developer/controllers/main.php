@@ -30,6 +30,8 @@ class Main_DeveloperController extends BranchController
 		echo "View ='[view]' - <a href='[view]'>Test</a><br/>";
 		echo "Controller ='[controller]' - <a href='[controller]'>Test</a><br/>";
 		echo "Branch ='[branch]' - <a href='[branch]'>Test</a><br/>";
+		echo "Branch Skin ='[branch.skin]' - <a href='[branch]'>Test</a><br/>";
+		echo "Branch Root ='[branch.root]' - <a href='[branch]'>Test</a><br/>";
 		
 		echo "<br /><br />";
 		var_dump(Config::read("URI.working"));

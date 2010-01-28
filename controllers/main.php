@@ -2,6 +2,7 @@
 
 class Main_Controller extends ApplicationController {
 	var $layout = "index";
+	//public $not_a_view = array('mypage');
 	//var $bounce = array("bounce"=>"loud", "check"=>"soft");
 	//var $filter = "";
 	//var $filter_only = array("", array("wibble"));
@@ -38,7 +39,7 @@ class Main_Controller extends ApplicationController {
 		// 		var_dump(Factory::get_config()->get_working_uri());
 	}
 	
-	public function mypage($post) {
+	public function _mypage($post) {
 		echo "string";
 	}
 	

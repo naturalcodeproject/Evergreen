@@ -10,11 +10,14 @@
 */
 
 abstract class Controller {
-	protected $view_to_load;
-	protected $formhandler;
-	protected $designer;
+	private $view_to_load;
+	private $formhandler;
+	private $designer;
 	private $params;
 	private $view_overridden = false;
+	
+	protected $bounceback = array();
+	protected $not_a_view = array();
 	
 	final function __construct () {
 		## Construct Code ##
@@ -129,7 +132,7 @@ abstract class Controller {
 	final protected function viewExists ($name, $controller="") {
 		if (empty($controller)) $controller = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
 		
-		if (method_exists($this, $name)) {
+		if (!preg_match('/^_(.*)$/i', $name) && $this->bounceback['check'] != $name && !in_array($name, $this->not_a_view) && method_exists($this, $name)) {
 			return true;
 		} else {
 			return false;
