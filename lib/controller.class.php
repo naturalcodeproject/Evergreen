@@ -53,7 +53,7 @@ abstract class Controller {
 		ob_start();
 		$error = false;
 		
-		if ($this->viewExists($this->view_to_load) || (!$this->viewExists($this->view_to_load) && isset($this->bounceback) && method_exists($this, $this->bounceback['check']) && method_exists($this, $this->bounceback['bounce']))) {
+		if ((is_callable(array($this, $this->view_to_load)) && $this->viewExists($this->view_to_load)) || (!$this->viewExists($this->view_to_load) && isset($this->bounceback) && method_exists($this, $this->bounceback['check']) && method_exists($this, $this->bounceback['bounce']))) {
 			if (isset($this->filter) || isset($this->filter_only) || isset($this->filter_except)) {
 				if (isset($this->filter)) {
 					if (!empty($this->filter) && !is_array($this->filter)) {
@@ -86,14 +86,14 @@ abstract class Controller {
 					Error::trigger("VIEW_NOT_FOUND");
 				}
 				
-				if (call_user_func(array($this, $this->bounceback['check'])) === false) {
+				if (is_callable(array($this, $this->bounceback['check'])) && call_user_func(array($this, $this->bounceback['check'])) === false) {
 					$error = true;
 					Error::trigger("VIEW_NOT_FOUND");
 				}
 			}
 			
 			ob_start();
-				if (call_user_func(array($this, $this->view_to_load)) === false) {
+				if (is_callable(array($this, $this->view_to_load)) && call_user_func(array($this, $this->view_to_load)) === false) {
 					Error::trigger("VIEW_NOT_FOUND");
 				}
 				if (!$this->view_overridden) $this->getView($this->view_to_load);

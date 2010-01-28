@@ -3,7 +3,7 @@
 class Main_Controller extends ApplicationController {
 	var $layout = "index";
 	//public $not_a_view = array('mypage');
-	//var $bounce = array("bounce"=>"loud", "check"=>"soft");
+	//var $bounceback = array("bounce"=>"loud", "check"=>"soft");
 	//var $filter = "";
 	//var $filter_only = array("", array("wibble"));
 	//var $filter_except = array("", array("wibble"));
@@ -37,18 +37,18 @@ class Main_Controller extends ApplicationController {
 		// 		
 		// 		echo "<br /><br />";
 		// 		var_dump(Factory::get_config()->get_working_uri());
+		echo $this->mypage('Jack Attack');
 	}
 	
-	public function _mypage($post) {
-		echo "string";
+	private function mypage($post) {
+		return $post;
 	}
 	
 	public function another_default() {
 		echo "this is another default<br />";
 	}
 	
-	public function custom_error()
-	{
+	public function custom_error() {
 		echo "custom_error_stuff<br />";
 		//Error::trigger("custom 404 error", array('code'=>404));
 		Error::trigger("custom 404 error page", array('code'=>404, 'url'=>'/anothererror'));
