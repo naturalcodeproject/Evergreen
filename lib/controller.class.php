@@ -17,6 +17,9 @@ abstract class Controller {
 	private $view_overridden = false;
 	
 	protected $bounceback = array();
+	protected $filter = array();
+	protected $filter_except = array();
+	protected $filter_only = array();
 	protected $not_a_view = array();
 	
 	final function __construct () {
@@ -54,7 +57,7 @@ abstract class Controller {
 		$error = false;
 		
 		if ((is_callable(array($this, $this->view_to_load)) && $this->viewExists($this->view_to_load)) || (!$this->viewExists($this->view_to_load) && isset($this->bounceback) && method_exists($this, $this->bounceback['check']) && method_exists($this, $this->bounceback['bounce']))) {
-			if (isset($this->filter) || isset($this->filter_only) || isset($this->filter_except)) {
+			if (!empty($this->filter) || !empty($this->filter_only) || !empty($this->filter_except)) {
 				if (isset($this->filter)) {
 					if (!empty($this->filter) && !is_array($this->filter)) {
 						call_user_func(array($this, $this->filter));
