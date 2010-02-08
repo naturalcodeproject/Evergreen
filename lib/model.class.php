@@ -261,7 +261,7 @@ class Model {
     private function checkRequiredFields() {
         // Check for required fields
         foreach ($this->fields as $field) {
-            if ($field->required && !property_exists($this, $field->name)) {
+            if ($field->required && (!property_exists($this, $field->name) || empty($this->{$field->name}))) {
                 $this->addError($field->name, '', ModelError::TYPE_REQUIRED_FIELD_MISSING);
             }
         }
