@@ -135,7 +135,7 @@ abstract class Controller {
 	final protected function viewExists ($name, $controller="") {
 		if (empty($controller)) $controller = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
 		
-		if (!preg_match('/^_(.*)$/i', $name) && $this->bounceback['check'] != $name && !in_array($name, $this->not_a_view) && method_exists($this, $name)) {
+		if (!preg_match('/^_(.*)$/i', $name) && (!isset($this->bounceback['check']) || $this->bounceback['check'] != $name) && !in_array($name, $this->not_a_view) && method_exists($this, $name)) {
 			return true;
 		} else {
 			return false;

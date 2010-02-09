@@ -314,84 +314,87 @@ final class Config {
 	*/
 	private static function checkRoutes($request_uri) {
 		self::setup();
-		foreach(self::$routes as $route) {
-			$generatedRegex = self::createRouteRegex($route['definition']);
-			$destination = $route['destination'];
-			if (preg_match ($generatedRegex['regex'], $request_uri, $matches)) {
-				array_shift($matches);
-				$combinedMatches = array_combine(array_pad((array)$generatedRegex['definedPositions'], count($matches), 'wildcard'), array_pad((array)$matches, count($generatedRegex['definedPositions']), null));
-				
-				foreach($combinedMatches as $key => $match) {
-					if (in_array($match, $generatedRegex['definedPositions'])) {
-						unset($combinedMatches[$key]);
-					}
-				}
-				
-				// Validate named positions
-				if (!empty($route['validation'])) {
-					foreach($route['validation'] as $name => $regex) {
-						//$regex = preg_quote($regex, '/');
-						if ($combinedMatches[$name] == NULL && isset($destination[$name])) {
-							continue;
-						}
-						
-						if (array_key_exists($name, $combinedMatches) && !preg_match('/^'.$regex.'$/i', $combinedMatches[$name])) {
-							return false;
-						}
-					}
-				}
-				
-				// Check if the route is trying to load from main
-				if (isset($destination['branch']) && $destination['branch'] == "MAIN") {
-					unset($destination['branch']);
-				}
-				
-				// Check if routing to a branch, unset it from the destination, and load in the branch config
-				if (!empty($destination['branch'])) {
-					$branch = $destination['branch'];
-					unset($destination['branch']);
+		
+		if (is_array(self::$routes)) {
+			foreach(self::$routes as $route) {
+				$generatedRegex = self::createRouteRegex($route['definition']);
+				$destination = $route['destination'];
+				if (preg_match ($generatedRegex['regex'], $request_uri, $matches)) {
+					array_shift($matches);
+					$combinedMatches = array_combine(array_pad((array)$generatedRegex['definedPositions'], count($matches), 'wildcard'), array_pad((array)$matches, count($generatedRegex['definedPositions']), null));
 					
-					if (self::isBranch($branch)) {
-						self::loadBranchConfig($branch);
+					foreach($combinedMatches as $key => $match) {
+						if (in_array($match, $generatedRegex['definedPositions'])) {
+							unset($combinedMatches[$key]);
+						}
 					}
-				}
-				
-				// Check if there is a wildcard match in the regex
-				if (!empty($combinedMatches['wildcard'])) {
-					$wildcard_matches = explode("/", $combinedMatches['wildcard']);
-					unset($combinedMatches['wildcard']);
-				}
-				
-				// Clean up Null's from matches so that defaults aren't overridden
-				foreach($combinedMatches as $key => $value) {
-					if ($value == NULL) {
-						unset($combinedMatches[$key]);
+					
+					// Validate named positions
+					if (!empty($route['validation'])) {
+						foreach($route['validation'] as $name => $regex) {
+							//$regex = preg_quote($regex, '/');
+							if ($combinedMatches[$name] == NULL && isset($destination[$name])) {
+								continue;
+							}
+							
+							if (array_key_exists($name, $combinedMatches) && !preg_match('/^'.$regex.'$/i', $combinedMatches[$name])) {
+								return false;
+							}
+						}
 					}
-				}
-				
-				// Build the new URI array that has been defined by the route
-				$newURI = array_merge((array)array('branch' => $branch), (array)self::read("URI.map"), (array)$destination, (array)$combinedMatches);
-				
-				// Loop through the URI and handle empty positions
-				foreach($newURI as $key => $value) {
-					if (empty($value) && count($wildcard_matches)) {
-						$newURI[$key] = array_shift($wildcard_matches);
+					
+					// Check if the route is trying to load from main
+					if (isset($destination['branch']) && $destination['branch'] == "MAIN") {
+						unset($destination['branch']);
 					}
+					
+					// Check if routing to a branch, unset it from the destination, and load in the branch config
+					if (!empty($destination['branch'])) {
+						$branch = $destination['branch'];
+						unset($destination['branch']);
+						
+						if (self::isBranch($branch)) {
+							self::loadBranchConfig($branch);
+						}
+					}
+					
+					// Check if there is a wildcard match in the regex
+					if (!empty($combinedMatches['wildcard'])) {
+						$wildcard_matches = explode("/", $combinedMatches['wildcard']);
+						unset($combinedMatches['wildcard']);
+					}
+					
+					// Clean up Null's from matches so that defaults aren't overridden
+					foreach($combinedMatches as $key => $value) {
+						if ($value == NULL) {
+							unset($combinedMatches[$key]);
+						}
+					}
+					
+					// Build the new URI array that has been defined by the route
+					$newURI = array_merge((array)array('branch' => $branch), (array)self::read("URI.map"), (array)$destination, (array)$combinedMatches);
+					
+					// Loop through the URI and handle empty positions
+					foreach($newURI as $key => $value) {
+						if (empty($value) && count($wildcard_matches)) {
+							$newURI[$key] = array_shift($wildcard_matches);
+						}
+					}
+					
+					// Check if there are remaining wildcard matches that havent filled empty positions and append them to the URI
+					if (isset($wildcard_matches) && count($wildcard_matches)) {
+						$newURI[] = implode("/", $wildcard_matches);
+					}
+					
+					// Build the final URI that will be used
+					$newURI = "/".implode("/", $newURI);
+					
+					// Setup the needed configuration settings and re-process the URI
+					self::register("Route.current", array_merge( $route, array("newWorkingURI" => $newURI) ));
+					self::register("URI.working", $newURI);
+					self::processURI();
+					return true;
 				}
-				
-				// Check if there are remaining wildcard matches that havent filled empty positions and append them to the URI
-				if (isset($wildcard_matches) && count($wildcard_matches)) {
-					$newURI[] = implode("/", $wildcard_matches);
-				}
-				
-				// Build the final URI that will be used
-				$newURI = "/".implode("/", $newURI);
-				
-				// Setup the needed configuration settings and re-process the URI
-				self::register("Route.current", array_merge( $route, array("newWorkingURI" => $newURI) ));
-				self::register("URI.working", $newURI);
-				self::processURI();
-				return true;
 			}
 		}
 		
