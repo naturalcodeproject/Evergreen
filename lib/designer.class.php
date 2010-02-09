@@ -11,6 +11,7 @@ class Designer {
 		$link_arr = explode("/", $link[2]);
 		$up_link_count = count(array_keys(array_slice($link_arr, 1), ".."));
 		
+		$return = '';
 		switch ($link_arr[0]) {
 			case "[current]":
 				$new_base = explode("/", Config::read("Path.current"));
