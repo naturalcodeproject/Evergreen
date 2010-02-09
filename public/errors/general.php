@@ -1,6 +1,6 @@
 <?php
 if (Config::read("System.mode") != "development") {
-	echo Config::read("Errors.generalErrorMessage");
+	echo Config::read("Error.generalErrorMessage");
 	exit;
 }
 

@@ -23,6 +23,7 @@ final class Config {
 			// Setup the System.defaultError's configuration setting
 			self::$config['System']['defaultError404'] = self::$config['Path']['physical']."/public/errors/404.php";
 			self::$config['System']['defaultErrorGEN'] = self::$config['Path']['physical']."/public/errors/general.php";
+            self::$config['System']['defaultErrorDB'] = self::$config['Path']['physical']."/public/errors/db.php";
 			
 			// Setup Configuration defaults
 			self::$config['System']['mode'] = "development";

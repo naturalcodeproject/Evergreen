@@ -18,6 +18,7 @@
 
     ## Model Errors ##
     Error::register('MODEL_NOT_FOUND', array("message"=>"The model you are trying to load was not found.", "code"=>"GEN"));
+    Error::register('MODEL_DB_FAILURE', array("message"=>"Model DB Error", "code"=>"DB"));
     
     ## Helper Errors ##
     Error::register('HELPER_NOT_FOUND', array("message"=>"The helper you are trying to load was not found.", "code"=>"GEN"));

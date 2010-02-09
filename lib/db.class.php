@@ -2,6 +2,7 @@
 
 class DB extends PDO {
     private $curException;
+    private $curErrorCode;
     
     function __construct() {
         parent::__construct('mysql:host='.
@@ -23,12 +24,17 @@ class DB extends PDO {
             return $result;
         } catch (Exception $e) {
             $this->curException = $e;
+            $this->curErrorCode = parent::errorCode();
             return false;
         }
     }
 
     public function getCurException() {
         return $this->curException;
+    }
+    
+    public function getCurErrorCode() {
+        return $this->curErrorCode;
     }
 
     function getElement($statement) {

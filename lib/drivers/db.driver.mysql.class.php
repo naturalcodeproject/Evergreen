@@ -5,6 +5,14 @@ class DB_Driver_MySQL extends DB_Driver {
     public function __construct($table_name, $model_name, $model_properties, $model) {
         parent::__construct($table_name, $model_name, $model_properties, $model);
     }
+    
+    public function is_code_unique_field_error($code) {
+        if ($code == 23000) {
+            return true;
+        }
+        
+        return false;
+    }
 
     public function perform_create() {
         try {
@@ -13,14 +21,14 @@ class DB_Driver_MySQL extends DB_Driver {
                      "(" . $this->get_comma_separated_column_names(false, '', FL_CREATE) . ") " .
                      "VALUES " .
                      "(" . $this->get_comma_separated_question_marks(FL_CREATE) . ")";
-
-        /*echo "<PRE>";
-        echo "CREATE STATEMENT:\n";
-        print_r($statement);
-        echo "\n\nCREATE VALUES:\n";
-        print_r($this->get_column_values(true, FL_CREATE));
-        echo "</PRE>";
-        die();*/
+                     
+            if (Config::read('Database.viewQueries')) {
+                echo "CREATE:<code>";
+                print_r($statement);
+                echo "<br /><br />";
+                print_r($this->get_column_values(true, FL_CREATE));
+                echo "</code>";
+            }
 
             $stmt = $this->db->prepare($statement);
             $stmt->execute($this->get_column_values(true, FL_CREATE));
@@ -45,7 +53,7 @@ class DB_Driver_MySQL extends DB_Driver {
 
             return $return_value;
         } catch (Exception $e) {
-            $this->model->addError(null, $e->getMessage(), ModelError::TYPE_DB_OPERATION_FAILED, $e->getTraceAsString());
+            $this->model->addError(null, $e->getMessage(), ModelError::TYPE_DB_OPERATION_FAILED, $e->getTraceAsString(), $e->getCode());
             return false;
         }
     }
@@ -92,7 +100,9 @@ class DB_Driver_MySQL extends DB_Driver {
             $this->get_select_statement(true, FL_RETRIEVE) . ' ' .
                      "FROM {$this->get_from_statement()} WHERE $where";
 
-            //echo "RETRIEVE STATMENT: </PRE><code>$statement</code><PRE>\n";
+            if (Config::read('Database.viewQueries')) {
+                echo "RETRIEVE: <code>$statement</code>\n";
+            }
 
             $stmt = $this->db->prepare($statement);
             $stmt->execute();
@@ -117,7 +127,7 @@ class DB_Driver_MySQL extends DB_Driver {
 
             return $rowFound;
         } catch (Exception $e) {
-            $this->model->addError(null, $e->getMessage(), ModelError::TYPE_DB_OPERATION_FAILED, $e->getTraceAsString());
+            $this->model->addError(null, $e->getMessage(), ModelError::TYPE_DB_OPERATION_FAILED, $e->getTraceAsString(), $e->getCode());
             return false;
         }
     }
@@ -160,19 +170,20 @@ class DB_Driver_MySQL extends DB_Driver {
             $columnValues = $this->get_column_values(true, FL_UPDATE);
             $primaryKeyValues = $this->get_column_values(true, FL_UPDATE, true);
             $values = array_merge($columnValues, $primaryKeyValues);
-
-            /*echo "<PRE>";
-            echo "UPDATE:\n";
-            print_r($statement);
-            echo "\n";
-            print_r($values);
-            echo "</PRE>";*/
+            
+            if (Config::read('Database.viewQueries')) {
+                echo "UPDATE:<code>";
+                print_r($statement);
+                echo "<br /><br />";
+                print_r($values);
+                echo "</code>";
+            }
 
             $stmt = $this->db->prepare($statement);
             $stmt->execute($values);
             return true;
         } catch (Exception $e) {
-            $this->model->addError(null, $e->getMessage(), ModelError::TYPE_DB_OPERATION_FAILED, $e->getTraceAsString());
+            $this->model->addError(null, $e->getMessage(), ModelError::TYPE_DB_OPERATION_FAILED, $e->getTraceAsString(), $e->getCode());
             return false;
         }
     }
@@ -198,6 +209,12 @@ class DB_Driver_MySQL extends DB_Driver {
             }
 
             $statement .= " LIMIT 1";
+            
+            if (Config::read('Database.viewQueries')) {
+                echo "DELETE:<code>";
+                print_r($statement);
+                echo "</code>";
+            }
 
             $values = array();
             if (is_array($primary_key)) {
@@ -214,7 +231,7 @@ class DB_Driver_MySQL extends DB_Driver {
             $stmt->execute($values);
             return true;
         } catch (Exception $e) {
-            $this->model->addError(null, $e->getMessage(), ModelError::TYPE_DB_OPERATION_FAILED, $e->getTraceAsString());
+            $this->model->addError(null, $e->getMessage(), ModelError::TYPE_DB_OPERATION_FAILED, $e->getTraceAsString(), $e->getCode());
             return false;
         }
     }
@@ -269,8 +286,13 @@ class DB_Driver_MySQL extends DB_Driver {
                 }
             }
 
-            //echo "FIND STATMENT: </PRE><code>$statement</code><PRE>\n";
-            // print_r( $where_vars );
+            if (Config::read('Database.viewQueries')) {
+                echo "FIND:<code>";
+                print_r($statement);
+                echo "<br /><br />";
+                print_r($this->find_where_vars);
+                echo "</code>";
+            }
 
             $stmt = $this->db->prepare($statement);
             $stmt->execute($this->find_where_vars);
@@ -288,7 +310,7 @@ class DB_Driver_MySQL extends DB_Driver {
 
             return $objects;
         } catch (Exception $e) {
-            $this->model->addError(null, $e->getMessage(), ModelError::TYPE_DB_OPERATION_FAILED, $e->getTraceAsString());
+            $this->model->addError(null, $e->getMessage(), ModelError::TYPE_DB_OPERATION_FAILED, $e->getTraceAsString(), $e->getCode());
             return false;
         }
     }

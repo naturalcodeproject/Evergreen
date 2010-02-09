@@ -7,6 +7,10 @@ final class Error {
 	static private $message;
 	static private $params;
 	static private $errorObj;
+    
+    // params passed into trigger function, can be used in addition to
+    // registered error params
+    static private $triggerParams;
 	
 	final public static function register($key, $params) {
 		if (!is_array($params)) {
@@ -17,6 +21,8 @@ final class Error {
 	}
 	
 	final public static function trigger($message, $params = array()) {
+        self::$triggerParams = $params;
+        
 		if (array_key_exists($message, self::$registeredErrors)) {
 			$key = $message;
 			$params = self::$registeredErrors[$message];
@@ -26,6 +32,13 @@ final class Error {
 		self::$key = $key;
 		self::$message = $message;
 		self::$params = $params;
+        
+        $errMsg = self::$message;
+        if (count(self::$triggerParams)) {
+            $errMsg .= "\n" . print_r(self::$triggerParams, true);
+        }
+        
+        trigger_error($errMsg);
 		
 		throw new Exception(self::$message);
 	}
@@ -46,7 +59,21 @@ final class Error {
 			if (isset(self::$params['url'])) {
 				Error::loadURL(self::$params['url']);
 			} else {
-				include(Config::read("System.defaultErrorGEN"));
+                if (isset(self::$params['code'])) {
+                    $code = self::$params['code'];
+                }
+
+                switch ($code) {
+                    case 'GEN':
+                        include(Config::read("System.defaultErrorGEN"));
+                        break;
+                    case 'DB':
+                        include(Config::read("System.defaultErrorDB"));
+                        break;
+                    default:
+                        include(Config::read("System.defaultErrorGEN"));
+                        break;
+                }
 			}
 		}
 	}
@@ -62,6 +89,10 @@ final class Error {
 	final public static function getTrace() {
 		return self::$errorObj->getTrace();
 	}
+    
+    final public static function getTriggerParams() {
+        return self::$triggerParams;
+    }
 	
 	final public static function clearAllBuffers() {
 		$buffer_count = ob_get_level();
@@ -102,7 +133,20 @@ final class Error {
 					$controller->showView();
 				} catch(Exception $e) {
 					if (Config::read("System.mode") == "development") {
-						include(Config::read("System.defaultErrorGEN"));
+                        if (isset(self::$params['code'])) {
+                            $code = self::$params['code'];
+                        }
+                        switch ($code) {
+                            case 'GEN':
+                                include(Config::read("System.defaultErrorGEN"));
+                                break;
+                            case 'DB':
+                                include(Config::read("System.defaultErrorDB"));
+                                break;
+                            default:
+                                include(Config::read("System.defaultErrorGEN"));
+                                break;
+                        }
 					}
 				}
 			}

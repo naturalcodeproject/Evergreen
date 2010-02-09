@@ -91,6 +91,8 @@ abstract class DB_Driver {
     abstract protected function get_found_rows_count();
     abstract protected function get_from_table_statement($parent, $table_name, $alias);
     abstract protected function get_table_name_with_alias();
+    
+    abstract public function is_code_unique_field_error($code);
 
     /*************************************************/
     /* Class Methods                                 */
@@ -155,10 +157,16 @@ abstract class DB_Driver {
     }
 
     public function query($statement) {
+        if (Config::read('Database.viewQueries')) {
+            echo "QUERY:<code>";
+            print_r($statement);
+            echo "</code>";
+        }
+
         $result = $this->db->query($statement);
         if (!$result) {
             $e = $this->db->getCurException();
-            $this->model->addError(null, $e->getMessage(), ModelError::TYPE_DB_OPERATION_FAILED, $e->getTraceAsString());
+            $this->model->addError(null, $e->getMessage(), ModelError::TYPE_DB_OPERATION_FAILED, $e->getTraceAsString(), $e->getCode());
         }
         return $result;
     }

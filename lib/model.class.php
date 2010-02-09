@@ -19,17 +19,25 @@ class ModelError {
     public $field;
     public $msg;
     public $trace;
+    public $code;
+    public $validator;
 
+    // Errors must be handled by user code
     const TYPE_INVALID_FIELD = 0;
     const TYPE_REQUIRED_FIELD_MISSING = 1;
     const TYPE_KEY_MISSING = 2;
-    const TYPE_DB_OPERATION_FAILED = 3;
+    const TYPE_DUPLICATE_UNIQUE = 3; // NOT SUPPORTED YET
+    
+    // Errors will throw exception and stop execution
+    const TYPE_DB_OPERATION_FAILED = 4;
 
     public function __construct() {
         $this->type = -1;
         $this->field = null;
         $this->msg = '';
         $this->trace = '';
+        $this->code = null;
+        $this->validator = '';
     }
 }
 
@@ -42,6 +50,7 @@ class Model {
     const KEY = 'key';
     const REQUIRED = 'required';
     const VALIDATE = 'validate';
+    const UNIQUE = 'unique';
 
     public function __construct() {
         $this->db_driver = null;
@@ -67,9 +76,13 @@ class Model {
                 $field->required = true;
             }
 
-            foreach ($options as $key=>$value) {
-                if ($key === Model::VALIDATE) {
-                    $field->validators[] = $value;
+            if (array_key_exists(Model::VALIDATE, $options)) {  
+                if (is_array($options[Model::VALIDATE])) {
+                    foreach ($options[Model::VALIDATE] as $option) {
+                        $field->validators[] = $option;
+                    }
+                } else {
+                    $field->validators[] = $options[Model::VALIDATE];
                 }
             }
         }
@@ -77,13 +90,23 @@ class Model {
         $this->fields[] = $field;
     }
 
-    public function addError($field=null, $msg='', $type=ModelError::TYPE_INVALID_FIELD, $trace='') {
+    public function addError($field=null, $msg='', $type=ModelError::TYPE_INVALID_FIELD, $trace='', $code=null) {
         $modelError = new ModelError();
         $modelError->type = $type;
         $modelError->field = $field;
         $modelError->msg = $msg;
         $modelError->trace = $trace;
+        $modelError->code = $code;
+        
         $this->errors[] = $modelError;
+        
+        if ($type == ModelError::TYPE_DB_OPERATION_FAILED) {
+            $params = array();
+            $params['db_message'] = $msg;
+            $params['db_trace'] = $trace;
+            $params['db_model'] = get_class($this);
+            Error::trigger("MODEL_DB_FAILURE", $params);
+        }
     }
 
     public function clearErrors() {
@@ -96,6 +119,72 @@ class Model {
 
     public function getErrors() {
         return $this->errors;
+    }
+    
+    public function getErrorMessages($field=false) {
+        $messages = array();
+        if (isset($this->errors)) {
+            foreach ($this->errors as $error) {
+                if (!$field || ($field && $field == $error->field)) {
+                    $messages[] = $error->msg;
+                }
+            }
+        }
+        return $messages;
+    }
+    
+    public function getErrorMessage($field, $validator) {
+        if (isset($this->errors)) {
+            if (isset($this->errors)) {
+                foreach ($this->errors as $error) {
+                    if ($error->field == $field && $error->validator == $validator) {
+                        return $error->msg;
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    public function validateFailed($field=false, $validator=false) {
+        if (isset($this->errors)) {
+            foreach ($this->errors as $error) {
+                if ((!$field || ($field && $error->field == $field)) && (!$validator || $validator == $error->validator)) {
+                    return true;
+                }
+            }   
+        }
+        
+        return false;
+    }
+    
+    public function requiredFailed($field=false) {
+        if (isset($this->errors)) {
+            foreach ($this->errors as $error) {
+                if ($error->type == ModelError::TYPE_REQUIRED_FIELD_MISSING) {
+                    if (!$field || ($field && $error->field == $field)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    public function keyFailed($field=false) {
+        if (isset($this->errors)) {
+            foreach ($this->errors as $error) {
+                if ($error->type == ModelError::TYPE_KEY_MISSING) {
+                    if (!$field || ($field && $error->field == $field)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
     }
 
     private function setup_driver() {
@@ -263,6 +352,10 @@ class Model {
         foreach ($this->fields as $field) {
             if ($field->required && (!property_exists($this, $field->name) || empty($this->{$field->name}))) {
                 $this->addError($field->name, '', ModelError::TYPE_REQUIRED_FIELD_MISSING);
+                
+                $errors = $this->errors;
+                $curError = array_pop($errors);
+                $curError->validator = self::REQUIRED;
             }
         }
     }
@@ -271,6 +364,10 @@ class Model {
         foreach ($this->fields as $field) {
             if ($field->key && !property_exists($this, $field->name)) {
                 $this->addError($field->name, '', ModelError::TYPE_KEY_MISSING);
+                
+                $errors = $this->errors;
+                $curError = array_pop($errors);
+                $curError->validator = self::KEY;
             }
         }
     }
@@ -280,7 +377,15 @@ class Model {
             if (count($field->validators)) {
                 foreach ($field->validators as $validator) {
                     $prop = $field->name;
-                    $this->$validator($this->$prop);
+                    $result = $this->$validator($prop, $this->$prop);
+                    
+                    if ($result) {
+                        $this->addError($prop, $result);
+                        
+                        $errors = $this->errors;
+                        $curError = array_pop($errors);
+                        $curError->validator = $validator;
+                    }
                 }
             }
         }

@@ -79,6 +79,14 @@ final class System {
    		$display = false;
    		$notify = false;
    		$halt_script = true;
+        
+        if (Config::read('Error.viewErrors')) {
+            $display = true;
+        }
+        
+        if (Config::read('Error.logErrors')) {
+            $notify = true;
+        }
    		
 		switch($errno) {
    			case E_USER_NOTICE:
@@ -113,23 +121,39 @@ final class System {
       			$notify = true;
        			break;
 		}
+        
+        $error_msg = '['.date('d-M-Y H:i:s').'] ';
+        $error_msg .= "$type: ";
+        $error_msg .= "\"$errstr\" occurred in $errfile on line $errline\n";
+        
+        if($display) echo '<PRE>' . $error_msg . '</PRE>';
 
 		if($notify) {
-			$log_file = Config::read("Path.physical")."/".Config::read("Errors.logDirectory")."/error.log";
-			$date = date('Y-m-d');
-			$log_file .= ".$date";
-		
-			$error_msg = '['.date('d-M-Y H:i:s').'] ';
-       		$error_msg .= "$type: ";
-       		$error_msg .= "\"$errstr\" occurred in $errfile on line $errline\n";
-
-       		if($display) echo $error_msg;
-       		
-          	if(empty($log_file)) {
-             	error_log($error_msg, 0);
-          	} else {
-          		error_log($error_msg, 3, $log_file);
-          	}
+            $logDir = Config::read("Error.logDirectory");
+            if (empty($logDir)) {
+                error_log($error_msg, $errno);
+            } else {
+                $log_file = Config::read("Path.physical")."/".$logDir."/";
+                
+                $year = date('Y');
+                $month = date('m');
+                $day = date('d');
+                
+                $log_file .= $year;
+                mkdir($log_file);
+                $log_file .= "/$month";
+                mkdir($log_file);
+                $log_file .= "/$day";
+                mkdir($log_file);
+                
+                $log_file .= "/error.log";
+                
+                if(empty($log_file)) {
+                    error_log($error_msg, 0);
+                } else {
+                    error_log($error_msg, 3, $log_file);
+                }
+            }
    		}
    
    		if($halt_script) exit -1;
