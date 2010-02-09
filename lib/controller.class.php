@@ -56,7 +56,7 @@ abstract class Controller {
 		ob_start();
 		$error = false;
 		
-		if ((is_callable(array($this, $this->view_to_load)) && $this->viewExists($this->view_to_load)) || (!$this->viewExists($this->view_to_load) && isset($this->bounceback) && method_exists($this, $this->bounceback['check']) && method_exists($this, $this->bounceback['bounce']))) {
+		if ((is_callable(array($this, $this->view_to_load)) && $this->viewExists($this->view_to_load)) || (!$this->viewExists($this->view_to_load) && (isset($this->bounceback['check']) && isset($this->bounceback['bounce'])) && method_exists($this, $this->bounceback['check']) && method_exists($this, $this->bounceback['bounce']))) {
 			if (!empty($this->filter) || !empty($this->filter_only) || !empty($this->filter_except)) {
 				if (isset($this->filter)) {
 					if (!empty($this->filter) && !is_array($this->filter)) {
@@ -77,7 +77,7 @@ abstract class Controller {
 				}
 			}
 			
-			if (isset($this->bounceback) && !$this->viewExists($this->view_to_load)) {
+			if ((isset($this->bounceback['check']) && isset($this->bounceback['bounce'])) && !$this->viewExists($this->view_to_load)) {
 				$values = array_values(Config::read('URI.working'));
 				$this->params = array_combine(array_keys(Config::read('URI.working')), array_slice(array_merge(array($values[0]), array($this->bounceback['bounce']),array_slice($values, 1)), 0, count(array_keys(Config::read('URI.working')))));
 				Config::register('Param', $this->params);
