@@ -59,6 +59,7 @@ final class Error {
 			if (isset(self::$params['url'])) {
 				Error::loadURL(self::$params['url']);
 			} else {
+				$code = null;
                 if (isset(self::$params['code'])) {
                     $code = self::$params['code'];
                 }

@@ -32,12 +32,15 @@ final class Config {
 			self::$config['URI']['useDashes'] = true;
 			self::$config['URI']['forceDashes'] = true;
 			self::$config['URI']['map'] = array(
-				"controller"=>"main",
-				"view"=>"index",
-				"action"=>"",
-				"id"=>""
+				"controller" 	=> "main",
+				"view" 			=> "index",
+				"action" 		=> "",
+				"id" 			=> ""
 			);
+			self::$config['Error']['viewErrors'] = true;
+    		self::$config['Error']['logErrors'] = true;
 			self::$config['Error']['generalErrorMessage'] = "An error occured. Please contact admin@example.com";
+			self::$config['Database']['viewQueries'] = false;
 		}
 		
 		// Indicate that the setup function has been run and doesnt need to be run again

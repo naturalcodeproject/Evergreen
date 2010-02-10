@@ -124,7 +124,7 @@ abstract class DB_Driver {
             $this->column_names[] = $field->name;
             $this->properties[$field->name] = null;
 
-            $flags;
+            $flags = null;
             foreach ($this->all_flags as $flag) {
                 $flags |= $flag;
             }
@@ -292,7 +292,7 @@ abstract class DB_Driver {
         }
 
         $where = array();
-        if (array_key_exists('where', $options)) {
+        if (array_key_exists('where', (array)$options)) {
             $where = $options['where'];
         }
         $this->where($where);

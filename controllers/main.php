@@ -11,8 +11,12 @@ class Main_Controller extends ApplicationController {
 	public function index () {
 		$this->home_selected = "selected";
 		
+		Config::read('Param.action');
+		
 		$test = System::helper("test");
 		echo $test->getSomething()."<br />";
+		
+		
 		//var_dump($test);
 		
 		//$this->projax = System::plugin("projax")->load();
@@ -40,7 +44,7 @@ class Main_Controller extends ApplicationController {
 		echo $this->mypage('Jack Attack');
 	}
 	
-	private function mypage($post) {
+	protected function mypage($post) {
 		return $post;
 	}
 	

@@ -43,6 +43,7 @@ final class System {
 	}
 	
 	final public static function model($name, $branch="") {
+		$model = false;
 		if (Config::read("Branch.name") && empty($branch)) {
 			$model = self::load(array("name"=>$name, "type"=>"model", "branch"=>Config::read("Branch.name")));
 		}
@@ -59,6 +60,7 @@ final class System {
 	}
 	
 	final public static function plugin($name, $branch="") {
+		$plugin = false;
 		if (Config::read("Branch.name") && empty($branch)) {
 			$plugin = self::load(array("name"=>$name, "type"=>"plugin", "branch"=>Config::read("Branch.name")));
 		}
