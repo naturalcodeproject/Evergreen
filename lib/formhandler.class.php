@@ -143,6 +143,10 @@ class Formhandler {
 						}
 					}
 				break;
+				case 'password':
+					// don't send a value back to the form for password fields because it will be in clear text
+					$properties['value'] = '';
+				break;
 				default:
 					if (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['update']) && is_array($this->forms_arr[$this->current_form]['update'])) {
 						$properties['value'] = $this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name);

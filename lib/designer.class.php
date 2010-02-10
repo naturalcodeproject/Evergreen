@@ -33,6 +33,11 @@ class Designer {
 				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
 			break;
 			
+			case "[branch.site]":
+				$new_base = explode("/", Config::read("Path.branch"));
+				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
+			break;
+			
 			case "[branch.skin]":
 				$new_base = explode("/", Config::read("Path.branchSkin"));
 				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
