@@ -162,7 +162,7 @@ class Formhandler {
 					$properties['value'] = stripslashes(htmlspecialchars($properties['value']));
 				break;
 			}
-			return "<{$type} ".$this->propertiesString($properties).">";
+			return "<{$type} ".$this->propertiesString($properties)." />";
 		} elseif ($type == "textarea" || $type == "select") {
 			if ($type == "select") {
 				$this->current_select = preg_replace("/(.+)\[\]/i", "\\1", str_replace(" ", "_", $properties['name']));
