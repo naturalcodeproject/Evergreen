@@ -112,6 +112,10 @@ class Formhandler {
 		}
 		
 		if ($type == "input") {
+			if (!isset($properties['value'])) {
+				$properties['value'] = '';
+			}
+
 			switch ($properties['type']) {
 				case 'radio':
 					if (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['update']) && is_array($this->forms_arr[$this->current_form]['update'])) {
