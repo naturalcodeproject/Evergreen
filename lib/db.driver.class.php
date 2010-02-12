@@ -476,7 +476,7 @@ abstract class DB_Driver {
         $this->join_columns[$alias] = $column;
         $this->relationship_classes[$alias] = $rel_class_name;
         $this->relationship_join_columns[$alias] = $foreign_key;
-        $this->relationship_join_types[$alias] = REL_ONE;
+        $this->relationship_join_types[$alias] = self::REL_ONE;
         $this->relationship_results[$alias] = null;
         $this->relationships = true;
         $this->has_one_relationships = true;
@@ -498,7 +498,7 @@ abstract class DB_Driver {
         $this->join_columns[$alias] = $column;
         $this->relationship_classes[$alias] = $rel_class_name;
         $this->relationship_join_columns[$alias] = $foreign_key;
-        $this->relationship_join_types[$alias] = REL_MANY;
+        $this->relationship_join_types[$alias] = self::REL_MANY;
         $this->relationship_results[$alias] = null;
         $this->relationships = true;
         $this->has_many_relationships = true;
@@ -545,7 +545,7 @@ abstract class DB_Driver {
 
         foreach ($this->relationship_join_types as $join_type) {
             $this->relationships = true;
-            if ($join_type == REL_ONE) {
+            if ($join_type == self::REL_ONE) {
                 $this->has_one_relationships = true;
             } else {
                 $this->has_many_relationships = true;
@@ -560,7 +560,7 @@ abstract class DB_Driver {
 
         if ($only_has_one) {
             foreach ($classes as $alias=>$class) {
-                if ($this->relationship_join_types[$alias] != REL_ONE) {
+                if ($this->relationship_join_types[$alias] != self::REL_ONE) {
                     unset($classes[$alias]);
                 }
             }
@@ -594,14 +594,14 @@ abstract class DB_Driver {
         $this->join_columns[$alias] = $column;
         $this->relationship_classes[$alias] = $foreign_object;
         $this->relationship_join_columns[$alias] = $foreign_key;
-        $this->relationship_join_types[$alias] = REL_MANY;
+        $this->relationship_join_types[$alias] = self::REL_MANY;
         $this->relationships = true;
     }
 
     protected function get_relationship_results($alias) {
         $rel_class = $this->relationship_classes[$alias];
 
-        if ($this->relationship_join_types[$alias] == REL_ONE) {
+        if ($this->relationship_join_types[$alias] == self::REL_ONE) {
             // TODO: Need to check if this is an instantiated class
             // or if this is just a class name, if just a class name
             // need to instantiate
