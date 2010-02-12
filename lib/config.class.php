@@ -365,6 +365,7 @@ final class Config {
 					}
 					
 					// Check if there is a wildcard match in the regex
+					$wildcard_matches = null;
 					if (!empty($combinedMatches['wildcard'])) {
 						$wildcard_matches = explode("/", $combinedMatches['wildcard']);
 						unset($combinedMatches['wildcard']);
