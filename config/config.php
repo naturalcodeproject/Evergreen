@@ -10,10 +10,10 @@
 	));
 	
 	Config::register(array("URI.map" => array(
-		"controller"=>"main",
-		"view"=>"index",
-		"action"=>"",
-		"id"=>""
+		"controller"	=> "main",
+		"view"			=> "index",
+		"action"		=> "",
+		"id"			=> ""
 	)));
 	
 	//Config::register("URI.prependIdentifier", "another");

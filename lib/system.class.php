@@ -4,7 +4,7 @@ final class System {
 		if (empty($args['name'])) return NULL;
 		if (empty($args['type'])) return NULL;
 		
-		if ($args['branch'] == "MAIN") {
+		if ($args['branch'] == Config::read('System.rootIdentifier')) {
 			$args['branch'] = "";
 		}
 		
@@ -16,7 +16,7 @@ final class System {
 		if (empty($args['name'])) return NULL;
 		if (empty($args['type'])) return NULL;
 		
-		if ($args['branch'] == "MAIN") {
+		if ($args['branch'] == Config::read('System.rootIdentifier')) {
 			$args['branch'] = "";
 		}
 		

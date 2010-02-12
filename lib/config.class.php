@@ -12,6 +12,9 @@ final class Config {
 			// Setup the System.version configuration setting
 			self::$config['System']['version'] = "1.0.0b1";
 			
+			// Setup the root identifier
+			self::$config['System']['rootIdentifier'] = "MAIN";
+			
 			// Setup the Path.physical configuration setting
 			self::$config['Path']['physical'] = dirname(dirname(__FILE__));
 			
@@ -347,7 +350,7 @@ final class Config {
 					}
 					
 					// Check if the route is trying to load from main
-					if (isset($destination['branch']) && $destination['branch'] == "MAIN") {
+					if (isset($destination['branch']) && $destination['branch'] == self::read('System.rootIdentifier')) {
 						unset($destination['branch']);
 					}
 					
