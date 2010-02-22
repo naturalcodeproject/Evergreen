@@ -145,7 +145,7 @@ abstract class Controller {
 	final protected function renderLayout ($name) {
 		$content_for_layout = $this->content_for_layout;
 		if (strlen(Config::read("Branch.name")) && file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php") && (include(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php")) == true) {
-			return 1;
+			return true;
 		} else {
 			if (file_exists(Config::read("Path.physical")."/views/layouts/{$name}.php") && (include(Config::read("Path.physical")."/views/layouts/{$name}.php")) == true) {
 				return true;
