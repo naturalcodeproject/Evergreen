@@ -9,14 +9,14 @@ class Loader {
 		$this->branch_to_use = $branch;
 	}
 	
-	public function setClass($name, $class_type) {
-		$name = strtolower($name);
+	public function setClass($original_name, $class_type) {
+		$name = strtolower($original_name);
 		if (strpos($name, '.') !== FALSE) {
 			$name = str_replace('.', ' ', $name);
 			$name = ucwords($name);
 			$name = str_replace(' ', '', $name);
 		}
-		$this->original_class_name = $name;
+		$this->original_class_name = $original_name;
 		$this->class_to_load = ucwords($name);
 		$this->class_type = $class_type;
 	}
