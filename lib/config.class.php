@@ -236,6 +236,10 @@ final class Config {
 			$position = array_search($key, array_keys(self::read("URI.working")));
 			if (self::read("Branch.name") != "") {
 				$position++;
+				
+				if (!$isDefaultController) {
+					$position++;
+				}
 			}
 			self::register("Path.".$key, str_replace("//", "/", implode("/", array_merge(explode("/", self::read("Path.site")), array_slice($uri_paths_by_map, 0, ($position+1))))));
 			$count++;
