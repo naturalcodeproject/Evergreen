@@ -60,6 +60,7 @@ abstract class DB_Driver {
     protected $relationship_join_types;
     protected $relationship_results;
     protected $relationship_of;
+    protected $relationship_branches;
 
     // Find Members
 
@@ -464,6 +465,7 @@ abstract class DB_Driver {
         $column = $refs['local'];
         $foreign_key = $refs['foreign'];
         $alias = $refs['alias'];
+        $branch = (!empty($refs['branch'])) ? $refs['branch'] : '';
 
         if (empty($alias)) {
             $alias = $rel_class_name;
@@ -478,6 +480,7 @@ abstract class DB_Driver {
         $this->relationship_join_columns[$alias] = $foreign_key;
         $this->relationship_join_types[$alias] = self::REL_ONE;
         $this->relationship_results[$alias] = null;
+        $this->relationship_branches[$alias] = $branch;
         $this->relationships = true;
         $this->has_one_relationships = true;
     }
@@ -486,6 +489,7 @@ abstract class DB_Driver {
         $column = $refs['local'];
         $foreign_key = $refs['foreign'];
         $alias = $refs['alias'];
+        $branch = (!empty($refs['branch'])) ? $refs['branch'] : '';
 
         if (empty($alias)) {
             $alias = $rel_class_name;
@@ -500,6 +504,7 @@ abstract class DB_Driver {
         $this->relationship_join_columns[$alias] = $foreign_key;
         $this->relationship_join_types[$alias] = self::REL_MANY;
         $this->relationship_results[$alias] = null;
+        $this->relationship_branches[$alias] = $branch;
         $this->relationships = true;
         $this->has_many_relationships = true;
     }
@@ -521,8 +526,9 @@ abstract class DB_Driver {
                 unset($this->relationship_join_columns[$alias]);
                 unset($this->relationship_join_types[$alias]);
                 unset($this->relationship_results[$alias]);
+                unset($this->relationship_branches[$alias]);
             } else {
-                $foreign_object = System::model(strtolower($class_name));
+                $foreign_object = System::model(strtolower($class_name), $this->relationship_branches[$alias]);
                 $foreign_object->db_driver()->set_alias($alias);
 
                 foreach ($this->relationship_of as $rel) {
