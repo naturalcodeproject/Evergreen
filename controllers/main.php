@@ -13,7 +13,7 @@ class Main_Controller extends ApplicationController {
 		
 		Config::read('Param.action');
 		
-		$test = System::helper("test");
+		$test = System::helper("test", '', array('two', 'three'));
 		echo $test->getSomething()."<br />";
 		
 		

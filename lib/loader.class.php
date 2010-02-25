@@ -3,10 +3,12 @@ class Loader {
 	protected $branch_to_use;
 	protected $class_to_load;
 	protected $class_type;
+	protected $args;
 	
-	public function __construct($name, $class_type, $branch="") {
+	public function __construct($name, $class_type, $branch="", $args = "") {
 		$this->setClass($name, $class_type);
 		$this->branch_to_use = $branch;
+		$this->args = $args;
 	}
 	
 	public function setClass($original_name, $class_type) {
@@ -65,7 +67,20 @@ class Loader {
 				include($file_path);
 			}
 			
-			$object = new $class_name();
+			if (is_array($this->args)) {
+				// if the args are an array then we'll send each one in as its own parameter
+				$args = array();
+				foreach($this->args as $key => $value) {
+					$args[] = '$this->args[\'' . $key . '\']';
+				}
+				
+				$string = '$object = new $class_name(' . implode(',', $args) . ');';
+				eval($string);
+			} else if (!empty($this->args)) {
+				$object = new $class_name($this->args);
+			} else {
+				$object = new $class_name();
+			}
 			
 			if (ucwords($this->class_type) == "Helper" || ucwords($this->class_type) == "Plugin") {
 				if (isset($object->requiredSystemMode) && $object->requiredSystemMode != Config::read("System.mode")) {

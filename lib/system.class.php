@@ -3,12 +3,13 @@ final class System {
 	final public static function load($args) {
 		if (empty($args['name'])) return NULL;
 		if (empty($args['type'])) return NULL;
+		if (empty($args['args'])) $args['args'] = '';
 		
 		if ($args['branch'] == Config::read('System.rootIdentifier')) {
 			$args['branch'] = "";
 		}
 		
-		$load = new Loader($args['name'], $args['type'], $args['branch']);
+		$load = new Loader($args['name'], $args['type'], $args['branch'], $args['args']);
 		return $load->load();
 	}
 	
@@ -27,12 +28,14 @@ final class System {
 	final public static function helper($name, $branch="") {
 		$helper = false;
 		
+		$args = array_slice(func_get_args() , 2);
+		
 		if (Config::read("Branch.name") && empty($branch)) {
-			$helper = self::load(array("name"=>$name, "type"=>"helper", "branch"=>Config::read("Branch.name")));
+			$helper = self::load(array("name"=>$name, "type"=>"helper", "branch"=>Config::read("Branch.name"), "args" => $args));
 		}
 		
 		if (!$helper) {
-			$helper = self::load(array("name"=>$name, "type"=>"helper", "branch"=>$branch));
+			$helper = self::load(array("name"=>$name, "type"=>"helper", "branch"=>$branch, "args" => $args));
 		}
 		
 		if (!$helper) {
@@ -44,12 +47,15 @@ final class System {
 	
 	final public static function model($name, $branch="") {
 		$model = false;
+		
+		$args = array_slice(func_get_args() , 2);
+		
 		if (Config::read("Branch.name") && empty($branch)) {
-			$model = self::load(array("name"=>$name, "type"=>"model", "branch"=>Config::read("Branch.name")));
+			$model = self::load(array("name"=>$name, "type"=>"model", "branch"=>Config::read("Branch.name"), "args" => $args));
 		}
 		
 		if (!$model) {
-			$model = self::load(array("name"=>$name, "type"=>"model", "branch"=>$branch));
+			$model = self::load(array("name"=>$name, "type"=>"model", "branch"=>$branch, "args" => $args));
 		}
 
         if (!$model) {
@@ -61,12 +67,15 @@ final class System {
 	
 	final public static function plugin($name, $branch="") {
 		$plugin = false;
+		
+		$args = array_slice(func_get_args() , 2);
+		
 		if (Config::read("Branch.name") && empty($branch)) {
-			$plugin = self::load(array("name"=>$name, "type"=>"plugin", "branch"=>Config::read("Branch.name")));
+			$plugin = self::load(array("name"=>$name, "type"=>"plugin", "branch"=>Config::read("Branch.name"), "args" => $args));
 		}
 		
 		if (!$plugin) {
-			$plugin = self::load(array("name"=>$name, "type"=>"plugin", "branch"=>$branch));
+			$plugin = self::load(array("name"=>$name, "type"=>"plugin", "branch"=>$branch, "args" => $args));
 		}
 		
 		if (!$plugin) {
