@@ -5,6 +5,7 @@ class ModelField {
     public $key;
     public $required;
     public $validators;
+    public $errorMessages = array();
 
     public function __construct() {
         $this->name = '';
@@ -68,12 +69,18 @@ class Model {
         $field->name = $name;
 
         if ($options) {
-            if (in_array(Model::KEY, $options)) {
+            if (in_array(Model::KEY, $options) || in_array(Model::KEY, array_keys($options))) {
                 $field->key = true;
+                if (!empty($options[Model::KEY])) {
+                	$field->errorMessages[Model::KEY] = $options[Model::KEY];
+                }
             }
 
-            if (in_array(Model::REQUIRED, $options)) {
+            if (in_array(Model::REQUIRED, $options) || in_array(Model::REQUIRED, array_keys($options))) {
                 $field->required = true;
+                if (!empty($options[Model::REQUIRED])) {
+                	$field->errorMessages[Model::REQUIRED] = $options[Model::REQUIRED];
+                }
             }
 
             if (array_key_exists(Model::VALIDATE, $options)) {  
@@ -357,7 +364,7 @@ class Model {
         // Check for required fields
         foreach ($this->fields as $field) {
             if ($field->required && (!property_exists($this, $field->name) || empty($this->{$field->name}))) {
-                $this->addError($field->name, '', ModelError::TYPE_REQUIRED_FIELD_MISSING);
+                $this->addError($field->name, (isset($field->errorMessages[self::REQUIRED]) ? $field->errorMessages[self::REQUIRED] : ''), ModelError::TYPE_REQUIRED_FIELD_MISSING);
                 
                 $errors = $this->errors;
                 $curError = array_pop($errors);
@@ -369,7 +376,7 @@ class Model {
     private function checkKeys() {
         foreach ($this->fields as $field) {
             if ($field->key && !property_exists($this, $field->name)) {
-                $this->addError($field->name, '', ModelError::TYPE_KEY_MISSING);
+                $this->addError($field->name, (isset($field->errorMessages[self::KEY]) ? $field->errorMessages[self::KEY] : ''), ModelError::TYPE_KEY_MISSING);
                 
                 $errors = $this->errors;
                 $curError = array_pop($errors);
