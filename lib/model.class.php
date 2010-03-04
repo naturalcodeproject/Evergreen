@@ -69,14 +69,14 @@ class Model {
         $field->name = $name;
 
         if ($options) {
-            if (in_array(Model::KEY, $options) || in_array(Model::KEY, array_keys($options))) {
+            if (in_array(Model::KEY, $options) || array_key_exists(Model::KEY, $options)) {
                 $field->key = true;
                 if (!empty($options[Model::KEY])) {
                 	$field->errorMessages[Model::KEY] = $options[Model::KEY];
                 }
             }
 
-            if (in_array(Model::REQUIRED, $options) || in_array(Model::REQUIRED, array_keys($options))) {
+            if (in_array(Model::REQUIRED, $options) || array_key_exists(Model::REQUIRED, $options)) {
                 $field->required = true;
                 if (!empty($options[Model::REQUIRED])) {
                 	$field->errorMessages[Model::REQUIRED] = $options[Model::REQUIRED];
