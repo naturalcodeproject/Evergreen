@@ -305,7 +305,7 @@ abstract class DB_Driver {
         $prop = $this->column_to_property($property);
 
         if ($this->has_property($prop)) {
-            return $this->$prop;
+            return ((isset($this->$prop)) ? $this->$prop : '');
         } else if ($this->relationships && array_key_exists($property, $this->relationship_classes)) {
             return $this->get_relationship_results($property);
         }

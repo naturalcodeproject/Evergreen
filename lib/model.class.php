@@ -46,7 +46,7 @@ class Model {
     private $db_driver;
     private $table_name;
     private $fields;
-    private $errors;
+    private $errors = array();
 
     const KEY = 'key';
     const REQUIRED = 'required';
@@ -121,11 +121,11 @@ class Model {
     }
 
     public function hasErrors() {
-        return (count($this->errors) > 0);
+        return (count(((isset($this->errors)) ? $this->errors : array())) > 0);
     }
 
     public function getErrors() {
-        return $this->errors;
+        return ((isset($this->errors)) ? $this->errors : false);
     }
     
     public function getErrorMessages($field=false) {
@@ -299,9 +299,10 @@ class Model {
     public function save() {
         $this->clearErrors();
         $this->setup_driver();
-
+		
         $this->checkRequiredFields();
-
+		$this->checkValidators();
+		
         if (!$this->hasErrors()) {
             return $this->db_driver->save();
         }
@@ -390,8 +391,8 @@ class Model {
             if (count($field->validators)) {
                 foreach ($field->validators as $validator) {
                     $prop = $field->name;
-                    $result = $this->$validator($prop, $this->$prop);
-                    
+                    $result = $this->{$validator}($prop, $this->$prop);
+					
                     if ($result) {
                         $this->addError($prop, $result);
                         
