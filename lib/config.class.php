@@ -207,9 +207,9 @@ final class Config {
 		
 		
 		if (self::read("URI.useModRewrite")) {
-			$uri_paths = explode("/", $_SERVER['REQUEST_URI']);
+			$uri_paths = explode("/", ltrim($_SERVER['REQUEST_URI'], '/'));
 		} else {
-			$uri_paths = explode("/", $_GET[self::read("URI.prependIdentifier")]);
+			$uri_paths = explode("/", ltrim($_GET[self::read("URI.prependIdentifier")], '/'));
 		}
 		
 		// Setup the additional Path configuration settings based off the URI.map, the Skin, and the Branch
@@ -234,12 +234,11 @@ final class Config {
 				$uri_paths_by_map = $uri_paths;
 			}
 			$position = array_search($key, array_keys(self::read("URI.working")));
-			if (self::read("Branch.name") != "") {
+			if (self::read("Branch.name") != "" && !$isDefaultController) {
 				$position++;
-				
-				if (!$isDefaultController) {
-					$position++;
-				}
+			}
+			if (self::read("Branch.name") == "" && $isDefaultController) {
+				$position--;
 			}
 			self::register("Path.".$key, str_replace("//", "/", implode("/", array_merge(explode("/", self::read("Path.site")), array_slice($uri_paths_by_map, 0, ($position+1))))));
 			$count++;
