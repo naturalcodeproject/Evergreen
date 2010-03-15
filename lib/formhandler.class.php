@@ -88,7 +88,8 @@ class Formhandler {
 				if (!empty($properties['update']) && $properties['update'] != false) {
 					$this->forms_arr[$properties['name']]['update'] = $properties['update'];
 				}
-			} else if (isset($properties['default'])) {
+			}
+			if (isset($properties['default'])) {
 				$properties['default'] = str_replace("\$this->", "\$this->caller->", $properties['default']);
 				eval("\$properties['default'] = ".$properties['default'].";");
 				
