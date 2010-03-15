@@ -61,20 +61,41 @@ class Formhandler {
 		$insides = stripslashes($insides);
 		
 		## Set up Properties
+		$randomName = false;
 		$properties = $this->propertiesArray($attr);
+		if (empty($properties['name'])) {
+			$properties['name'] = uniqid(mt_rand());
+			$randomName = true;
+		}
+		if (empty($properties['update'])) {
+			if (!empty($properties['method'])) {
+				if (strtolower(trim($properties['method'])) == "post") {
+					$properties['update'] = $_POST;
+				} else {
+					$properties['update'] = $_GET;
+				}
+			} else {
+				$properties['update'] = $_GET;
+			}
+		}
 		if (!empty($properties['update']) || !empty($properties['default']))  {
 			if (isset($properties['update'])) {
-				$properties['update'] = str_replace("\$this->", "\$this->caller->", $properties['update']);
-				eval("\$properties['update'] = ".$properties['update'].";");
-			}
-			
-			if (isset($properties['default'])) {
+				if (is_string($properties['update'])) {
+					$properties['update'] = str_replace("\$this->", "\$this->caller->", $properties['update']);
+					eval("\$properties['update'] = ".$properties['update'].";");
+				}
+				
+				if (!empty($properties['update']) && $properties['update'] != false) {
+					$this->forms_arr[$properties['name']]['update'] = $properties['update'];
+				}
+			} else if (isset($properties['default'])) {
 				$properties['default'] = str_replace("\$this->", "\$this->caller->", $properties['default']);
 				eval("\$properties['default'] = ".$properties['default'].";");
+				
+				if (!empty($properties['default']) && $properties['default'] != false) {
+					$this->forms_arr[$properties['name']]['default'] = $properties['default'];
+				}
 			}
-			
-			if (!empty($properties['default'])) $this->forms_arr[$properties['name']]['default'] = $properties['default'];
-			if (!empty($properties['update'])) $this->forms_arr[$properties['name']]['update'] = $properties['update'];
 			
 			unset($properties['update']);
 			unset($properties['default']);
@@ -88,7 +109,10 @@ class Formhandler {
 		$insides = preg_replace("/<(textarea|select)\s*(.*?)>(.*?)<\\/([(textarea|select)]*?)>/imsxe", "\$this->formInsides('\\1', '\\2', '\\3')", $insides);
 		
 		## Replace Form
-		$this->current_form = "";
+		unset($this->current_form);
+		if ($randomName == true) {
+			unset($properties['name']);
+		}
 		return "<form ".$this->propertiesString($properties).">
 				{$insides}</form>";
 	}
@@ -225,7 +249,11 @@ class Formhandler {
 			return isset($haystack[$find[$position]]) ? $haystack[$find[$position]] : null;
 		}
 		
-		return $this->getFormNameValue($haystack[$find[$position]], $find, $position+1);
+		if (isset($haystack[$find[$position]])) {
+			return $this->getFormNameValue($haystack[$find[$position]], $find, $position+1);
+		} else {
+			return false;
+		}
 	}
 }
 ?>
