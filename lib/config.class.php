@@ -90,6 +90,25 @@ final class Config {
 		return null;
 	}
 	
+	public static function remove($key) {
+		self::setup();
+		$path = explode('.', $key);
+		$config_holder =& self::$config;
+		foreach($path as $i => $path_key) {
+			if ($i == (count($path) - 1)) {
+				if (isset($config_holder[$path_key])) {
+					unset($config_holder[$path_key])
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				$config_holder =& $config_holder[$path_key];
+			}
+		}
+		return null;
+	}
+	
 	public static function registerRoute($definition, $action, $validation=array()) {
 		self::setup();
 		
