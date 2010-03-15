@@ -142,6 +142,10 @@ class Formhandler {
 			}
 
 			switch ($properties['type']) {
+				case 'button':
+				case 'submit':
+					// do nothing
+				break;
 				case 'radio':
 					if (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['update']) && is_array($this->forms_arr[$this->current_form]['update'])) {
 						if ($this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name) == $properties['value'] || (is_array($this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name)) && in_array($properties['value'], $this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name)))) {
