@@ -172,19 +172,20 @@ class Formhandler {
 					}
 				break;
 				case 'password':
-					// don't send a value back to the form for password fields because it will be in clear text
-					$properties['value'] = '';
-				break;
 				default:
-					if (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['update']) && is_array($this->forms_arr[$this->current_form]['update'])) {
-						$properties['value'] = $this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name);
-					} elseif (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['default']) && is_array($this->forms_arr[$this->current_form]['default'])) {
-						$value = $this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name);
-						
-						// check to see if the above method found a value before we set it in the form
-						if ($value != null) {
-							$properties['value'] = $value;
+					if ($properties['type'] != 'password' || ($properties['type'] == 'password' && (isset($properties['autopopulate']) && $properties['autopopulate'] == 'true'))) {
+						if (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['update']) && is_array($this->forms_arr[$this->current_form]['update'])) {
+							$properties['value'] = $this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name);
+						} elseif (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['default']) && is_array($this->forms_arr[$this->current_form]['default'])) {
+							$value = $this->getFormNameValue($this->forms_arr[$this->current_form]['default'], $this->parsed_name);
+							
+							// check to see if the above method found a value before we set it in the form
+							if ($value != null) {
+								$properties['value'] = $value;
+							}
 						}
+					} else {
+						$properties['value'] = '';
 					}
 					
 					$properties['value'] = stripslashes(htmlspecialchars($properties['value']));
