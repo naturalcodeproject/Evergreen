@@ -97,7 +97,7 @@ final class Config {
 		foreach($path as $i => $path_key) {
 			if ($i == (count($path) - 1)) {
 				if (isset($config_holder[$path_key])) {
-					unset($config_holder[$path_key])
+					unset($config_holder[$path_key]);
 					return true;
 				} else {
 					return false;
