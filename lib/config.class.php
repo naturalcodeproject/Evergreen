@@ -243,7 +243,6 @@ final class Config {
 		self::register("Path.skin", str_replace("//", "/", self::read("Path.root")."/public"));
 		
 		$count = 0;
-		var_dump(self::read('URI.working'));
 		foreach(self::read("URI.working") as $key => $value) {
 			if (empty($value)) {
 				continue;
