@@ -131,7 +131,7 @@ final class Error {
 				include(Config::read("System.defaultError404"));
 			} else {
 				try {
-					$controller->showView();
+					$controller->_showView();
 				} catch(Exception $e) {
 					if (Config::read("System.mode") == "development") {
                         if (isset(self::$params['code'])) {

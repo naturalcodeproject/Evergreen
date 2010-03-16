@@ -61,7 +61,7 @@ final class Evergreen {
 				exit;
 			} else {
 				// Load the view
-				$controller->showView();
+				$controller->_showView();
 				
 			}
 		} catch(Exception $e) {

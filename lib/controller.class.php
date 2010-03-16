@@ -10,17 +10,18 @@
 */
 
 abstract class Controller {
-	private $view_to_load;
+	private $viewToLoad;
 	private $formhandler;
 	private $designer;
 	private $params;
-	private $view_overridden = false;
+	private $overriddenView = false;
+	private	$overriddenViewToLoad = array();
 	
 	protected $bounceback = array();
 	protected $filter = array();
 	protected $filter_except = array();
 	protected $filter_only = array();
-	protected $not_a_view = array();
+	protected $notAView = array();
 	
 	final function __construct () {
 		## Construct Code ##
@@ -29,15 +30,15 @@ abstract class Controller {
 			$this->params[reset(array_slice(array_keys($this->params), 1, 1))] = reset(array_slice(Config::read("URI.map"), 1, 1));
 		}
 		
-		$this->view_to_load = $this->params[reset(array_slice(array_keys($this->params), 1, 1))];
+		$this->viewToLoad = $this->params[reset(array_slice(array_keys($this->params), 1, 1))];
 		
 		$this->formhandler = new Formhandler($this);
 		$this->designer = new Designer();
 	}
 	
-	final public function showView () {
+	final public function _showView () {
 		## Set up the actual page
-		$full_page = $this->loadView();
+		$full_page = $this->_loadView();
 		
 		## First Designer Fix
 		$this->designer->doFixes($full_page);
@@ -52,11 +53,11 @@ abstract class Controller {
 		echo $full_page;
 	}
 	
-	final private function loadView() {
+	final private function _loadView() {
 		ob_start();
 		$error = false;
 		
-		if ((is_callable(array($this, $this->view_to_load)) && $this->viewExists($this->view_to_load)) || (!$this->viewExists($this->view_to_load) && (isset($this->bounceback['check']) && isset($this->bounceback['bounce'])) && method_exists($this, $this->bounceback['check']) && method_exists($this, $this->bounceback['bounce']))) {
+		if ((is_callable(array($this, $this->viewToLoad)) && $this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) || (!$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true)) && (isset($this->bounceback['check']) && isset($this->bounceback['bounce'])) && method_exists($this, $this->bounceback['check']) && method_exists($this, $this->bounceback['bounce']))) {
 			if (!empty($this->filter) || !empty($this->filter_only) || !empty($this->filter_except)) {
 				if (isset($this->filter)) {
 					if (!empty($this->filter) && !is_array($this->filter)) {
@@ -64,27 +65,27 @@ abstract class Controller {
 					}
 				}
 				
-				if (isset($this->filter_only) && sizeof($this->filter_only) > 1 && is_array($this->filter_only[1]) && in_array($this->view_to_load, $this->filter_only[1])) {
+				if (isset($this->filter_only) && sizeof($this->filter_only) > 1 && is_array($this->filter_only[1]) && in_array($this->viewToLoad, $this->filter_only[1])) {
 					if (!empty($this->filter_only[0]) && !is_array($this->filter_only[0])) {
 						call_user_func(array($this, $this->filter_only[0]));
 					}
 				}
 				
-				if (isset($this->filter_except) && sizeof($this->filter_except) > 1 && is_array($this->filter_except[1]) && !in_array($this->view_to_load, $this->filter_except[1])) {
+				if (isset($this->filter_except) && sizeof($this->filter_except) > 1 && is_array($this->filter_except[1]) && !in_array($this->viewToLoad, $this->filter_except[1])) {
 					if (!empty($this->filter_except[0]) && !is_array($this->filter_except[0])) {
 						call_user_func(array($this, $this->filter_except[0]));
 					}
 				}
 			}
 			
-			if ((isset($this->bounceback['check']) && isset($this->bounceback['bounce'])) && !$this->viewExists($this->view_to_load)) {
+			if ((isset($this->bounceback['check']) && isset($this->bounceback['bounce'])) && !$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) {
 				$values = array_values(Config::read('URI.working'));
 				$this->params = array_combine(array_keys(Config::read('URI.working')), array_slice(array_merge(array($values[0]), array($this->bounceback['bounce']),array_slice($values, 1)), 0, count(array_keys(Config::read('URI.working')))));
 				Config::register('Param', $this->params);
 				$this->params = Config::loadableURI($this->params);
-				$this->view_to_load = $this->params[reset(array_slice(array_keys($this->params), 1, 1))];
+				$this->viewToLoad = $this->params[reset(array_slice(array_keys($this->params), 1, 1))];
 				
-				if (!$this->viewExists($this->view_to_load)) {
+				if (!$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) {
 					$error = true;
 					Error::trigger("VIEW_NOT_FOUND");
 				}
@@ -96,10 +97,14 @@ abstract class Controller {
 			}
 			
 			ob_start();
-				if (is_callable(array($this, $this->view_to_load)) && call_user_func(array($this, $this->view_to_load)) === false) {
+				if (is_callable(array($this, $this->viewToLoad)) && call_user_func(array($this, $this->viewToLoad)) === false) {
 					Error::trigger("VIEW_NOT_FOUND");
 				}
-				if (!$this->view_overridden) $this->getView($this->view_to_load);
+				if ($this->overriddenView) {
+					$this->_getView($this->overriddenViewToLoad);
+				} else {
+					$this->_getView($this->viewToLoad);
+				}
 			$this->content_for_layout = ob_get_clean();
 			
 		} else {
@@ -108,7 +113,7 @@ abstract class Controller {
 		}
 		
 		if(!empty($this->layout) && !$error) {
-			$this->renderLayout($this->layout);
+			$this->_renderLayout($this->layout);
 		} else {
 			echo $this->content_for_layout;
 		}
@@ -118,31 +123,74 @@ abstract class Controller {
 		return $full_page;
 	}
 	
-	final protected function getView ($name, $controller="", $override = false) {
-		if ($this->view_overridden == false && $override == true) {
-			$this->view_overridden = $override;
+	final protected function _getView($args, $controller="", $override = false) {
+		if (!is_array($args)) {
+			$args = array(
+				'name' => $args,
+				'controller' => $controller,
+				'override' => $override
+			);
+		} else {
+			if (empty($args['name'])) {
+				return false;
+			}
 		}
-		if (empty($controller)) {
-			$controller = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
+		if (empty($args['controller'])) {
+			$args['controller'] = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
 		}
-		if ((!strlen(Config::read("Branch.name")) && file_exists(Config::read("Path.physical")."/views/".strtolower($controller)."/{$name}.php") && (include(Config::read("Path.physical")."/views/".strtolower($controller)."/{$name}.php")) == true) || (strlen(Config::read("Branch.name")) && file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".strtolower($controller)."/{$name}.php") && (include(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".strtolower($controller)."/{$name}.php")) == true)) {
+		if ($this->overriddenView == false && $args['override'] == true) {
+			$this->overriddenView = $args['override'];
+			unset($args['override']);
+			$this->overriddenViewToLoad = $args;
 			return true;
+		}
+		if ((strlen(Config::read("Branch.name")) == 0)) {
+			if (((file_exists(Config::read("Path.physical")."/views/".$args['controller']."/".$args['name'].".php") && (include(Config::read("Path.physical")."/views/".$args['controller']."/".$args['name'].".php")) == true)) || ((file_exists(Config::read("Path.physical")."/views/".$args['controller']."/".str_replace('_', '-', $args['name']).".php") && (include(Config::read("Path.physical")."/views/".$args['controller']."/".str_replace('_', '-', $args['name']).".php")) == true))) {
+				return true;
+			}
+		} else {
+			if (((file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".$args['controller']."/".$args['name'].".php") && (include(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".$args['controller']."/".$args['name'].".php")) == true)) || (file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".$args['controller']."/".str_replace('_', '-', $args['name']).".php") && (include(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".$args['controller']."/".str_replace('_', '-', $args['name']).".php")) == true)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	final protected function _viewExists ($args, $controller="", $checkmethod = false) {
+		if (!is_array($args)) {
+			$args = array(
+				'name' => $args,
+				'controller' => $controller,
+				'checkmethod' => $checkmethod
+			);
+		} else {
+			if (empty($args['name'])) {
+				return false;
+			}
+		}
+		if (empty($args['controller'])) {
+			$args['controller'] = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
+		}
+		if ((!preg_match('/^_(.*)$/i', $args['name']) && (!isset($this->bounceback['check']) || $this->bounceback['check'] != $args['controller']) && !in_array($args['controller'], $this->notAView))) {
+			if ($args['checkmethod'] == true) {
+				if (method_exists($this, $args['name'])) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				if (((!strlen(Config::read("Branch.name")) && (file_exists(Config::read("Path.physical")."/views/".$args['controller']."/".$args['name'].".php") || file_exists(Config::read("Path.physical")."/views/".$args['controller']."/".str_replace('_', '-', $args['name']).".php"))) || (strlen(Config::read("Branch.name")) && (file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".$args['controller']."/".$args['name'].".php") || file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".$args['controller']."/".str_replace('_', '-', $args['name']).".php"))))) {
+					return true;
+				} else {
+					return false;
+				}
+			}
 		} else {
 			return false;
 		}
 	}
 	
-	final protected function viewExists ($name, $controller="") {
-		if (empty($controller)) $controller = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
-		
-		if (!preg_match('/^_(.*)$/i', $name) && (!isset($this->bounceback['check']) || $this->bounceback['check'] != $name) && !in_array($name, $this->not_a_view) && method_exists($this, $name)) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-	
-	final protected function renderLayout ($name) {
+	final protected function _renderLayout ($name) {
 		$content_for_layout = $this->content_for_layout;
 		if (strlen(Config::read("Branch.name")) && file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php") && (include(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php")) == true) {
 			return true;
