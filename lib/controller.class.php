@@ -171,8 +171,8 @@ abstract class Controller {
 		if (empty($args['controller'])) {
 			$args['controller'] = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
 		}
-		if ((!preg_match('/^_(.*)$/i', $args['name']) && (!isset($this->bounceback['check']) || $this->bounceback['check'] != $args['controller']) && !in_array($args['controller'], $this->notAView))) {
-			if ($args['checkmethod'] == true) {
+		if (($args['name'][0] != '_') && (!isset($this->bounceback['check']) || $this->bounceback['check'] != $args['controller']) && !in_array($args['controller'], $this->notAView))) {
+			if ($args['checkmethod'] === true) {
 				if (method_exists($this, $args['name'])) {
 					return true;
 				} else {
@@ -180,6 +180,13 @@ abstract class Controller {
 				}
 			} else {
 				if (((!strlen(Config::read("Branch.name")) && (file_exists(Config::read("Path.physical")."/views/".$args['controller']."/".$args['name'].".php") || file_exists(Config::read("Path.physical")."/views/".$args['controller']."/".str_replace('_', '-', $args['name']).".php"))) || (strlen(Config::read("Branch.name")) && (file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".$args['controller']."/".$args['name'].".php") || file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".$args['controller']."/".str_replace('_', '-', $args['name']).".php"))))) {
+					if ($args['checkmethod'] == 'both') {
+						if (method_exists($this, $args['name'])) {
+							return true;
+						} else {
+							return false;
+						}
+					}
 					return true;
 				} else {
 					return false;
