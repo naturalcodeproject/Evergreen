@@ -23,7 +23,7 @@ abstract class Controller {
 	protected $filter_only = array();
 	protected $notAView = array();
 	
-	final function __construct () {
+	final private function _controllerSetup() {
 		## Construct Code ##
 		$this->params = Config::loadableURI(Config::read("URI.working"));
 		if (!strlen(reset(array_slice($this->params, 1, 1)))) {
@@ -36,7 +36,9 @@ abstract class Controller {
 		$this->designer = new Designer();
 	}
 	
-	final public function _showView () {
+	final public function _showView() {
+		## Run the controller's Setup
+		$this->_controllerSetup();
 		## Set up the actual page
 		$full_page = $this->_loadView();
 		
@@ -156,7 +158,7 @@ abstract class Controller {
 		return false;
 	}
 	
-	final protected function _viewExists ($args, $controller="", $checkmethod = false) {
+	final protected function _viewExists($args, $controller="", $checkmethod = false) {
 		if (!is_array($args)) {
 			$args = array(
 				'name' => $args,
@@ -171,7 +173,7 @@ abstract class Controller {
 		if (empty($args['controller'])) {
 			$args['controller'] = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
 		}
-		if (($args['name'][0] != '_') && (!isset($this->bounceback['check']) || $this->bounceback['check'] != $args['controller']) && !in_array($args['controller'], $this->notAView))) {
+		if (($args['name'][0] != '_' && (!isset($this->bounceback['check']) || $this->bounceback['check'] != $args['controller']) && !in_array($args['controller'], $this->notAView))) {
 			if ($args['checkmethod'] === true) {
 				if (method_exists($this, $args['name'])) {
 					return true;
@@ -197,7 +199,7 @@ abstract class Controller {
 		}
 	}
 	
-	final protected function _renderLayout ($name) {
+	final protected function _renderLayout($name) {
 		$content_for_layout = $this->content_for_layout;
 		if (strlen(Config::read("Branch.name")) && file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php") && (include(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php")) == true) {
 			return true;
