@@ -8,10 +8,19 @@ class Main_Controller extends ApplicationController {
 	//var $filter_only = array("", array("wibble"));
 	//var $filter_except = array("", array("wibble"));
 	public function __construct() {
+		$this->_addFilterExcept('another_default', array('index'));
 		
+		$this->_addFilter(array(
+			'filter' => 'dash_test_page',
+		));
+		
+		parent::__construct();
 	}
 	
 	public function index () {
+		echo "<pre>";
+		var_dump($this->filters);
+		echo "</pre>";
 		$this->home_selected = "selected";
 		
 		Config::read('Param.action');

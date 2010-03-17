@@ -14,7 +14,7 @@ abstract class Controller {
 	private $formhandler;
 	private $designer;
 	private $params = array();
-	private $filters = array();
+	protected $filters = array();
 	private $overriddenView = false;
 	private	$overriddenViewToLoad = array();
 	
@@ -129,14 +129,16 @@ abstract class Controller {
 	final protected function _getView($args, $controller="", $override = false) {
 		if (!is_array($args)) {
 			$args = array(
+				'name' => $args
+			);
+		}
+		$args = array_merge(array(
 				'name' => $args,
 				'controller' => $controller,
 				'override' => $override
-			);
-		} else {
-			if (empty($args['name'])) {
-				return false;
-			}
+			), $args);
+		if (empty($args['name'])) {
+			return false;
 		}
 		if (empty($args['controller'])) {
 			$args['controller'] = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
@@ -162,14 +164,16 @@ abstract class Controller {
 	final protected function _viewExists($args, $controller="", $checkmethod = false) {
 		if (!is_array($args)) {
 			$args = array(
+				'name' => $args
+			);
+		}
+		$args = array_merge(array(
 				'name' => $args,
 				'controller' => $controller,
 				'checkmethod' => $checkmethod
-			);
-		} else {
-			if (empty($args['name'])) {
-				return false;
-			}
+			), $args);
+		if (empty($args['name'])) {
+			return false;
 		}
 		if (empty($args['controller'])) {
 			$args['controller'] = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
@@ -213,20 +217,77 @@ abstract class Controller {
 		}
 	}
 	
-	final protected function _addFilter($args, $type = "", $schedule = "View.before") {
+	final protected function _addFilter($args, $type = "all", $methods = array(), $schedule = "") {
 		if (!is_array($args)) {
 			$args = array(
+				'filter' => $args
+			);
+		}
+		$args = array_merge(array(
 				'filter' => $args,
 				'type' => $type,
+				'methods' => $methods,
 				'schedule' => $schedule
-			);
-		} else {
-			if (empty($args['filter'])) {
-				return false;
+			), $args);
+		if (empty($args['schedule'])) {
+			$args['schedule'] = "View.before";
+		}
+		if (empty($args['filter'])) {
+			return false;
+		}
+		$path = explode('.', $args['schedule']);
+		$filter_holder =& $this->filters;
+		foreach($path as $i => $path_key) {
+			if ($i == (count($path) - 1)) {
+				if (!isset($filter_holder[$path_key][$args['filter']])) {
+					$filter_holder[$path_key][$args['filter']] = array();
+				}
+				if (isset($filter_holder[$path_key][$args['filter']]['methods']) && $args['type'] != 'all') {
+					foreach($filter_holder[$path_key][$args['filter']]['methods'] as $value) {
+						if (!in_array($value, (array)$args['methods'])) {
+							$args['methods'] = array_merge((array)$args['methods'], (array)$value);
+						}
+					}
+				}
+				$filter_holder[$path_key][$args['filter']] = array_merge(array(
+					'type' => $args['type'],
+					'methods' => $args['methods']
+				), $filter_holder[$path_key][$args['filter']]);
+				return true;
+			} else {
+				if (!isset($filter_holder[$path_key])) {
+					$filter_holder[$path_key] = array();
+				}
+				$filter_holder =& $filter_holder[$path_key];
 			}
 		}
-		
-		
+	}
+	
+	final protected function _addFilterExcept($filter, $methods = array(), $schedule = "") {
+		return $this->_addFilter(array(
+			'filter' => $filter,
+			'type' => 'except',
+			'methods' => $methods,
+			'schedule' => $schedule
+		));
+	}
+	
+	final protected function _addFilterOnly($filter, $methods = array(), $schedule = "") {
+		return $this->_addFilter(array(
+			'filter' => $filter,
+			'type' => 'only',
+			'methods' => $methods,
+			'schedule' => $schedule
+		));
+	}
+	
+	final protected function _addFilterAll($filter, $schedule = "") {
+		return $this->_addFilter(array(
+			'filter' => $filter,
+			'type' => 'all',
+			'methods' => array(),
+			'schedule' => $schedule
+		));
 	}
 }
 ?>
