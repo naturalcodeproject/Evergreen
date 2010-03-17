@@ -19,8 +19,9 @@
 
 ?>
 
-<form name="hello" update="$_POST" method="post" action="[branch]/formtest">
+<form method="post" action="[branch]/formtest">
 	<input type="text" name="hello[name]" value="" /><br />
+	<input type="password" name="hello[password]" autopopulate="true" value="" /><br />
 	<select name="hello[something][]" multiple="multiple" size="5">
 		<option value="1">1</option>
 		<option value="2">2</option>
@@ -38,3 +39,7 @@
 	<input type="checkbox" name="hello[boxes][]" value="3" /><br />
 	<input type="submit" value="go" />
 </form>
+
+<pre>
+	<?php var_dump($_POST); ?>
+</pre>

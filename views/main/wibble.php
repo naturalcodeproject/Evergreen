@@ -1,1 +1,1 @@
-<p>hi Im wibble... and this is a number: <?= $this->wibblenum; ?></p>
+<p>hi Im wibble... and this is a number: <? //$this->wibblenum; ?></p>

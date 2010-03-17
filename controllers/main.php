@@ -7,6 +7,9 @@ class Main_Controller extends ApplicationController {
 	//var $filter = "";
 	//var $filter_only = array("", array("wibble"));
 	//var $filter_except = array("", array("wibble"));
+	public function __construct() {
+		
+	}
 	
 	public function index () {
 		$this->home_selected = "selected";
@@ -42,6 +45,7 @@ class Main_Controller extends ApplicationController {
 		// 		echo "<br /><br />";
 		// 		var_dump(Factory::get_config()->get_working_uri());
 		echo $this->mypage('Jack Attack');
+		//$this->getView($this->newView, '', true);
 	}
 	
 	protected function mypage($post) {
