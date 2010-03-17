@@ -13,7 +13,8 @@ abstract class Controller {
 	private $viewToLoad;
 	private $formhandler;
 	private $designer;
-	private $params;
+	private $params = array();
+	private $filters = array();
 	private $overriddenView = false;
 	private	$overriddenViewToLoad = array();
 	
@@ -199,7 +200,7 @@ abstract class Controller {
 		}
 	}
 	
-	final protected function _renderLayout($name) {
+	final private function _renderLayout($name) {
 		$content_for_layout = $this->content_for_layout;
 		if (strlen(Config::read("Branch.name")) && file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php") && (include(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php")) == true) {
 			return true;
@@ -210,6 +211,22 @@ abstract class Controller {
 				return false;
 			}
 		}
+	}
+	
+	final protected function _addFilter($args, $type = "", $schedule = "View.before") {
+		if (!is_array($args)) {
+			$args = array(
+				'filter' => $args,
+				'type' => $type,
+				'schedule' => $schedule
+			);
+		} else {
+			if (empty($args['filter'])) {
+				return false;
+			}
+		}
+		
+		
 	}
 }
 ?>
