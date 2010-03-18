@@ -229,6 +229,8 @@ class Formhandler {
 		## Set up Properties
 		$properties = $this->propertiesArray($attr);
 		
+		$properties = array_merge(array('value' => ''), $properties);
+		
 		if (isset($this->forms_arr[$this->current_form]['update']) && is_array($this->forms_arr[$this->current_form]['update'])) {
 			if (($this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name) == $properties['value'] || $this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name) == $insides)  && !is_array($this->getFormNameValue($this->forms_arr[$this->current_form]['update'], $this->parsed_name))) {
 				$properties['selected'] = "selected";
