@@ -60,7 +60,9 @@ abstract class Controller {
 		$this->_setFullPageContent($fullPage);
 		
 		## Output Page
+		$this->_runFilters('Page.before.output');
 		echo $this->_getFullPageContent();
+		$this->_runFilters('Page.after.output');
 	}
 	
 	final private function _loadView() {
@@ -69,7 +71,7 @@ abstract class Controller {
 		
 		if ((is_callable(array($this, $this->viewToLoad)) && $this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) || (!$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true)) && (isset($this->bounceback['check']) && isset($this->bounceback['bounce'])) && method_exists($this, $this->bounceback['check']) && method_exists($this, $this->bounceback['bounce']))) {
 			$this->_runBounceBack();
-			
+			$this->_runFilters('Page.before');
 			$this->_runFilters('View.before');
 			ob_start();
 				$this->_runFilters('View.content.before');
@@ -96,6 +98,7 @@ abstract class Controller {
 		$this->_runFilters('Layout.after');
 		
 		$this->_setFullPageContent(ob_get_clean());
+		$this->_runFilters('Page.after');
 	}
 	
 	final protected function _getView($args, $controller="", $override = false) {
