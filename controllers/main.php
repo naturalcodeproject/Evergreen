@@ -4,23 +4,11 @@ class Main_Controller extends ApplicationController {
 	var $layout = "index";
 	//public $not_a_view = array('mypage');
 	//var $bounceback = array("bounce"=>"loud", "check"=>"soft");
-	//var $filter = "";
-	//var $filter_only = array("", array("wibble"));
-	//var $filter_except = array("", array("wibble"));
 	public function __construct() {
-		$this->_addFilterExcept('another_default', array('index'));
-		
-		$this->_addFilter(array(
-			'filter' => 'dash_test_page',
-		));
-		
 		parent::__construct();
 	}
 	
 	public function index () {
-		echo "<pre>";
-		var_dump($this->filters);
-		echo "</pre>";
 		$this->home_selected = "selected";
 		
 		Config::read('Param.action');

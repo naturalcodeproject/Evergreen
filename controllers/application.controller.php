@@ -4,8 +4,7 @@ class ApplicationController extends Controller {
 	protected $filter = 'is_user_admin';
 	
 	public function __construct() {
-		$this->_addFilterAll('another_default');
-		$this->_addFilterExcept('another_default', array('custom_error'));
+		//$this->_addFilterAll('another_default', 'View.before');
 	}
 	
 	public function is_user_admin() {
