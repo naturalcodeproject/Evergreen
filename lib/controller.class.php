@@ -412,8 +412,28 @@ abstract class Controller {
 	}
 	
 	final protected function _setLayout($name, $branch = '') {
-		$this->layout = array('name' => $name, 'branch' => $branch);
-		return true;
+		$layout = array('name' => $name, 'branch' => $branch);
+		if (($layout['branch'] == Config::read('System.rootIdentifier')) || (!strlen(Config::read("Branch.name")) && empty($layout['branch']))) {
+			if ((file_exists(Config::read("Path.physical")."/views/layouts/{$layout['name']}.php")) || (file_exists(Config::read("Path.physical")."/views/layouts/".str_replace("_", "-", $layout['name']).".php"))) {
+				$this->layout = $layout;
+				return true;
+			} else {
+				return false;
+			}
+		} else if ((strlen(Config::read("Branch.name")) && empty($layout['branch'])) || !empty($layout['branch'])) {
+			if (!empty($layout['branch'])) {
+				$branchToUse = $layout['branch'];
+			} else {
+				$branchToUse = Config::read("Branch.name");
+			}
+			if ((file_exists(Config::read("Path.physical")."/branches/".$branchToUse."/views/layouts/{$layout['name']}.php")) || (file_exists(Config::read("Path.physical")."/branches/".$branchToUse."/views/layouts/".str_replace("_", "-", $layout['name']).".php"))) {
+				$this->layout = $layout;
+				return true;
+			} else {
+				return false;
+			}
+		}
+		return false;
 	}
 	
 	final protected function _removeLayout() {
