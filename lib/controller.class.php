@@ -10,14 +10,18 @@
 */
 
 abstract class Controller {
-	private $viewToLoad;
-	private $formhandler;
-	private $designer;
+	private $viewToLoad = null;
+	private $formhandler = null;
+	private $designer = null;
+	private $layout = null;
 	private $params = array();
 	private $filters = array();
 	private $overriddenView = false;
 	private	$overriddenViewToLoad = array();
 	private $bounceback = array('check' => '', 'bounce' => '');
+	
+	private $viewContent = null;
+	private $fullPageContent = null;
 	
 	protected $notAView = array();
 	
@@ -38,19 +42,25 @@ abstract class Controller {
 		## Run the controller's Setup
 		$this->_controllerSetup();
 		## Set up the actual page
-		$full_page = $this->_loadView();
+		$this->_loadView();
+		
+		## Full Page Content Holder
+		$fullPage = $this->_getFullPageContent();
 		
 		## First Designer Fix
-		$this->designer->doFixes($full_page);
+		$this->designer->doFixes($$fullPage);
 		
 		## Form Fix
-		$this->formhandler->decode($full_page);
+		$this->formhandler->decode($fullPage);
 		
 		## Second Designer Fix
-		$this->designer->doFixes($full_page);
+		$this->designer->doFixes($fullPage);
+		
+		## Set Full Page Content After Fixes
+		$this->_setFullPageContent($fullPage);
 		
 		## Output Page
-		echo $full_page;
+		echo $this->_getFullPageContent();
 	}
 	
 	final private function _loadView() {
@@ -71,7 +81,7 @@ abstract class Controller {
 					$this->_getView($this->viewToLoad);
 				}
 				$this->_runFilters('View.after');
-			$this->content_for_layout = ob_get_clean();
+			$this->_setViewContent(ob_get_clean());
 			$this->_runFilters('View.afterProcessing');
 		} else {
 			$error = true;
@@ -79,16 +89,12 @@ abstract class Controller {
 		}
 		
 		$this->_runFilters('Layout.before');
-		if(!empty($this->layout) && !$error) {
-			$this->_renderLayout($this->layout);
-		} else {
-			echo $this->content_for_layout;
+		if(!$this->_renderLayout() && !$error) {
+			echo $this->_getViewContent();
 		}
 		$this->_runFilters('Layout.after');
 		
-		$full_page = ob_get_clean();
-		
-		return $full_page;
+		$this->_setFullPageContent(ob_get_clean());
 	}
 	
 	final protected function _getView($args, $controller="", $override = false) {
@@ -169,17 +175,30 @@ abstract class Controller {
 		}
 	}
 	
-	final private function _renderLayout($name) {
-		$content_for_layout = $this->content_for_layout;
-		if (strlen(Config::read("Branch.name")) && file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php") && (include(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/layouts/{$name}.php")) == true) {
-			return true;
-		} else {
-			if (file_exists(Config::read("Path.physical")."/views/layouts/{$name}.php") && (include(Config::read("Path.physical")."/views/layouts/{$name}.php")) == true) {
+	final private function _renderLayout() {
+		$layout = array_merge(array('name'=>'', 'branch'=>''), (array)$this->layout);
+		if (empty($layout['name'])) {
+			return false;
+		}
+		if (($layout['branch'] == Config::read('System.rootIdentifier')) || (!strlen(Config::read("Branch.name")) && empty($layout['branch']))) {
+			if ((file_exists(Config::read("Path.physical")."/views/layouts/{$layout['name']}.php") && (include(Config::read("Path.physical")."/views/layouts/{$layout['name']}.php")) == true) || (file_exists(Config::read("Path.physical")."/views/layouts/".str_replace("_", "-", $layout['name']).".php") && (include(Config::read("Path.physical")."/views/layouts/".str_replace("_", "-", $layout['name']).".php")) == true)) {
+				return true;
+			} else {
+				return false;
+			}
+		} else if ((strlen(Config::read("Branch.name")) && empty($layout['branch'])) || !empty($layout['branch'])) {
+			if (!empty($layout['branch'])) {
+				$branchToUse = $layout['branch'];
+			} else {
+				$branchToUse = Config::read("Branch.name");
+			}
+			if ((file_exists(Config::read("Path.physical")."/branches/".$branchToUse."/views/layouts/{$layout['name']}.php") && (include(Config::read("Path.physical")."/branches/".$branchToUse."/views/layouts/{$layout['name']}.php")) == true) || (file_exists(Config::read("Path.physical")."/branches/".$branchToUse."/views/layouts/".str_replace("_", "-", $layout['name']).".php") && (include(Config::read("Path.physical")."/branches/".$branchToUse."/views/layouts/".str_replace("_", "-", $layout['name']).".php")) == true)) {
 				return true;
 			} else {
 				return false;
 			}
 		}
+		return false;
 	}
 	
 	final protected function _addFilterAll($filter, $schedule) {
@@ -390,6 +409,32 @@ abstract class Controller {
 				Error::trigger("VIEW_NOT_FOUND");
 			}
 		}
+	}
+	
+	final protected function _setLayout($name, $branch = '') {
+		$this->layout = array('name' => $name, 'branch' => $branch);
+		return true;
+	}
+	
+	final protected function _removeLayout() {
+		$this->layout = null;
+		return true;
+	}
+	
+	final protected function _getViewContent() {
+		return $this->viewContent;
+	}
+	
+	final protected function _setViewContent($content) {
+		$this->viewContent = $content;
+	}
+	
+	final protected function _getFullPageContent() {
+		return $this->fullPageContent;
+	}
+	
+	final protected function _setFullPageContent($content) {
+		$this->fullPageContent = $content;
 	}
 }
 ?>

@@ -1,11 +1,11 @@
 <?php
 
 class Main_Controller extends ApplicationController {
-	var $layout = "index";
 	//public $not_a_view = array('mypage');
 	//var $bounceback = array("bounce"=>"loud", "check"=>"soft");
 	public function __construct() {
 		parent::__construct();
+		$this->_setLayout('index');
 	}
 	
 	public function index () {

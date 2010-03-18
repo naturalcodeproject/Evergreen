@@ -2,7 +2,9 @@
 
 class Main_DeveloperController extends BranchController
 {
-	var $layout = "index";
+	public function __construct() {
+		$this->_setLayout('index', Config::read('System.rootIdentifier'));
+	}
 	
 	public function index()
 	{
