@@ -70,8 +70,9 @@ abstract class Controller {
 		if ((is_callable(array($this, $this->viewToLoad)) && $this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) || (!$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true)) && (isset($this->bounceback['check']) && isset($this->bounceback['bounce'])) && method_exists($this, $this->bounceback['check']) && method_exists($this, $this->bounceback['bounce']))) {
 			$this->_runBounceBack();
 			
+			$this->_runFilters('View.before');
 			ob_start();
-				$this->_runFilters('View.before');
+				$this->_runFilters('View.content.before');
 				if (is_callable(array($this, $this->viewToLoad)) && call_user_func(array($this, $this->viewToLoad)) === false) {
 					Error::trigger("VIEW_NOT_FOUND");
 				}
@@ -80,9 +81,9 @@ abstract class Controller {
 				} else {
 					$this->_getView($this->viewToLoad);
 				}
-				$this->_runFilters('View.after');
+				$this->_runFilters('View.content.after');
 			$this->_setViewContent(ob_get_clean());
-			$this->_runFilters('View.afterProcessing');
+			$this->_runFilters('View.after');
 		} else {
 			$error = true;
 			Error::trigger("VIEW_NOT_FOUND");
@@ -268,7 +269,7 @@ abstract class Controller {
 			if ($i == (count($path) - 1)) {
 				if (!isset($filter_holder[$path_key][$filter])) {
 					$filter_holder[$path_key][$filter] = array(
-						'type' => 'only',
+						'type' => 'except',
 						'methods' => array()
 					);
 				}
