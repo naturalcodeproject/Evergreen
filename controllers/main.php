@@ -6,6 +6,11 @@ class Main_Controller extends ApplicationController {
 	public function __construct() {
 		parent::__construct();
 		$this->_setLayout('index');
+		//$this->_setBounceBack('testBounce', 'index');
+	}
+	
+	public function testBounce() {
+		return true;
 	}
 	
 	public function index () {

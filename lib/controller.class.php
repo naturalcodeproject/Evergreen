@@ -18,7 +18,7 @@ abstract class Controller {
 	private $filters = array();
 	private $overriddenView = false;
 	private	$overriddenViewToLoad = array();
-	private $bounceback = array('check' => '', 'bounce' => '');
+	private $bounceback = null;
 	
 	private $viewContent = null;
 	private $fullPageContent = null;
@@ -60,17 +60,16 @@ abstract class Controller {
 		$this->_setFullPageContent($fullPage);
 		
 		## Output Page
-		$this->_runFilters('Page.before.output');
+		$this->_runFilters('Page.output.before');
 		echo $this->_getFullPageContent();
-		$this->_runFilters('Page.after.output');
+		$this->_runFilters('Page.output.after');
 	}
 	
 	final private function _loadView() {
 		ob_start();
 		$error = false;
 		
-		if ((is_callable(array($this, $this->viewToLoad)) && $this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) || (!$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true)) && (isset($this->bounceback['check']) && isset($this->bounceback['bounce'])) && method_exists($this, $this->bounceback['check']) && method_exists($this, $this->bounceback['bounce']))) {
-			$this->_runBounceBack();
+		if ((is_callable(array($this, $this->viewToLoad)) && $this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) || (!$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true)) && ($this->_runBounceBack()))) {
 			$this->_runFilters('Page.before');
 			$this->_runFilters('View.before');
 			ob_start();
@@ -206,197 +205,140 @@ abstract class Controller {
 	}
 	
 	final protected function _addFilterAll($filter, $schedule) {
-		$path = explode('.', $schedule);
-		$filter_holder =& $this->filters;
-		foreach($path as $i => $path_key) {
-			if ($i == (count($path) - 1)) {
-				if (!isset($filter_holder[$path_key][$filter])) {
-					$filter_holder[$path_key][$filter] = array();
-				}
-				$filter_holder[$path_key][$filter] = array(
-					'type' => 'except',
-					'methods' => array()
-				);
-				return true;
-			} else {
-				if (!isset($filter_holder[$path_key])) {
-					$filter_holder[$path_key] = array();
-				}
-				$filter_holder =& $filter_holder[$path_key];
-			}
+		if (!isset($this->filters[$schedule])) {
+			$this->filters[$schedule] = array();
 		}
-		return false;
+		$filter_holder[$schedule][$filter] = array(
+			'type' => 'except',
+			'methods' => array()
+		);
+		return true;
 	} 
 	
 	final protected function _addFilterOn($filter, $methods, $schedule) {
 		$methods = (array)$methods;
-		$path = explode('.', $schedule);
-		$filter_holder =& $this->filters;
-		foreach($path as $i => $path_key) {
-			if ($i == (count($path) - 1)) {
-				if (!isset($filter_holder[$path_key][$filter])) {
-					$filter_holder[$path_key][$filter] = array(
-						'type' => 'only',
-						'methods' => array()
-					);
-				}
-				if ($filter_holder[$path_key][$filter]['type'] == 'except') {
-					foreach($filter_holder[$path_key][$filter]['methods'] as $key => $method) {
-						if (in_array($method, $methods)) {
-							unset($filter_holder[$path_key][$filter]['methods'][$key]);
-						}
-					}
-				} else if ($filter_holder[$path_key][$filter]['type'] == 'only') {
-					foreach($methods as $key => $method) {
-						if (!in_array($method, $filter_holder[$path_key][$filter]['methods'])) {
-							$filter_holder[$path_key][$filter]['methods'][] = $method;
-						}
-					}
-				}
-				return true;
-			} else {
-				if (!isset($filter_holder[$path_key])) {
-					$filter_holder[$path_key] = array();
-				}
-				$filter_holder =& $filter_holder[$path_key];
-			}
+		if (!isset($this->filters[$schedule])) {
+			$this->filters[$schedule] = array();
 		}
-		return false;
+		if (!isset($this->filters[$schedule][$filter])) {
+			$this->filters[$schedule][$filter] = array(
+				'type' => 'only',
+				'methods' => array()
+			);
+		}
+		if ($this->filters[$schedule][$filter]['type'] == 'except') {
+			foreach($this->filters[$schedule][$filter]['methods'] as $key => $method) {
+				if (in_array($method, $methods)) {
+					unset($this->filters[$schedule][$filter]['methods'][$key]);
+				}
+			}
+		} else if ($this->filters[$schedule][$filter]['type'] == 'only') {
+			foreach($methods as $key => $method) {
+				if (!in_array($method, $this->filters[$schedule][$filter]['methods'])) {
+					$this->filters[$schedule][$filter]['methods'][] = $method;
+				}
+			}
+		} else {
+			return false;
+		}
+		return true;
 	}
 	
 	final protected function _addFilterExcept($filter, $methods, $schedule) {
 		$methods = (array)$methods;
-		$path = explode('.', $schedule);
-		$filter_holder =& $this->filters;
-		foreach($path as $i => $path_key) {
-			if ($i == (count($path) - 1)) {
-				if (!isset($filter_holder[$path_key][$filter])) {
-					$filter_holder[$path_key][$filter] = array(
-						'type' => 'except',
-						'methods' => array()
-					);
-				}
-				if ($filter_holder[$path_key][$filter]['type'] == 'except') {
-					foreach($methods as $key => $method) {
-						if (!in_array($method, $filter_holder[$path_key][$filter]['methods'])) {
-							$filter_holder[$path_key][$filter]['methods'][] = $method;
-						}
-					}
-				} else if ($filter_holder[$path_key][$filter]['type'] == 'only') {
-					$filter_holder[$path_key][$filter] = array(
-						'type' => 'except',
-						'methods' => $methods
-					);
-				}
-				return true;
-			} else {
-				if (!isset($filter_holder[$path_key])) {
-					$filter_holder[$path_key] = array();
-				}
-				$filter_holder =& $filter_holder[$path_key];
-			}
+		if (!isset($this->filters[$schedule])) {
+			$this->filters[$schedule] = array();
 		}
-		return false;
+		if (!isset($this->filters[$schedule][$filter])) {
+			$this->filters[$schedule][$filter] = array(
+				'type' => 'except',
+				'methods' => array()
+			);
+		}
+		if ($this->filters[$schedule][$filter]['type'] == 'except') {
+			foreach($methods as $key => $method) {
+				if (!in_array($method, $this->filters[$schedule][$filter]['methods'])) {
+					$this->filters[$schedule][$filter]['methods'][] = $method;
+				}
+			}
+		} else if ($this->filters[$schedule][$filter]['type'] == 'only') {
+			$this->filters[$schedule][$filter] = array(
+				'type' => 'except',
+				'methods' => $methods
+			);
+		} else {
+			return false;
+		}
+		return true;
 	}
 
 	final protected function _removeFilterOn($filter, $methods, $schedule) {
 		$methods = (array)$methods;
-		$path = explode('.', $schedule);
-		$filter_holder =& $this->filters;
-		foreach($path as $i => $path_key) {
-			if ($i == (count($path) - 1)) {
-				if (!isset($filter_holder[$path_key][$filter])) {
-					return true;
+		if (!isset($this->filters[$schedule][$filter])) {
+			return true;
+		}
+		if ($this->filters[$schedule][$filter]['type'] == 'except') {
+			foreach($methods as $key => $method) {
+				if (!in_array($method, $this->filters[$schedule][$filter]['methods'])) {
+					$this->filters[$schedule][$filter]['methods'][] = $method;
 				}
-				if ($filter_holder[$path_key][$filter]['type'] == 'except') {
-					foreach($methods as $key => $method) {
-						if (!in_array($method, $filter_holder[$path_key][$filter]['methods'])) {
-							$filter_holder[$path_key][$filter]['methods'][] = $method;
-						}
-					}
-					return true;
-				} else if ($filter_holder[$path_key][$filter]['type'] == 'only') {
-					foreach($filter_holder[$path_key][$filter]['methods'] as $key => $method) {
-						if (in_array($method, $methods)) {
-							unset($filter_holder[$path_key][$filter]['methods'][$key]);
-						}
-					}
-					
-					if (count($filter_holder[$path_key][$filter]['methods']) == 0) {
-						$this->_removeFilter($filter);
-					}
-					return true;
-				}
-				return false;
-			} else {
-				if (!isset($filter_holder[$path_key])) {
-					$filter_holder[$path_key] = array();
-				}
-				$filter_holder =& $filter_holder[$path_key];
 			}
+			return true;
+		} else if ($this->filters[$schedule][$filter]['type'] == 'only') {
+			foreach($this->filters[$schedule][$filter]['methods'] as $key => $method) {
+				if (in_array($method, $methods)) {
+					unset($this->filters[$schedule][$filter]['methods'][$key]);
+				}
+			}
+			
+			if (count($this->filters[$schedule][$filter]['methods']) == 0) {
+				$this->_removeFilter($filter);
+			}
+			return true;
 		}
 		return false;
 	}
 	
 	final protected function _removeFilter($filter, $schedule) {
-		$path = explode('.', $schedule);
-		$filter_holder =& $this->filters;
-		foreach($path as $i => $path_key) {
-			if ($i == (count($path) - 1)) {
-				if (isset($filter_holder[$path_key][$filter])) {
-					unset($filter_holder[$path_key][$filter]);
-				}
-				return true;
-			} else {
-				if (!isset($filter_holder[$path_key])) {
-					$filter_holder[$path_key] = array();
-				}
-				$filter_holder =& $filter_holder[$path_key];
-			}
+		if (isset($this->filters[$schedule][$filter])) {
+			unset($this->filters[$schedule][$filter]);
 		}
-		return false;
+		return true;
 	}
 	
 	final private function _runFilters($schedule) {
-		$path = explode('.', $schedule);
-		$filter_holder =& $this->filters;
-		foreach($path as $i => $path_key) {
-			if ($i == (count($path) - 1)) {
-				if (isset($filter_holder[$path_key])) {
-					foreach($filter_holder[$path_key] as $filter => $attributes) {
-						if ($attributes['type'] == 'except') {
-							if (!in_array($this->viewToLoad, $attributes['methods'])) {
-								call_user_func(array($this, $filter));
-							}
-						} else if ($attributes['type'] == 'only') {
-							if (in_array($this->viewToLoad, $attributes['methods'])) {
-								call_user_func(array($this, $filter));
-							}
-						}
+		if (isset($this->filters[$schedule])) {
+			foreach($this->filters[$schedule] as $filter => $attributes) {
+				if ($attributes['type'] == 'except') {
+					if (!in_array($this->viewToLoad, $attributes['methods'])) {
+						call_user_func(array($this, $filter));
+					}
+				} else if ($attributes['type'] == 'only') {
+					if (in_array($this->viewToLoad, $attributes['methods'])) {
+						call_user_func(array($this, $filter));
 					}
 				}
-				return true;
-			} else {
-				if (!isset($filter_holder[$path_key])) {
-					$filter_holder[$path_key] = array();
-				}
-				$filter_holder =& $filter_holder[$path_key];
 			}
+			return true;
 		}
 		return false;
 	}
 	
 	final protected function _setBounceBack($check, $bounce) {
-		$this->bounceback['check'] = $check;
-		$this->bounceback['bounce'] = $bounce;
+		$this->bounceback = array(
+			'check' => $check,
+			'bounce' => $bounce
+		);
+		return true;
 	}
 	
 	final protected function _removeBounceBack() {
-		$this->bounceback = array('check' => '', 'bounce' => '');
+		$this->bounceback = null;
+		return true;
 	}
 	
 	final private function _runBounceBack() {
-		if ((isset($this->bounceback['check']) && isset($this->bounceback['bounce'])) && !$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) {
+		if (((isset($this->bounceback['check']) && method_exists($this, $this->bounceback['check'])) && (isset($this->bounceback['bounce']) && method_exists($this, $this->bounceback['bounce']))) && !$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) {
 			$values = array_values(Config::read('URI.working'));
 			$this->params = array_combine(array_keys(Config::read('URI.working')), array_slice(array_merge(array($values[0]), array($this->bounceback['bounce']),array_slice($values, 1)), 0, count(array_keys(Config::read('URI.working')))));
 			Config::register('Param', $this->params);
@@ -404,15 +346,15 @@ abstract class Controller {
 			$this->viewToLoad = $this->params[reset(array_slice(array_keys($this->params), 1, 1))];
 			
 			if (!$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) {
-				$error = true;
-				Error::trigger("VIEW_NOT_FOUND");
+				return false;
 			}
 			
 			if (is_callable(array($this, $this->bounceback['check'])) && call_user_func(array($this, $this->bounceback['check'])) === false) {
-				$error = true;
-				Error::trigger("VIEW_NOT_FOUND");
+				return false;
 			}
+			return true;
 		}
+		return false;
 	}
 	
 	final protected function _setLayout($name, $branch = '') {
