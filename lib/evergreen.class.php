@@ -1,6 +1,9 @@
 <?php
 final class Evergreen {
 	function __construct() {
+		$starttime = explode(' ', microtime());
+		$starttime = $starttime[1] + $starttime[0];
+		
 		try {
 			## Register Autoloader Class ##
 			spl_autoload_register(array('AutoLoaders', 'main'));
@@ -69,7 +72,29 @@ final class Evergreen {
 			Error::processError($e);
 		}
 		
+		$mtime = explode(' ', microtime());
+		$totaltime = $mtime[0] + $mtime[1] - $starttime;
 
+		if (Config::read('System.mode') == 'development') {
+			echo sprintf('Time : %.3fs seconds', $totaltime);
+			
+			if (function_exists('memory_get_usage')) {
+				// php has to be compiled with --enable-memory-limit for this to exist
+				// prior to version 5.2.1
+				echo ' | Memory Used : ' . self::convertBytes(memory_get_usage(true));
+			}
+			
+			if (function_exists('memory_get_peak_usage')) {
+				// php 5.2+
+				echo ' | Peak Memory Used: ' . self::convertBytes(memory_get_peak_usage(true));
+			}
+		}
+	}
+	
+	public function convertBytes($size)
+	{
+		$unit = array('b','kb','mb','gb','tb','pb');
+		return @round($size / pow(1024, ($i = floor(log($size, 1024)))), 2) . ' ' . $unit[$i];
 	}
 }
 
