@@ -48,7 +48,7 @@ abstract class Controller {
 		$fullPage = $this->_getFullPageContent();
 		
 		## First Designer Fix
-		$this->designer->doFixes($$fullPage);
+		$this->designer->doFixes($fullPage);
 		
 		## Form Fix
 		$this->formhandler->decode($fullPage);
