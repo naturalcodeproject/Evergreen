@@ -208,7 +208,7 @@ abstract class Controller {
 		if (!isset($this->filters[$schedule])) {
 			$this->filters[$schedule] = array();
 		}
-		$filter_holder[$schedule][$filter] = array(
+		$this->filters[$schedule][$filter] = array(
 			'type' => 'except',
 			'methods' => array()
 		);
