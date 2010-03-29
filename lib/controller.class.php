@@ -68,7 +68,6 @@ abstract class Controller {
 	final private function _loadView() {
 		ob_start();
 		$error = false;
-		
 		if ((is_callable(array($this, $this->viewToLoad)) && $this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) || (!$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true)) && ($this->_runBounceBack()))) {
 			$this->_runFilters('Page.before');
 			$this->_runFilters('View.before');
@@ -345,7 +344,7 @@ abstract class Controller {
 			$this->params = Config::loadableURI($this->params);
 			$this->viewToLoad = $this->params[reset(array_slice(array_keys($this->params), 1, 1))];
 			
-			if (!$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) {
+			if ($this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true)) !== true) {
 				return false;
 			}
 			

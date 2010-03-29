@@ -6,7 +6,7 @@ class Main_Controller extends ApplicationController {
 	public function __construct() {
 		parent::__construct();
 		$this->_setLayout('index');
-		//$this->_setBounceBack('testBounce', 'index');
+		//$this->_setBounceBack('testBounce', 'another_default');
 	}
 	
 	public function testBounce() {
@@ -15,43 +15,6 @@ class Main_Controller extends ApplicationController {
 	
 	public function index () {
 		$this->home_selected = "selected";
-		
-		Config::read('Param.action');
-		
-		$test = System::helper("test", '', array('two', 'three'));
-		echo $test->getSomething()."<br />";
-		
-		
-		//var_dump($test);
-		
-		//$this->projax = System::plugin("projax")->load();
-		//$this->render_view('wibble');
-		
-		//echo "<pre>";
-			//print_r(get_loaded_extensions());
-			//print_r(get_included_files());
-		//echo "</pre>";
-		
-		//$this->branch_projax = System::plugin("projax")->from_branch("developer")->load();
-	
-		//$hookhelper = System::load_helper("somethingelse");
-		//$hookhelper->aFunction();
-		
-		// echo "<p/>";
-		// 		echo "Current ='[current]' - <a href='[current]'>Test</a><br/>";
-		// 		echo "Site ='[site]' - <a href='[site]'>Test</a><br/>";
-		// 		echo "View ='[view]' - <a href='[view]'>Test</a><br/>";
-		// 		echo "Controller ='[controller]' - <a href='[controller]'>Test</a><br/>";
-		// 		echo "Branch ='[branch]' - <a href='[branch]'>Test</a><br/>";
-		// 		
-		// 		echo "<br /><br />";
-		// 		var_dump(Factory::get_config()->get_working_uri());
-		echo $this->mypage('Jack Attack');
-		//$this->getView($this->newView, '', true);
-	}
-	
-	protected function mypage($post) {
-		return $post;
 	}
 	
 	public function another_default() {
@@ -69,17 +32,6 @@ class Main_Controller extends ApplicationController {
 	{
 		echo "Hello to the dash test page.";
 	}
-	
-	// public function soft()
-	// {
-	// 	echo "soft";
-	// 	return false;
-	// }
-	// 
-	// public function loud()
-	// {
-	// 	echo "Loud";
-	// }
 	
 	public function error404()
 	{
