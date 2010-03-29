@@ -1,10 +1,8 @@
 <?php
 final class Evergreen {
 	function __construct() {
-		if (Config::read('System.displayPageLoadInfo') == true) {
-			$starttime = explode(' ', microtime());
-			$starttime = $starttime[1] + $starttime[0];
-		}
+		$starttime = explode(' ', microtime());
+		$starttime = $starttime[1] + $starttime[0];
 		
 		try {
 			## Register Autoloader Class ##

@@ -4,7 +4,7 @@
 	
 	## URI Setup ##
 	Config::register(array(
-		"URI.useModRewrite" => false,
+		"URI.useModRewrite" => true,
 		"URI.useDashes" => true,
 		"URI.forceDashes" => true
 	));
