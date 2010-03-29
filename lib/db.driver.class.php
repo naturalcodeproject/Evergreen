@@ -169,7 +169,12 @@ abstract class DB_Driver {
             $e = $this->db->getCurException();
             $this->model->addError(null, $e->getMessage(), ModelError::TYPE_DB_OPERATION_FAILED, $e->getTraceAsString(), $e->getCode());
         }
-        return $result->fetchAll(PDO::FETCH_ASSOC);
+		try {
+        	return $result->fetchAll(PDO::FETCH_ASSOC);
+		}
+		catch (Exception $e) {
+			return NULL;
+		}
     }
 
     public function set_column_operations($column, $flags) {
