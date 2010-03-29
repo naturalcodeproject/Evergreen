@@ -30,6 +30,7 @@ final class Config {
 			
 			// Setup Configuration defaults
 			self::$config['System']['mode'] = "development";
+			self::$config['System']['displayPageLoadInfo'] = false;
 			self::$config['URI']['prependIdentifier'] = "url";
 			self::$config['URI']['useModRewrite'] = true;
 			self::$config['URI']['useDashes'] = true;
@@ -228,7 +229,11 @@ final class Config {
 		if (self::read("URI.useModRewrite")) {
 			$uri_paths = explode("/", ltrim($_SERVER['REQUEST_URI'], '/'));
 		} else {
-			$uri_paths = explode("/", ltrim($_GET[self::read("URI.prependIdentifier")], '/'));
+			if (isset($_GET[self::read("URI.prependIdentifier")])) {
+				$uri_paths = explode("/", ltrim($_GET[self::read("URI.prependIdentifier")], '/'));
+			} else {
+				$uri_paths = array();
+			}
 		}
 		
 		// Setup the additional Path configuration settings based off the URI.map, the Skin, and the Branch

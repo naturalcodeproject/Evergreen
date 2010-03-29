@@ -1,8 +1,10 @@
 <?php
 final class Evergreen {
 	function __construct() {
-		$starttime = explode(' ', microtime());
-		$starttime = $starttime[1] + $starttime[0];
+		if (Config::read('System.displayPageLoadInfo') == true) {
+			$starttime = explode(' ', microtime());
+			$starttime = $starttime[1] + $starttime[0];
+		}
 		
 		try {
 			## Register Autoloader Class ##
@@ -71,11 +73,10 @@ final class Evergreen {
 			// Load error if something triggered an error
 			Error::processError($e);
 		}
-		
-		$mtime = explode(' ', microtime());
-		$totaltime = $mtime[0] + $mtime[1] - $starttime;
 
-		if (Config::read('System.mode') == 'development') {
+		if (Config::read('System.displayPageLoadInfo') == true) {
+			$mtime = explode(' ', microtime());
+			$totaltime = $mtime[0] + $mtime[1] - $starttime;
 			echo sprintf('Time : %.3fs seconds', $totaltime);
 			
 			if (function_exists('memory_get_usage')) {
