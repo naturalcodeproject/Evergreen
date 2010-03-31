@@ -14,9 +14,8 @@ final class Evergreen {
 			## Load Base Configuration ##
 			if (file_exists(Config::read("Path.physical")."/config/config.php")) {
 				// Load in the config.php file
-				include(Config::read("Path.physical")."/config/config.php");
+				include_once(Config::read("Path.physical")."/config/config.php");
 			} else {
-				// Error if the config.php file isnt present in the config directory
 				echo "You are missing the configuration file and without it Evergreen cannot run.";
 				exit;
 			}
@@ -99,7 +98,7 @@ final class Evergreen {
 
 class AutoLoaders {
 	public static function main($class_name) {
-		self::parseClassName($class_name);
+		$class_name = self::parseClassName($class_name);
 		self::baseIncludes($class_name);
 		
 		## Controller Include ##
@@ -109,7 +108,7 @@ class AutoLoaders {
 	}
 	
 	public static function branches($class_name) {
-		self::parseClassName($class_name);
+		$class_name = self::parseClassName($class_name);
 		$branch_name = Config::read("Branch.name");
 		self::baseIncludes($class_name);
 		
@@ -121,41 +120,17 @@ class AutoLoaders {
 	
 	public static function baseIncludes($class_name) {
 		## Base System Includes ##
-		require_once("lib/factory.class.php");
-		require_once("lib/system.class.php");
 		require_once("lib/config.class.php");
-		require_once("lib/error.class.php");
-        require_once("lib/db.driver.class.php");
 		
 		## Other Lib Includes ##
 		if (file_exists(Config::read("Path.physical")."/lib/{$class_name}.class.php")) {
-			require_once(Config::read("Path.physical")."/lib/{$class_name}.class.php");
+			include_once(Config::read("Path.physical")."/lib/{$class_name}.class.php");
 		}
 	}
 	
-	static function parseClassName(&$class_name) {
-		$class_name[0] = strtolower($class_name[0]);
-		
-		$class_name = explode("_", $class_name);
-		if (count($class_name) > 1) {
-			array_pop($class_name);
-			$class_name = implode("_", $class_name);
-		} else {
-			$class_name = $class_name[0];
-		}
-		
-		if (!ctype_lower($class_name)) {
-			$new_name = '';
-			for($i = 0; $i < strlen($class_name); $i++) {
-				$char = $class_name[$i];
-				if (ctype_upper($char)) {
-					$new_name .= '.' . strtolower($char);
-				} else {
-					$new_name .= $char;
-				}
-			}
-			$class_name = $new_name;
-		}
+	static function parseClassName($class_name) {
+		$class_name = implode('_', array_slice(explode('_', $class_name), 0, 1));
+		return strtolower(ltrim(preg_replace('/[A-Z]/', '.$0', $class_name), '.'));
 	}
 }
 ?>

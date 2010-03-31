@@ -1,28 +1,95 @@
 <?php
 final class System {
 	final public static function load($args) {
-		if (empty($args['name'])) return NULL;
-		if (empty($args['type'])) return NULL;
-		if (empty($args['args'])) $args['args'] = '';
+		if (empty($args['name'])) return false;
+		if (empty($args['type'])) return false;
+		if (empty($args['args'])) $args['args'] = array();
 		
 		if ($args['branch'] == Config::read('System.rootIdentifier')) {
 			$args['branch'] = "";
 		}
 		
-		$load = new Loader($args['name'], $args['type'], $args['branch'], $args['args']);
-		return $load->load();
+		$className = strtolower($args['name']);
+		if (strpos($className, '.') !== FALSE) {
+			$className = str_replace('.', ' ', $className);
+			$className = ucwords($className);
+			$className = str_replace(' ', '', $className);
+		} else {
+			$className = ucwords($className);
+		}
+		
+		$className = $className."_".((strlen($args['branch'])) ? ucwords($args['branch']) : "").ucwords($args['type']);
+		
+		if (self::exists(array('name'=>$args['name'], 'type'=>$args['type'], 'branch'=>((empty($args['branch'])) ? Config::read('System.rootIdentifier') : $args['branch'])))) {
+			if (is_array($args['args']) && count($args['args'])) {
+				$methodArgs = array();
+				foreach($args['args'] as $key => $value) {
+					$methodArgs[] = '$args[\'args\'][\'' . $key . '\']';
+				}
+				eval('$object = new '.$className.'(' . implode(',', $methodArgs) . ');');
+				unset($methodArgs);
+			} else if (!empty($args['args'])) {
+				$object = new $className($args['args']);
+			} else {
+				$object = new $className();
+			}
+			unset($className);
+			if (ucwords($args['type']) == "Helper" || ucwords($args['type']) == "Plugin") {
+				if (isset($object->requiredSystemMode) && $object->requiredSystemMode != Config::read("System.mode")) {
+					// The system does not have the required mode so don't load the object
+					Error::trigger("LOADER_REQUIRED_SYSTEM_MODE");
+				}
+
+				if (isset($object->minimumSystemVersion) && !version_compare(Config::read("System.version"), $object->minimumSystemVersion, ">")) {
+					// The system version is lower than the object's required minimum so don't load the object
+					Error::trigger("LOADER_MINIMUM_SYSTEM_VERSION");
+				}
+
+				if (isset($object->maximumSystemVersion)  && !version_compare(Config::read("System.version"), $object->maximumSystemVersion, "<")) {
+					// The system version is higher than the object's required maximum so don't load the object
+					Error::trigger("LOADER_MAXIMUM_SYSTEM_VERSION");
+				}
+			}
+			
+			return $object;
+		} else {
+			return false;
+		}
 	}
 	
 	final public static function exists($args) {
-		if (empty($args['name'])) return NULL;
-		if (empty($args['type'])) return NULL;
+		if (empty($args['name'])) return false;
+		if (empty($args['type'])) return false;
 		
 		if ($args['branch'] == Config::read('System.rootIdentifier')) {
 			$args['branch'] = "";
 		}
 		
-		$load = new Loader($args['name'], $args['type'], $args['branch']);
-		return $load->exists();
+		$filePath = null;
+		switch ($args['type']) {
+			case 'helper':
+				$filePath = Config::read("Path.physical").((strlen($args['branch'])) ? "/branches/".$args['branch'] : "")."/helpers/".$args['name'].".php";
+			break;
+			
+			case 'controller':
+				$filePath = Config::read("Path.physical").((strlen($args['branch'])) ? "/branches/".$args['branch'] : "")."/controllers/".$args['name'].".php";
+			break;
+			
+			case 'model':
+				$filePath = Config::read("Path.physical").((strlen($args['branch'])) ? "/branches/".$args['branch'] : "")."/models/".$args['name'].".php";
+			break;
+			
+			case 'plugin':
+				$filePath = Config::read("Path.physical").((strlen($args['branch'])) ? "/branches/".$args['branch'] : "")."/plugins/".$args['name']."/".$args['name'].".php";
+			break;
+		}
+		
+		if (file_exists($filePath)) {
+			unset($filePath);
+			return true;
+		}
+		unset($filePath);
+		return false;
 	}
 	
 	final public static function helper($name, $branch="") {
@@ -34,14 +101,14 @@ final class System {
 			$helper = self::load(array("name"=>$name, "type"=>"helper", "branch"=>Config::read("Branch.name"), "args" => $args));
 		}
 		
-		if (!$helper) {
+		if (!is_object($helper)) {
 			$helper = self::load(array("name"=>$name, "type"=>"helper", "branch"=>$branch, "args" => $args));
 		}
 		
-		if (!$helper) {
+		if (!is_object($helper)) {
             Error::trigger("HELPER_NOT_FOUND");
         }
-        
+        unset($args);
         return $helper;
 	}
 	
@@ -54,14 +121,14 @@ final class System {
 			$model = self::load(array("name"=>$name, "type"=>"model", "branch"=>Config::read("Branch.name"), "args" => $args));
 		}
 		
-		if (!$model) {
+		if (!is_object($model)) {
 			$model = self::load(array("name"=>$name, "type"=>"model", "branch"=>$branch, "args" => $args));
 		}
-
-        if (!$model) {
+		
+		if (!is_object($model)) {
             Error::trigger("MODEL_NOT_FOUND");
         }
-
+		unset($args);
         return $model;
 	}
 	
@@ -74,14 +141,14 @@ final class System {
 			$plugin = self::load(array("name"=>$name, "type"=>"plugin", "branch"=>Config::read("Branch.name"), "args" => $args));
 		}
 		
-		if (!$plugin) {
+		if (!is_object($plugin)) {
 			$plugin = self::load(array("name"=>$name, "type"=>"plugin", "branch"=>$branch, "args" => $args));
 		}
 		
-		if (!$plugin) {
+		if (!is_object($plugin)) {
             Error::trigger("PLUGIN_NOT_FOUND");
         }
-        
+        unset($args);
         return $plugin;
 	}
 	

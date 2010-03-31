@@ -15,6 +15,7 @@ class Main_Controller extends ApplicationController {
 	
 	public function index () {
 		$this->home_selected = "selected";
+		//System::model('worker');
 	}
 	
 	public function another_default() {

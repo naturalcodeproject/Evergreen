@@ -38,6 +38,13 @@ abstract class Controller {
 		$this->designer = new Designer();
 	}
 	
+	final private function _controllerDestruct() {
+		unset($this->viewContent);
+		unset($this->fullPageContent);
+		unset($this->formhandler);
+		unset($this->designer);
+	}
+	
 	final public function _showView() {
 		## Run the controller's Setup
 		$this->_controllerSetup();
@@ -63,6 +70,8 @@ abstract class Controller {
 		$this->_runFilters('Page.output.before');
 		echo $this->_getFullPageContent();
 		$this->_runFilters('Page.output.after');
+		$this->_controllerDestruct();
+		unset($fullPage);
 	}
 	
 	final private function _loadView() {

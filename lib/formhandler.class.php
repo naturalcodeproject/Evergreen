@@ -11,15 +11,7 @@
 */
 
 class Formhandler {
-	private $regex_form = "/<form (.+)>/i";
-	private $regex_form_end = "/<\/form>/i";
-	private $regex_input = "/<input ([^>]+)>/i";
-	private $regex_textarea = "/<textarea ([^>]+)>([^(<\/textarea>)]+)<\/textarea>/i";
-	private $regex_properties = "/(.+)=[\'\"](.+)/i";
-	
 	protected $caller;
-	
-	
 	private $errors_arr = array();
 	private $forms_arr = array();
 	
@@ -31,7 +23,7 @@ class Formhandler {
 		$propertiesArray = array();
 		$test = preg_split("/[\'\"] /i", trim($propertiesString)." ");
 		foreach ($test as $item) {
-			if (preg_match($this->regex_properties, trim($item), $matches)) {
+			if (preg_match("/(.+)=[\'\"](.+)/i", trim($item), $matches)) {
 				$propertiesArray[strtolower($matches[1])] = $matches[2];
 			}
 		}
