@@ -1,8 +1,5 @@
 <?php
-
-class Main_Controller extends ApplicationController {
-	//public $not_a_view = array('mypage');
-	//var $bounceback = array("bounce"=>"loud", "check"=>"soft");
+class Main_Controller extends ApplicationController_Controller {
 	public function __construct() {
 		parent::__construct();
 		$this->_setLayout('index');
@@ -15,21 +12,24 @@ class Main_Controller extends ApplicationController {
 	
 	public function index () {
 		$this->home_selected = "selected";
-		//System::model('worker');
+		//$helper = new Test_Helper();
+		$model = new Users_Model();
+		//$model->query('select *');
+		//$results = DB::query("select * from users", "Users_Model");
 	}
 	
-	public function another_default() {
+	public function anotherDefault() {
 		echo "this is another default<br />";
 	}
 	
-	public function custom_error() {
+	public function customError() {
 		echo "custom_error_stuff<br />";
 		//Error::trigger("custom 404 error", array('code'=>404));
 		Error::trigger("custom 404 error page", array('code'=>404, 'url'=>'/anothererror'));
 		//Error::trigger("hello world");
 	}
 	
-	public function dash_test_page()
+	public function dashTestPage()
 	{
 		echo "Hello to the dash test page.";
 	}
@@ -50,31 +50,6 @@ class Main_Controller extends ApplicationController {
 		
 		$this->layout = "";
 	}
-	
-    public function models() {
-        $blog_tag_model = System::model('blogtag');
-        $this->blog_tags = $blog_tag_model->find();
-
-        $bp = System::model('blogpost');
-        $found = $bp->retrieve(1);
-
-        $createdBy = $bp->get('createdBy');
-        $editedBy  = $bp->get('editedBy');
-        $createdByClass = $createdBy->get('class');
-        $editedByClass = $editedBy->get('class');
-
-        echo "<PRE>";
-        echo "\n\n------------------------------------------\n\n";
-
-        echo '             TITLE: ' . $bp->title . "\n";
-        echo '              BODY: ' . $bp->body . "\n";
-        echo '        CREATED BY: ' . $createdBy->name . "\n";
-        echo '         EDITED BY: ' . $editedBy->name . "\n";
-        echo '           SECTION: ' . $bp->get('section')->name . "\n";
-        echo 'CREATED BY (class): ' . $createdByClass->name . "\n";
-        echo ' EDITED BY (class): ' . $editedByClass->name . "\n";
-        echo "</PRE>";
-    }
 
 }
 ?>

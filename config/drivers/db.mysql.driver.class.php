@@ -1,6 +1,6 @@
 <?php
 
-class DB_Driver_MySQL extends DB_Driver {
+class DB_MySQL_Driver extends DB_Driver {
 
     public function __construct($table_name, $model_name, $model_properties, $model) {
         parent::__construct($table_name, $model_name, $model_properties, $model);

@@ -197,16 +197,7 @@ class Model {
     private function setup_driver() {
         if (!$this->db_driver) {
             $specific_driver = Config::read("Database.driver");
-            $driver_name = "DB_Driver_{$specific_driver}";
-            $driver_path = '/config/drivers/db.driver.' . strtolower($specific_driver) . '.class.php';
-            
-            if (Config::read("Branch.name") != "" && file_exists(Config::read('Path.physical') . '/branches/' . Config::read("Branch.name") . $driver_path)) {
-            	require_once(Config::read("Path.physical") . '/branches/' . Config::read("Branch.name") . $driver_path);
-			} else if (file_exists(Config::read('Path.physical') . $driver_path)) {
-				require_once(Config::read("Path.physical") . $driver_path);
-			} else {
-				Error::trigger('MODEL_DRIVER_NOT_FOUND');
-			}
+            $driver_name = "DB_{$specific_driver}_Driver";
             $this->db_driver = new $driver_name($this->table_name, get_class($this), $this->fields, $this);
         }
     }

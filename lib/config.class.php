@@ -43,7 +43,7 @@ final class Config {
 			);
 			self::$config['Error']['viewErrors'] = true;
     		self::$config['Error']['logErrors'] = true;
-			self::$config['Error']['generalErrorMessage'] = "An error occured. Please contact admin@example.com";
+			self::$config['Error']['generalErrorMessage'] = "An error occurred. Please contact the administrator.";
 			self::$config['Database']['viewQueries'] = false;
 		}
 		
@@ -132,9 +132,15 @@ final class Config {
 			Error::trigger("NO_URI_MAP");
 		}
 		
+		if (!array_key_exists('controller', self::read("URI.map")) || !array_key_exists('view', self::read("URI.map"))) {
+			//Error::trigger("NO_URI_MAP");
+		}
+		
 		if (!self::read("URI.working")) {
 			if (self::read("URI.useModRewrite")) {
-				if (strpos($_SERVER['REQUEST_URI'], "?")) $_SERVER['REQUEST_URI'] = substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], "?"));
+				if (strpos($_SERVER['REQUEST_URI'], "?")) {
+					$_SERVER['REQUEST_URI'] = substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], "?"));
+				}
 				$_SERVER['REQUEST_URI'] = preg_replace("/^(".str_replace("/", "\/", self::read("URI.base"))."?)/i", "", $_SERVER['REQUEST_URI']);
 				
 				self::register("URI.prepend", "");
@@ -175,7 +181,7 @@ final class Config {
 		if (count($url_vals) > 0 && empty($url_vals[count($url_vals)-1])) {
 			unset($url_vals[count($url_vals)-1]);
 			if (!is_array(self::read("Route.current"))) {
-				if (empty($_POST) && empty($_FILES)) {
+				if (empty($_POST) && empty($_FILES) && !headers_sent()) {
 					header("HTTP/1.1 301 Moved Permanently");
 					header("Location: ".self::read("URI.base").self::read("URI.prepend")."/".implode("/", $url_vals) . ((!empty($_SERVER['QUERY_STRING'])) ? ((!self::read("URI.useModRewrite")) ? "&" . $_SERVER['QUERY_STRING'] : "?" . $_SERVER['QUERY_STRING']) : ""));
 					header("Connection: close");
@@ -186,45 +192,111 @@ final class Config {
 		
 		## Branch Check ##
 		$url_vals = self::checkForBranch($url_vals);
-		$branch_name = self::read("Branch.name");
 		
 		## Route Check ##
 		if (self::checkRoutes("/".implode("/", $url_vals))) {
 			return false;
 		}
 		
-		$count = 0;
-		$isDefaultController = false;
+		$uriMap = self::read("URI.map");
 		
-		foreach(self::read("URI.map") as $key => $item) {
-			if ($count == 0 && self::read("Route.current") == null && !empty($url_vals) && $url_vals[0] == reset(self::read('URI.map')) && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[1].".php") &&  !is_dir(self::read("Path.physical")."/branches/".$url_vals[$count])) {
-				if (empty($_POST) && empty($_FILES)) {
-					header("HTTP/1.1 301 Moved Permanently");
-					header("Location: ".self::read("URI.base") . self::read("URI.prepend") . ((self::read("Branch.name")) ? "/" . self::read("Branch.name") : "") ."/".implode("/", array_slice($url_vals, 1)) . ((!empty($_SERVER['QUERY_STRING'])) ? ((!self::read("URI.useModRewrite")) ? "&" . $_SERVER['QUERY_STRING'] : "?" . $_SERVER['QUERY_STRING']) : ""));
-					header("Connection: close");
-					exit;
+		if (!empty($url_vals)) {
+			foreach($url_vals as $key => $value) {
+				if (!empty($value)) {
+					if (file_exists(self::read("Path.physical").((strlen(self::read("Branch.name"))) ? "/branches/".self::uriToFile(self::read("Branch.name")) : "")."/controllers/".self::uriToFile($value).".php")) {
+						$uri_vals = array(
+							"prepend" => array_slice($url_vals, 0, ($key-count($url_vals))),
+							"main" => array_slice($url_vals, $key)
+						);
+						
+						if (!empty($uriMap['controller']) && $uriMap['controller'] == $value) {
+							if (empty($_POST) && empty($_FILES) && !headers_sent()) {
+								header("HTTP/1.1 301 Moved Permanently");
+								header("Location: ".self::read("URI.base") . self::read("URI.prepend") . ((self::read("Branch.name")) ? "/" . self::read("Branch.name") : "") ."/".implode("/", array_merge($uri_vals['prepend'], array_slice($uri_vals['main'], 1))) . ((!empty($_SERVER['QUERY_STRING'])) ? ((!self::read("URI.useModRewrite")) ? "&" . $_SERVER['QUERY_STRING'] : "?" . $_SERVER['QUERY_STRING']) : ""));
+								header("Connection: close");
+								exit;
+							}
+						}
+						break;
+					}
 				}
 			}
-			
-			if ($count == 0 && !empty($url_vals[$count]) && !file_exists(self::read("Path.physical")."/branches/".$branch_name."/controllers/".$url_vals[$count].".php") && !empty($branch_name)) {
-				$url_vals = array_merge(array($item), $url_vals);
-			} elseif ($count == 0 && !empty($url_vals[$count]) && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[$count].".php") && empty($branch_name)) {
-				$url_vals = array_merge(array($item), $url_vals);
-			}
-			
-			if ($count == 0 && !empty($url_vals) && $url_vals[0] == reset(self::read('URI.map'))) {
-				$isDefaultController = true;
-			}
-			
-			$uri_params[$key] = ((!empty($item) && empty($url_vals[$count])) ? $item : ((!empty($url_vals[$count])) ? $url_vals[$count] : null));
-			$count++;
+			unset($key, $value);
 		}
+		
+		if (isset($uri_vals['prepend']) && isset($uri_vals['main'])) {
+			$count = 0;
+			foreach($uriMap as $key => $item) {
+				if ((!empty($item) && empty($url_vals[$count])) || $key == 'controller') {
+					if (is_array($item) && count($item) > 1) {
+						$item = reset($item);
+					}
+					$uri_params[$key] = $item;
+				} else if (!empty($url_vals[$count])) {
+					if (is_array($item) && count($item) > 1 && function_exists($item[1])) {
+						if ($item[1]($url_vals[$count]) == true) {
+							$uri_params[$key] = $url_vals[$count];
+							$count++;
+						} else {
+							$uri_params[$key] = (string)$item[0];
+						}
+					} else {
+						$uri_params[$key] = $url_vals[$count];
+						$count++;
+					}
+				} else {
+					$uri_params[$key] = null;
+				}
+			}
+
+		} else {
+			$foundController = false;
+			$count = 0;
+			foreach($uriMap as $key => $item) {
+				if ($key == 'controller') {
+					$foundController = true;
+					$count = 0;
+				}
+				
+				if ($foundController) {
+					$uriKey = "main";
+				} else {
+					$uriKey = "prepend";
+				}
+				
+				if (!empty($item) && empty($uri_vals[$uriKey][$count])) {
+					if (is_array($item)) {
+						$uri_params[$key] = reset($item);
+					} else {
+						$uri_params[$key] = $item;
+					}
+				} else if (!empty($uri_vals[$uriKey][$count])) {
+					if (is_array($item) && count($item) > 1 && function_exists($item[1])) {
+						if ($item[1]($uri_vals[$uriKey][$count]) == true) {
+							$uri_params[$key] = $uri_vals[$uriKey][$count];
+							$count++;
+						} else {
+							$uri_params[$key] = (string)$item[0];
+						}
+					} else {
+						$uri_params[$key] = $uri_vals[$uriKey][$count];
+						$count++;
+					}
+				} else {
+					$uri_params[$key] = null;
+				}
+			}
+		}
+
+		unset($key, $item, $count, $foundController, $url_vals, $uriMap, $uriKey);
 		
 		self::register("URI.working", $uri_params);
 		
 		// Setup the Param configuration setting
 		self::register("Param", $uri_params);
 		
+		// Clean up the generated working uri variable
+		unset($uri_params);
 		
 		if (self::read("URI.useModRewrite")) {
 			$uri_paths = explode("/", ltrim($_SERVER['REQUEST_URI'], '/'));
@@ -248,25 +320,23 @@ final class Config {
 		self::register("Path.skin", str_replace("//", "/", self::read("Path.root")."/public"));
 		
 		$count = 0;
-		foreach(self::read("URI.working") as $key => $value) {
+		$uriMap = self::read("URI.map");
+		$uriWorking = self::read("URI.working");
+		foreach($uriWorking as $key => $value) {
 			if (empty($value)) {
 				continue;
 			}
-			if ($count == 0 && $isDefaultController) {
-				$uri_paths_by_map = array_merge(array(), $uri_paths);
+			if (isset($uriMap[$key]) && $uriMap[$key] == $value) {
+				unset($uriWorking[$key]);
+				$position = $count;
+				$count--;
 			} else {
-				$uri_paths_by_map = $uri_paths;
+				$position = ($count+1);
 			}
-			$position = array_search($key, array_keys(self::read("URI.working")));
-			if (self::read("Branch.name") != "" && !$isDefaultController) {
-				$position++;
-			}
-			if (self::read("Branch.name") == "" && $isDefaultController) {
-				$position--;
-			}
-			self::register("Path.".$key, str_replace("//", "/", implode("/", array_merge(explode("/", self::read("Path.site")), array_slice($uri_paths_by_map, 0, ($position+1))))));
+			self::register("Path.".$key, self::read("URI.base").'/'.trim(implode('/', array_slice($uriWorking, 0, $position)), '/'));
 			$count++;
 		}
+		unset($uriMap);
 		
 		$current_uri_map = array();
 		
@@ -279,27 +349,61 @@ final class Config {
 		return true;
 	}
 	
-	public static function loadableURI($uri_params) {
-		if(self::read("URI.useDashes") || self::read("URI.forceDashes")) {
-			if (self::read("URI.forceDashes")) {
-				$uri_params[reset(array_slice(array_keys($uri_params), 0, 1))] = str_replace("_", "", $uri_params[reset(array_slice(array_keys($uri_params), 0, 1))]);
-				$uri_params[reset(array_slice(array_keys($uri_params), 1, 1))] = str_replace("_", "", $uri_params[reset(array_slice(array_keys($uri_params), 1, 1))]);
-			}
-
-			$uri_params[reset(array_slice(array_keys($uri_params), 0, 1))] = str_replace("-", "_", $uri_params[reset(array_slice(array_keys($uri_params), 0, 1))]);
-			$uri_params[reset(array_slice(array_keys($uri_params), 1, 1))] = str_replace("-", "_", $uri_params[reset(array_slice(array_keys($uri_params), 1, 1))]);
+	public static function uriToFile($uriItem) {
+		if (self::read('URI.useDashes') == true && self::read('URI.forceDashes') == false) {
+			$regex = '/[_-]/';
+		} else if (self::read('URI.forceDashes') == true) {
+			$regex = '/[-]/';
+		} else {
+			$regex = '/[_]/';
 		}
-
-		return $uri_params;
+		return strtolower(preg_replace($regex, '.', $uriItem));
+	}
+	
+	public static function uriToMethod($uriItem) {
+		if (self::read('URI.useDashes') == true && self::read('URI.forceDashes') == false) {
+			$regex = '/[_-]/';
+		} else if (self::read('URI.forceDashes') == true) {
+			$regex = '/[-]/';
+		} else {
+			$regex = '/[_]/';
+		}
+		
+		$uriItem = explode(' ', ucwords(preg_replace($regex, ' ', $uriItem)));
+		if (count($uriItem) > 0) {
+			$uriItem[0] = strtolower($uriItem[0]);
+		}
+		return implode('', $uriItem);
+	}
+	
+	public static function uriToClass($uriItem) {
+		if (self::read('URI.useDashes') == true && self::read('URI.forceDashes') == false) {
+			$regex = '/[_-]/';
+		} else if (self::read('URI.forceDashes') == true) {
+			$regex = '/[-]/';
+		} else {
+			$regex = '/[_]/';
+		}
+		
+		$uriItem = explode(' ', ucwords(preg_replace($regex, ' ', $uriItem)));
+		return implode('', $uriItem);
+	}
+	
+	public static function methodToFile($methodItem) {
+		return strtolower(trim(preg_replace('/[A-Z]/', '.$0', $methodItem), '.'));
+	}
+	
+	public static function classToFile($classItem) {
+		return self::methodToFile($classItem);
 	}
 	
 	public static function isBranch($branch_name) {
-		return is_dir(self::read("Path.physical")."/branches/".$branch_name);
+		return is_dir(self::read("Path.physical")."/branches/".self::uriToFile($branch_name));
 	}
 	
 	public static function checkForBranch($url_vals) {
-		if (is_array($url_vals) && !empty($url_vals) && self::isBranch($url_vals[0]) && !file_exists(self::read("Path.physical")."/controllers/".$url_vals[0].".php")) {
-			self::register("Branch.name", $url_vals[0]);
+		if (is_array($url_vals) && !empty($url_vals) && self::isBranch($url_vals[0]) && !file_exists(self::read("Path.physical")."/controllers/".self::uriToFile($url_vals[0]).".php")) {
+			self::register("Branch.name", self::uriToMethod($url_vals[0]));
 			self::loadBranchConfig(self::read("Branch.name"));
 			array_shift($url_vals);
 			return $url_vals;
@@ -310,14 +414,14 @@ final class Config {
 	
 	public static function loadBranchConfig($branch_name) {
 		self::setup();
-		if (file_exists(self::read("Path.physical")."/branches/{$branch_name}/config/config.php")) {
+		if (file_exists(self::read("Path.physical")."/branches/".self::uriToFile(self::classToFile($branch_name))."/config/config.php")) {
 			// Load the branch configuration
-			include(self::read("Path.physical")."/branches/{$branch_name}/config/config.php");
+			include(self::read("Path.physical")."/branches/".self::uriToFile(self::classToFile($branch_name))."/config/config.php");
 		}
 		
-		if (file_exists(self::read("Path.physical")."/branches/{$branch_name}/config/errors.php")) {
+		if (file_exists(self::read("Path.physical")."/branches/".self::uriToFile(self::classToFile($branch_name))."/config/errors.php")) {
 			// Load the branch errors
-			include(self::read("Path.physical")."/branches/{$branch_name}/config/errors.php");
+			include(self::read("Path.physical")."/branches/".self::uriToFile(self::classToFile($branch_name))."/config/errors.php");
 		}
 		
 		if (self::read("Branch.active") !== null && self::read("Branch.active") == false) {
@@ -409,7 +513,10 @@ final class Config {
 					$newURI = array_merge((array)array('branch' => $branch), (array)self::read("URI.map"), (array)$destination, (array)$combinedMatches);
 					
 					// Loop through the URI and handle empty positions
-					foreach($newURI as $key => $value) {
+					foreach($newURI as $key => &$value) {
+						if (is_array($value) && count($value) > 1) {
+							$value = reset($value);
+						}
 						if (empty($value) && count($wildcard_matches)) {
 							$newURI[$key] = array_shift($wildcard_matches);
 						}
@@ -421,7 +528,7 @@ final class Config {
 					}
 					
 					// Build the final URI that will be used
-					$newURI = "/".implode("/", $newURI);
+					$newURI = "/".implode("/", (array)$newURI);
 					
 					// Setup the needed configuration settings and re-process the URI
 					self::register("Route.current", array_merge( $route, array("newWorkingURI" => $newURI) ));

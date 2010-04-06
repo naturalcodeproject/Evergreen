@@ -9,7 +9,7 @@ final class Evergreen {
 			spl_autoload_register(array('AutoLoaders', 'main'));
 			
 			## Register Error Handler Class ##
-			set_error_handler(array("System", "logError"), ini_get("error_reporting"));
+			set_error_handler(array("Error", "logError"), ini_get("error_reporting"));
 			
 			## Load Base Configuration ##
 			if (file_exists(Config::read("Path.physical")."/config/config.php")) {
@@ -44,28 +44,19 @@ final class Evergreen {
 				exit;
 			}
 			
-			## URI Managment ##
+			## Process the URI ##
 			Config::processURI();
 			
-			## Load in Controller ##
-			if (Config::read("Branch.name")) {
-				## Unload Main Autoloader ##
-				spl_autoload_unregister(array('AutoLoaders', 'main'));
-				
-				## Load Branch Autoloader ##
-				spl_autoload_register(array('AutoLoaders', 'branches'));
-			}
-			
 			## Load in the requested controller ##
-			if (($controller = System::load(array("name"=>reset(Config::loadableURI(Config::read("URI.working"))), "type"=>"controller", "branch"=>Config::read("Branch.name")))) === false) {
-				// The controller wasn't found so trigger an error
-				Error::trigger("CONTROLLER_NOT_FOUND");
-				exit;
-			} else {
-				// Load the view
-				$controller->_showView();
-				
+			$load['name'] = Config::uriToClass(Config::read("URI.working.controller"));
+			if (Config::read("Branch.name") != '') {
+				$load['branch'] = Config::uriToClass(Config::read("Branch.name"));
 			}
+			$load['type'] = 'Controller';
+			$load = implode('_', $load);
+			
+			$controller = new $load();
+			$controller->_showView();
 		} catch(Exception $e) {
 			// Load error if something triggered an error
 			Error::processError($e);
@@ -98,39 +89,147 @@ final class Evergreen {
 
 class AutoLoaders {
 	public static function main($class_name) {
-		$class_name = self::parseClassName($class_name);
-		self::baseIncludes($class_name);
-		
-		## Controller Include ##
-		if (file_exists(Config::read("Path.physical")."/controllers/{$class_name}.php")) {
-			include_once(Config::read("Path.physical")."/controllers/{$class_name}.php");
+		## Don't Run if Class Exists ##
+		if (class_exists($class_name, false)) {
+		   return true;
 		}
-	}
-	
-	public static function branches($class_name) {
-		$class_name = self::parseClassName($class_name);
-		$branch_name = Config::read("Branch.name");
-		self::baseIncludes($class_name);
 		
-		## Branch Controller Include ##
-		if (file_exists(Config::read("Path.physical")."/branches/{$branch_name}/controllers/{$class_name}.php")) {
-			include_once(Config::read("Path.physical")."/branches/{$branch_name}/controllers/{$class_name}.php");
-		}
-	}
-	
-	public static function baseIncludes($class_name) {
 		## Base System Includes ##
 		require_once("lib/config.class.php");
 		
-		## Other Lib Includes ##
-		if (file_exists(Config::read("Path.physical")."/lib/{$class_name}.class.php")) {
-			include_once(Config::read("Path.physical")."/lib/{$class_name}.class.php");
+		## Parse Class Name ##
+		$class = self::parseClassName($class_name);
+		
+		if (isset($class['type'])) {
+			$basePath = Config::read("Path.physical").((!empty($class['branch'])) ? "/branches/".$class['branch'] : "");
+			if ($class['type'] == 'controller' && file_exists($basePath."/controllers/{$class['class']}.php")) {
+				## Controller Include ##
+				include_once($basePath."/controllers/{$class['class']}.php");
+			} else if ($class['type'] == 'model' && file_exists($basePath."/models/{$class['class']}.php")) {
+				## Model Include ##
+				include_once($basePath."/models/{$class['class']}.php");
+			} else if ($class['type'] == 'helper' && file_exists($basePath."/helpers/{$class['class']}.php")) {
+				## Helper Include ##
+				include_once($basePath."/helpers/{$class['class']}.php");
+			} else if ($class['type'] == 'plugin' && file_exists($basePath."/plugins/{$class['class']}.php")) {
+				## Plugin Include ##
+				include_once($basePath."/plugins/{$class['class']}.php");
+			} else if ($class['type'] == 'driver') {
+				## Driver Include ##
+				if (isset($class['specificDriver'])) {
+					if (Config::read("Branch.name") != "") {
+						$branchDriverPath = Config::read("Path.physical")."/branches/".$class['branch']."/config/drivers/".strtolower(str_replace('_', '.', $class['original'])).".class.php";
+						if (file_exists($branchDriverPath)) {
+							include_once($branchDriverPath);
+						}
+						unset($branchDriverPath);
+					}
+					
+					$mainDriverPath = Config::read("Path.physical")."/config/drivers/".strtolower(str_replace('_', '.', $class['original'])).".class.php";
+					if (!class_exists($class['original'], false) && file_exists($mainDriverPath)) {
+						include_once($mainDriverPath);
+					}
+					unset($mainDriverPath);
+				} else {
+					if (file_exists(Config::read("Path.physical")."/lib/".strtolower(str_replace('_', '.', $class['original'])).".class.php")) {
+						include_once(Config::read("Path.physical")."/lib/".strtolower(str_replace('_', '.', $class['original'])).".class.php");
+					}
+				}
+			}
+			unset($basePath);
+		} else {
+			## Lib Includes ##
+			if (file_exists(Config::read("Path.physical")."/lib/{$class['class']}.class.php")) {
+				include_once(Config::read("Path.physical")."/lib/{$class['class']}.class.php");
+			}
 		}
+		
+		if (!class_exists($class['original'], false)) {
+			if (isset($class['type'])) {
+				if ($class['type'] == 'driver' && isset($class['specificDriver'])) {
+					$class['type'] = 'model_driver';
+				}
+				eval(sprintf('
+					class %1$s{
+						public function __construct() {
+							Error::trigger("%2$s_NOT_FOUND");
+						}
+						public function __call($m, $a) {
+							Error::trigger("%2$s_NOT_FOUND");
+						}
+						public static function __callStatic($m, $a) {
+							Error::trigger("%2$s_NOT_FOUND");
+						}
+					}', $class['original'], strtoupper($class['type'])));
+			} else {
+				eval(sprintf('
+					class %1$s{
+						public function __construct() {
+							Error::trigger("Class \'%1$s\' not found", array("code"=>"GEN"));
+						}
+						public function __call($m, $a) {
+							Error::trigger("Class \'%1$s\' not found", array("code"=>"GEN"));
+						}
+						public static function __callStatic($m, $a) {
+							Error::trigger("Class \'%1$s\' not found", array("code"=>"GEN"));
+						}
+					}', $class['original']));
+			}
+		} else {
+			if (isset($class['type']) && in_array($class['type'], array('helper', 'plugin'))) {
+				$classVars = get_class_vars($class['original']);
+				if (isset($classVars['requiredSystemMode']) && $classVars['requiredSystemMode'] != Config::read("System.mode")) {
+					// The system does not have the required mode so don't load the object
+					Error::trigger("REQUIRED_SYSTEM_MODE", array('messageArgs'=>array('name'=>$class['original'], 'type'=>ucwords($class['type']), 'class-required-mode'=>$classVars['requiredSystemMode'])));
+				}
+
+				if (isset($classVars['minimumSystemVersion']) && !version_compare(Config::read("System.version"), $classVars['minimumSystemVersion'], ">")) {
+					// The system version is lower than the object's required minimum so don't load the object
+					Error::trigger("MINIMUM_SYSTEM_VERSION", array('messageArgs'=>array('name'=>', '.$class['original'].',', 'type'=>ucwords($class['type']), 'class-required-version'=>$classVars['minimumSystemVersion'])));
+				}
+
+				if (isset($classVars['maximumSystemVersion'])  && !version_compare(Config::read("System.version"), $classVars['maximumSystemVersion'], "<")) {
+					// The system version is higher than the object's required maximum so don't load the object
+					Error::trigger("MAXIMUM_SYSTEM_VERSION", array('messageArgs'=>array('name'=>', '.$class['original'].',', 'type'=>ucwords($class['type']), 'class-required-version'=>$classVars['maximumSystemVersion'])));
+				}
+				unset($classVars);
+			}
+		}
+		
+		unset($class);
 	}
 	
-	static function parseClassName($class_name) {
-		$class_name = implode('_', array_slice(explode('_', $class_name), 0, 1));
-		return strtolower(ltrim(preg_replace('/[A-Z]/', '.$0', $class_name), '.'));
+	static function parseClassName($className) {
+		$classArr = array( 'original'=>$className );
+		$classPieces = explode('_', $classArr['original']);
+		if (count($classPieces) > 1) {
+			$classType = strtolower(reset(array_slice($classPieces, -1)));
+			if (in_array($classType, array('controller', 'model', 'helper', 'plugin', 'driver'))) {
+				$classArr['type'] = $classType;
+				array_pop($classPieces);
+			}
+			if (count($classPieces) > 1) {
+				if ($classArr['type'] == 'driver') {
+					$classArr['specificDriver'] = strtolower(array_pop($classPieces));
+				} else {
+					$classArr['branch'] = strtolower(array_pop($classPieces));
+				}
+				$className = $classPieces;
+			} else {
+				$className = $classPieces;
+			}
+		} else {
+			$className = $classPieces;
+		}
+		$classArr['class'] = strtolower(trim(preg_replace('/[A-Z]/', '.$0', implode('_', $className)), '.'));
+		
+		unset($classType);
+		unset($branchName);
+		unset($classInfo);
+		unset($className);
+		unset($classPieces);
+		
+		return $classArr;
 	}
 }
 ?>

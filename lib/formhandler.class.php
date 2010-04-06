@@ -42,15 +42,16 @@ class Formhandler {
 		## Newline Fix
 		$content = str_replace("\n", "<newline>", $content);
 		## Form Fix
-		$content = preg_replace("/<form\s*(.*?)[^(->)]>(.*?)<\\/form>/ixmse", "\$this->formReplace('\\1', '\\2')", $content);
+		$content = preg_replace_callback("/<form\s*(.*?)[^(->)]>(.*?)<\\/form>/im", array($this, 'formReplace'), $content);
 		## Back to Normal
 		$content = str_replace("<newline>", "\n", $content);
 	}
 	
-	private function formReplace ($attr, $insides) {
+	private function formReplace($args) {
 		## Fix Slashes
-		$attr = stripslashes($attr);
-		$insides = stripslashes($insides);
+		$args = array_pad($args, 3, '');
+		$attr = stripslashes($args[1]);
+		$insides = stripslashes($args[2]);
 		
 		## Set up Properties
 		$randomName = false;
@@ -90,16 +91,15 @@ class Formhandler {
 				}
 			}
 			
-			unset($properties['update']);
-			unset($properties['default']);
+			unset($properties['update'], $properties['default']);
 		}
 		
 		if (!empty($properties['name'])) $this->forms_arr[$properties['name']]['attributes'] = $properties;
 		
 		## Set Up Elements
 		$this->current_form = $properties['name'];
-		$insides = preg_replace("/<(input)\s*(.*?)>/imsxe", "\$this->formInsides('\\1', '\\2', '')", $insides);
-		$insides = preg_replace("/<(textarea|select)\s*(.*?)>(.*?)<\\/([(textarea|select)]*?)>/imsxe", "\$this->formInsides('\\1', '\\2', '\\3')", $insides);
+		$insides = preg_replace_callback("/<(input)\s*(.*?)>/im", array($this, 'formInsides'), $insides);
+		$insides = preg_replace_callback("/<(textarea|select)\s*(.*?)>(.*?)<\\/([(textarea|select)]*?)>/im", array($this, 'formInsides'), $insides);
 		
 		## Replace Form
 		unset($this->current_form);
@@ -110,10 +110,11 @@ class Formhandler {
 				{$insides}</form>";
 	}
 	
-	private function formInsides ($type, $attr, $insides) {
-		$type = strtolower(stripslashes($type));
-		$attr = stripslashes($attr);
-		$insides = stripslashes($insides);
+	private function formInsides($args) {
+		$args = array_pad($args, 4, '');
+		$type = strtolower(stripslashes($args[1]));
+		$attr = stripslashes($args[2]);
+		$insides = stripslashes($args[3]);
 		
 		## Properties Set Up
 		$properties = $this->propertiesArray($attr);
@@ -192,7 +193,7 @@ class Formhandler {
 		} elseif ($type == "textarea" || $type == "select") {
 			if ($type == "select") {
 				$this->current_select = preg_replace("/(.+)\[\]/i", "\\1", str_replace(" ", "_", $properties['name']));
-				$insides = preg_replace("/<option (.*?)>(.*?)<\\/option>/imsxe", "\$this->selectInsides(\"\\1\", \"\\2\")", $insides);
+				$insides = preg_replace_callback("/<option (.*?)>(.*?)<\\/option>/im", array($this, 'selectInsides'), $insides);
 				$this->current_select = "";
 			} elseif ($type == "textarea") {
 				if (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['update']) && is_array($this->forms_arr[$this->current_form]['update'])) {
@@ -213,10 +214,11 @@ class Formhandler {
 		}
 	}
 	
-	private function selectInsides ($attr, $insides) {
+	private function selectInsides ($args) {
 		## Fix Slashes
-		$attr = stripslashes($attr);
-		$insides = stripslashes($insides);
+		$args = array_pad((array)$args, 3, '');
+		$attr = stripslashes($args[1]);
+		$insides = stripslashes($args[2]);
 		
 		## Set up Properties
 		$properties = $this->propertiesArray($attr);

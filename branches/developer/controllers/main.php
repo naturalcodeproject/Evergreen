@@ -1,6 +1,6 @@
 <?php
 
-class Main_DeveloperController extends BranchController
+class Main_Developer_Controller extends ApplicationController_Developer_Controller
 {
 	public function __construct() {
 		$this->_setLayout('index', Config::read('System.rootIdentifier'));

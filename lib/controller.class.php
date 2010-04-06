@@ -12,7 +12,6 @@
 abstract class Controller {
 	private $viewToLoad = null;
 	private $formhandler = null;
-	private $designer = null;
 	private $layout = null;
 	private $params = array();
 	private $filters = array();
@@ -27,22 +26,20 @@ abstract class Controller {
 	
 	final private function _controllerSetup() {
 		## Construct Code ##
-		$this->params = Config::loadableURI(Config::read("URI.working"));
-		if (!strlen(reset(array_slice($this->params, 1, 1)))) {
-			$this->params[reset(array_slice(array_keys($this->params), 1, 1))] = reset(array_slice(Config::read("URI.map"), 1, 1));
+		$this->params = Config::read("URI.working");
+		if (!strlen($this->params['view'])) {
+			$this->params['view'] = Config::read("URI.map.view");
 		}
 		
-		$this->viewToLoad = $this->params[reset(array_slice(array_keys($this->params), 1, 1))];
+		$this->viewToLoad = Config::uriToMethod($this->params['view']);
 		
 		$this->formhandler = new Formhandler($this);
-		$this->designer = new Designer();
 	}
 	
 	final private function _controllerDestruct() {
 		unset($this->viewContent);
 		unset($this->fullPageContent);
 		unset($this->formhandler);
-		unset($this->designer);
 	}
 	
 	final public function _showView() {
@@ -55,13 +52,13 @@ abstract class Controller {
 		$fullPage = $this->_getFullPageContent();
 		
 		## First Designer Fix
-		$this->designer->doFixes($fullPage);
+		$fullPage = $this->_designerFix($fullPage);
 		
 		## Form Fix
 		$this->formhandler->decode($fullPage);
 		
 		## Second Designer Fix
-		$this->designer->doFixes($fullPage);
+		$fullPage = $this->_designerFix($fullPage);
 		
 		## Set Full Page Content After Fixes
 		$this->_setFullPageContent($fullPage);
@@ -102,6 +99,7 @@ abstract class Controller {
 		if(!$this->_renderLayout() && !$error) {
 			echo $this->_getViewContent();
 		}
+		unset($this->viewContent);
 		$this->_runFilters('Layout.after');
 		
 		$this->_setFullPageContent(ob_get_clean());
@@ -123,7 +121,7 @@ abstract class Controller {
 			return false;
 		}
 		if (empty($args['controller'])) {
-			$args['controller'] = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
+			$args['controller'] = $this->params['controller'];
 		}
 		if ($this->overriddenView == false && $args['override'] == true) {
 			$this->overriddenView = $args['override'];
@@ -132,13 +130,17 @@ abstract class Controller {
 			return true;
 		}
 		if ((strlen(Config::read("Branch.name")) == 0)) {
-			if (((file_exists(Config::read("Path.physical")."/views/".$args['controller']."/".$args['name'].".php") && (include(Config::read("Path.physical")."/views/".$args['controller']."/".$args['name'].".php")) == true)) || ((file_exists(Config::read("Path.physical")."/views/".$args['controller']."/".str_replace('_', '-', $args['name']).".php") && (include(Config::read("Path.physical")."/views/".$args['controller']."/".str_replace('_', '-', $args['name']).".php")) == true))) {
+			$path = Config::read("Path.physical")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
+			if (((file_exists($path) && (include($path)) == true))) {
 				return true;
 			}
+			unset($path);
 		} else {
-			if (((file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".$args['controller']."/".$args['name'].".php") && (include(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".$args['controller']."/".$args['name'].".php")) == true)) || (file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".$args['controller']."/".str_replace('_', '-', $args['name']).".php") && (include(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".$args['controller']."/".str_replace('_', '-', $args['name']).".php")) == true)) {
+			$path = Config::read("Path.physical")."/branches/".Config::uriToFile(Config::classToFile(Config::read("Branch.name")))."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
+			if (((file_exists($path) && (include($path)) == true))) {
 				return true;
 			}
+			unset($path);
 		}
 		return false;
 	}
@@ -158,17 +160,18 @@ abstract class Controller {
 			return false;
 		}
 		if (empty($args['controller'])) {
-			$args['controller'] = $this->params[reset(array_slice(array_keys($this->params), 0, 1))];
+			$args['controller'] = $this->params['controller'];
 		}
 		if (($args['name'][0] != '_' && (!isset($this->bounceback['check']) || $this->bounceback['check'] != $args['controller']) && !in_array($args['controller'], $this->notAView))) {
 			if ($args['checkmethod'] === true) {
-				if (method_exists($this, $args['name'])) {
+				if (is_callable(array($this, $args['name'])) && method_exists($this, $args['name'])) {
 					return true;
 				} else {
 					return false;
 				}
 			} else {
-				if (((!strlen(Config::read("Branch.name")) && (file_exists(Config::read("Path.physical")."/views/".$args['controller']."/".$args['name'].".php") || file_exists(Config::read("Path.physical")."/views/".$args['controller']."/".str_replace('_', '-', $args['name']).".php"))) || (strlen(Config::read("Branch.name")) && (file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".$args['controller']."/".$args['name'].".php") || file_exists(Config::read("Path.physical")."/branches/".Config::read("Branch.name")."/views/".$args['controller']."/".str_replace('_', '-', $args['name']).".php"))))) {
+				$path = Config::read("Path.physical").((strlen(Config::read("Branch.name"))) ? "/branches/".Config::uriToFile(Config::classToFile(Config::read("Branch.name"))) : "")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
+				if (file_exists($path)) {
 					if ($args['checkmethod'] == 'both') {
 						if (method_exists($this, $args['name'])) {
 							return true;
@@ -180,19 +183,19 @@ abstract class Controller {
 				} else {
 					return false;
 				}
+				unset($path);
 			}
 		} else {
 			return false;
 		}
 	}
 	
-	final private function _renderLayout() {
-		$layout = array_merge(array('name'=>'', 'branch'=>''), (array)$this->layout);
-		if (empty($layout['name'])) {
-			return false;
-		}
+	final protected function _setLayout($name, $branch = '') {
+		$layout = array('name' => $name, 'branch' => $branch);
 		if (($layout['branch'] == Config::read('System.rootIdentifier')) || (!strlen(Config::read("Branch.name")) && empty($layout['branch']))) {
-			if ((file_exists(Config::read("Path.physical")."/views/layouts/{$layout['name']}.php") && (include(Config::read("Path.physical")."/views/layouts/{$layout['name']}.php")) == true) || (file_exists(Config::read("Path.physical")."/views/layouts/".str_replace("_", "-", $layout['name']).".php") && (include(Config::read("Path.physical")."/views/layouts/".str_replace("_", "-", $layout['name']).".php")) == true)) {
+			$path = Config::read("Path.physical")."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
+			if (file_exists($path)) {
+				$this->layout = $layout;
 				return true;
 			} else {
 				return false;
@@ -203,7 +206,42 @@ abstract class Controller {
 			} else {
 				$branchToUse = Config::read("Branch.name");
 			}
-			if ((file_exists(Config::read("Path.physical")."/branches/".$branchToUse."/views/layouts/{$layout['name']}.php") && (include(Config::read("Path.physical")."/branches/".$branchToUse."/views/layouts/{$layout['name']}.php")) == true) || (file_exists(Config::read("Path.physical")."/branches/".$branchToUse."/views/layouts/".str_replace("_", "-", $layout['name']).".php") && (include(Config::read("Path.physical")."/branches/".$branchToUse."/views/layouts/".str_replace("_", "-", $layout['name']).".php")) == true)) {
+			$path = Config::read("Path.physical")."/branches/".Config::uriToFile(Config::classToFile($branchToUse))."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
+			if (file_exists($path)) {
+				$this->layout = $layout;
+				return true;
+			} else {
+				return false;
+			}
+		}
+		return false;
+	}
+	
+	final protected function _removeLayout() {
+		$this->layout = null;
+		return true;
+	}
+	
+	final private function _renderLayout() {
+		$layout = array_merge(array('name'=>'', 'branch'=>''), (array)$this->layout);
+		if (empty($layout['name'])) {
+			return false;
+		}
+		if (($layout['branch'] == Config::read('System.rootIdentifier')) || (!strlen(Config::read("Branch.name")) && empty($layout['branch']))) {
+			$path = Config::read("Path.physical")."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
+			if ((file_exists($path) && (include($path)) == true)) {
+				return true;
+			} else {
+				return false;
+			}
+		} else if ((strlen(Config::read("Branch.name")) && empty($layout['branch'])) || !empty($layout['branch'])) {
+			if (!empty($layout['branch'])) {
+				$branchToUse = $layout['branch'];
+			} else {
+				$branchToUse = Config::read("Branch.name");
+			}
+			$path = Config::read("Path.physical")."/branches/".Config::uriToFile(Config::classToFile($branchToUse))."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
+			if ((file_exists($path) && (include($path)) == true)) {
 				return true;
 			} else {
 				return false;
@@ -350,8 +388,7 @@ abstract class Controller {
 			$values = array_values(Config::read('URI.working'));
 			$this->params = array_combine(array_keys(Config::read('URI.working')), array_slice(array_merge(array($values[0]), array($this->bounceback['bounce']),array_slice($values, 1)), 0, count(array_keys(Config::read('URI.working')))));
 			Config::register('Param', $this->params);
-			$this->params = Config::loadableURI($this->params);
-			$this->viewToLoad = $this->params[reset(array_slice(array_keys($this->params), 1, 1))];
+			$this->viewToLoad = Config::uriToMethod($this->params['view']);
 			
 			if ($this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true)) !== true) {
 				return false;
@@ -363,36 +400,6 @@ abstract class Controller {
 			return true;
 		}
 		return false;
-	}
-	
-	final protected function _setLayout($name, $branch = '') {
-		$layout = array('name' => $name, 'branch' => $branch);
-		if (($layout['branch'] == Config::read('System.rootIdentifier')) || (!strlen(Config::read("Branch.name")) && empty($layout['branch']))) {
-			if ((file_exists(Config::read("Path.physical")."/views/layouts/{$layout['name']}.php")) || (file_exists(Config::read("Path.physical")."/views/layouts/".str_replace("_", "-", $layout['name']).".php"))) {
-				$this->layout = $layout;
-				return true;
-			} else {
-				return false;
-			}
-		} else if ((strlen(Config::read("Branch.name")) && empty($layout['branch'])) || !empty($layout['branch'])) {
-			if (!empty($layout['branch'])) {
-				$branchToUse = $layout['branch'];
-			} else {
-				$branchToUse = Config::read("Branch.name");
-			}
-			if ((file_exists(Config::read("Path.physical")."/branches/".$branchToUse."/views/layouts/{$layout['name']}.php")) || (file_exists(Config::read("Path.physical")."/branches/".$branchToUse."/views/layouts/".str_replace("_", "-", $layout['name']).".php"))) {
-				$this->layout = $layout;
-				return true;
-			} else {
-				return false;
-			}
-		}
-		return false;
-	}
-	
-	final protected function _removeLayout() {
-		$this->layout = null;
-		return true;
 	}
 	
 	final protected function _getViewContent() {
@@ -410,5 +417,87 @@ abstract class Controller {
 	final protected function _setFullPageContent($content) {
 		$this->fullPageContent = $content;
 	}
+	
+	public function _designerFixCallback($link) {
+		
+		$link_arr = explode("/", $link[2]);
+		$up_link_count = count(array_keys(array_slice($link_arr, 1), ".."));
+		
+		$return = '';
+		switch ($link_arr[0]) {
+			case "[current]":
+				$new_base = explode("/", Config::read("Path.current"));
+				$return = implode("/", (($up_link_count) ? array_slice($new_base, 0, -$up_link_count) : $new_base)) . implode("/", array_pad(array_slice($link_arr, $up_link_count+1), -(count(array_slice($link_arr, $up_link_count+1))+1), ""));
+			break;
+			
+			case "[site]":
+				$new_base = explode("/", Config::read("Path.site"));
+				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
+			break;
+			
+			case "[skin]":
+				$new_base = explode("/", Config::read("Path.skin"));
+				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
+			break;
+			
+			case "[root]":
+				$new_base = explode("/", Config::read("Path.root"));
+				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
+			break;
+			
+			case "[branch.site]":
+				$new_base = explode("/", Config::read("Path.branch"));
+				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
+			break;
+			
+			case "[branch.skin]":
+				$new_base = explode("/", Config::read("Path.branchSkin"));
+				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
+			break;
+			
+			case "[branch.root]":
+				$new_base = explode("/", Config::read("Path.branchRoot"));
+				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
+			break;
+			
+			default:
+				$working_uri = Config::read("URI.working");
+				
+				if (strlen(Config::read("Branch.name"))) {
+					$working_uri = array_merge(array("branch"=>Config::read("Branch.name")), $working_uri);
+				}
+				
+				foreach($working_uri as $key => $item) {
+					$tmp_key = "[".$key."]";
+					
+					if ($link_arr[0] == $tmp_key) {
+						$position = array_search($key, array_keys($working_uri));
+						$new_base = explode("/", Config::read("Path.root"));
+						
+						$new_url = array_merge( array_merge($new_base, array_slice($working_uri, 0, ($position+1))), array_pad(array_slice($link_arr, $up_link_count+1), -(count(array_slice($link_arr, $up_link_count+1))), "") );
+						
+						$return = implode("/",  $new_url );
+						break 1;
+					}
+				}
+			break;
+		}
+		
+		$return = str_replace("//", "/", $return);
+		
+		if (!Config::read("URI.useModRewrite") && !empty($return)) {
+			if (substr_count($return, "?", 0) > 1) {
+				$return = strrev(preg_replace("/\?/i", "&", strrev($return), (substr_count($return, "?", 0) - 1)));
+			}
+
+		}
+		
+		return $link[1].((!empty($return)) ? $return : $link[2]);
+	}
+	
+	public function _designerFix ($content) {
+		return preg_replace_callback("/(=\"|=\'|=)([\[\]][^(\"|\'|[:space:]|>)]+)/", array($this, "_designerFixCallback"), $content);
+	}
+
 }
 ?>

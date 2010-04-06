@@ -1,6 +1,6 @@
 <?php
 
-class ApplicationController extends Controller {
+class ApplicationController_Controller extends Controller {
 	protected $filter = 'is_user_admin';
 	
 	public function __construct() {

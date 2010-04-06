@@ -1,6 +1,6 @@
 <?php
 
-class Testing_Controller extends ApplicationController {
+class Testing_Controller extends ApplicationController_Controller {
 	public function __construct() {
 		parent::__construct();
 		$this->_setLayout('index');

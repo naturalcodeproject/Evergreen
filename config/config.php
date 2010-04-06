@@ -10,10 +10,12 @@
 	));
 	
 	Config::register(array("URI.map" => array(
+		//"lang"			=> array("en", "(en|sp)"),
+		"lang"			=> array("en", create_function('$element', 'return preg_match("/(en|sp)/i", $element);')),
 		"controller"	=> "main",
 		"view"			=> "index",
-		"action"		=> "",
-		"id"			=> ""
+		"action"		=> null,
+		"id"			=> null
 	)));
 	
 	//Config::register("URI.prependIdentifier", "another");
@@ -29,10 +31,10 @@
 	Config::register("System.displayPageLoadInfo", true);
     
 	## Database Setup ##
-	Config::register("Database.host", "localhost");
-	Config::register("Database.username", "root");
-	Config::register("Database.password", "");
-	Config::register("Database.database", "test");
+	Config::register("Database.host", "10.45.6.212");
+	Config::register("Database.username", "wylie");
+	Config::register("Database.password", "SW7dr*kE");
+	Config::register("Database.database", "daniel_test");
 	Config::register("Database.driver", "MySQL");
     Config::register("Database.viewQueries", false);
 	
