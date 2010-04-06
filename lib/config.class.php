@@ -224,7 +224,7 @@ final class Config {
 			unset($key, $value);
 		}
 		
-		if (isset($uri_vals['prepend']) && isset($uri_vals['main'])) {
+		if (!isset($uri_vals['prepend']) && !isset($uri_vals['main'])) {
 			$count = 0;
 			foreach($uriMap as $key => $item) {
 				if ((!empty($item) && empty($url_vals[$count])) || $key == 'controller') {
