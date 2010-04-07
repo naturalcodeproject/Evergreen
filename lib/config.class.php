@@ -210,7 +210,7 @@ final class Config {
 						);
 						
 						if (!empty($uriMap['controller']) && $uriMap['controller'] == $value) {
-							if (empty($_POST) && empty($_FILES) && !headers_sent()) {
+							if (empty($_POST) && empty($_FILES) && !headers_sent() && !is_array(self::read("Route.current"))) {
 								header("HTTP/1.1 301 Moved Permanently");
 								header("Location: ".self::read("URI.base") . self::read("URI.prepend") . ((self::read("Branch.name")) ? "/" . self::read("Branch.name") : "") ."/".implode("/", array_merge($uri_vals['prepend'], array_slice($uri_vals['main'], 1))) . ((!empty($_SERVER['QUERY_STRING'])) ? ((!self::read("URI.useModRewrite")) ? "&" . $_SERVER['QUERY_STRING'] : "?" . $_SERVER['QUERY_STRING']) : ""));
 								header("Connection: close");
@@ -248,7 +248,6 @@ final class Config {
 					$uri_params[$key] = null;
 				}
 			}
-
 		} else {
 			$foundController = false;
 			$count = 0;
@@ -528,11 +527,12 @@ final class Config {
 					}
 					
 					// Build the final URI that will be used
-					$newURI = "/".implode("/", (array)$newURI);
+					$newURI = rtrim("/".implode("/", (array)$newURI), '/');
 					
 					// Setup the needed configuration settings and re-process the URI
 					self::register("Route.current", array_merge( $route, array("newWorkingURI" => $newURI) ));
 					self::register("URI.working", $newURI);
+					
 					self::processURI();
 					return true;
 				}
