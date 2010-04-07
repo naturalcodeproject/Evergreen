@@ -4,7 +4,7 @@
 	
 	Config::register("Branch.active", true);
 	Config::register("Branch.requiredSystemMode", "development");
-	Config::register("Branch.minimumSystemVersion", "1.0.0b");
+	Config::register("Branch.minimumSystemVersion", "0.2.0");
 	//Config::register("Branch.maximumSystemVersion", "1.0.0");
 	
 	/*

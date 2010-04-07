@@ -1,6 +1,6 @@
 <?php
 
-class ValidationHandler_Helper
+class Validationhandler_Helper
 {
 	
 	public function validateCreate(&$model)

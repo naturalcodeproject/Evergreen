@@ -4,29 +4,84 @@ class Blogpost_Model extends Model {
 
 	public function __construct() {
 		$this->setTableName('blog_posts');
-        
-        $this->addField('id', array('key'));
-        $this->addField('user_id', array('required'));
-        $this->addField('section_id', array('required'));
-        $this->addField('title', array('required', 'validate'=>'validateTitle'));
-        $this->addField('body', array('required'));
-        $this->addField('edited_by');
-        $this->addField('parent_id');
 
-		$this->hasOne('Bloguser', array('local'=>'user_id', 'foreign'=>'id', 'alias'=>'createdBy'));
+        $this->addField('id', array(
+        	'key',
+        	'format'	=> 'integer',
+        ));
+
+        $this->addField('time', array(
+        	'required' => 'A required message',
+        	'format'	=> 'timestamp',
+        ));
+
+        $this->addField('title'	, array(
+        	'required',
+        	'validate' => array(
+        		'maxlength',
+        		'minlength',
+        	),
+        	'format' => 'plaintext',
+        ));
+
+        $this->addField('user_id', array(
+        	'validate' => array(
+        		'isValidUser' => 'Please select a valid user',
+        	),
+        	'type' => 'integer',
+        ));
+
+        $this->addField('body', array(
+        	'validate' => 'test',
+        	'format' => 'htmltext',
+        ));
+
+		/*$this->hasOne('Bloguser', array('local'=>'user_id', 'foreign'=>'id', 'alias'=>'createdBy'));
 		$this->hasOne('Bloguser', array('local'=>'edited_by', 'foreign'=>'id', 'alias'=>'editedBy'));
 		$this->hasOne('Blogsection', array('local'=>'section_id', 'foreign'=>'id', 'alias'=>'section'));
 
-		$this->hasMany('Blogcomment', array('local'=>'id', 'foreign'=>'blog_post_id', 'alias'=>'comments'));
+		$this->hasMany('Blogcomment', array('local'=>'id', 'foreign'=>'blog_post_id', 'alias'=>'comments'));*/
 	}
 
-    public function validateTitle($value) {
-        if (strlen($value) < 3) {
-            $this->addError('title', 'Title must be at least 3 characters long');
-        } else if (strlen($value) > 32) {
-            $this->addError('title', 'Title must be less than 32 characters long');
-        }
-    }
+	private function isValidUser() {
+		return true;
+	}
+
+	private function maxlength() {
+		return true;
+	}
+
+	private function minlength() {
+		return true;
+	}
+
+	private function test() {
+		return true;
+	}
 }
+
+/*
+--
+-- Table structure for table `blog_posts`
+--
+
+DROP TABLE IF EXISTS `blog_posts`;
+CREATE TABLE `blog_posts` (
+  `id` mediumint(11) unsigned NOT NULL AUTO_INCREMENT,
+  `time` int(11) unsigned NOT NULL,
+  `title` varchar(255) COLLATE utf8_bin NOT NULL,
+  `user_id` mediumint(11) NOT NULL,
+  `body` text COLLATE utf8_bin NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=2 ;
+
+--
+-- Dumping data for table `blog_posts`
+--
+
+INSERT INTO `blog_posts` (`id`, `time`, `title`, `user_id`, `body`) VALUES
+(1, 1270008945, 'this is my title', 1, 'this is the body to my blog post.');
+*/
 
 ?>

@@ -10,8 +10,7 @@
 	));
 	
 	Config::register(array("URI.map" => array(
-		//"lang"			=> array("en", "(en|sp)"),
-		"lang"			=> array("en", create_function('$element', 'return preg_match("/(en|sp)/i", $element);')),
+		//"lang"			=> array("en", create_function('$element', 'return preg_match("/(en|sp)/i", $element);')),
 		"controller"	=> "main",
 		"view"			=> "index",
 		"action"		=> null,
@@ -34,7 +33,7 @@
 	Config::register("Database.host", "10.45.6.212");
 	Config::register("Database.username", "wylie");
 	Config::register("Database.password", "SW7dr*kE");
-	Config::register("Database.database", "daniel_test");
+	Config::register("Database.database", "eric");
 	Config::register("Database.driver", "MySQL");
     Config::register("Database.viewQueries", false);
 	

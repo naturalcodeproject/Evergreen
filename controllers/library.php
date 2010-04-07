@@ -1,5 +1,4 @@
 <?php
-
 class Library_Controller extends ApplicationController_Controller {
 	public function __construct() {
 		parent::__construct();

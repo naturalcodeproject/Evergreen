@@ -10,7 +10,7 @@ final class Config {
 	private static function setup() {
 		if (!self::$isSetup) {
 			// Setup the System.version configuration setting
-			self::$config['System']['version'] = "1.0.0b2";
+			self::$config['System']['version'] = "0.3.0";
 			
 			// Setup the root identifier
 			self::$config['System']['rootIdentifier'] = "MAIN";

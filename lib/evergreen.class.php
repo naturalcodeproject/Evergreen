@@ -176,6 +176,9 @@ class AutoLoaders {
 					}', $class['original']));
 			}
 		} else {
+			if (strtolower($class['original']) == 'db') {
+				DB::setup();
+			}
 			if (isset($class['type']) && in_array($class['type'], array('helper', 'plugin'))) {
 				$classVars = get_class_vars($class['original']);
 				if (isset($classVars['requiredSystemMode']) && $classVars['requiredSystemMode'] != Config::read("System.mode")) {
@@ -209,7 +212,7 @@ class AutoLoaders {
 				array_pop($classPieces);
 			}
 			if (count($classPieces) > 1) {
-				if ($classArr['type'] == 'driver') {
+				if (isset($classArr['type']) && $classArr['type'] == 'driver') {
 					$classArr['specificDriver'] = strtolower(array_pop($classPieces));
 				} else {
 					$classArr['branch'] = strtolower(array_pop($classPieces));
@@ -221,7 +224,7 @@ class AutoLoaders {
 		} else {
 			$className = $classPieces;
 		}
-		$classArr['class'] = strtolower(trim(preg_replace('/[A-Z]/', '.$0', implode('_', $className)), '.'));
+		$classArr['class'] = preg_replace('/^d\.b/', 'db', strtolower(trim(preg_replace('/[A-Z]/', '.$0', implode('_', $className)), '.')));
 		
 		unset($classType);
 		unset($branchName);

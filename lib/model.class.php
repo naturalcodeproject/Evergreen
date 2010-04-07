@@ -1,400 +1,566 @@
 <?php
 
-class ModelField {
-    public $name;
-    public $key;
-    public $required;
-    public $validators;
-    public $errorMessages = array();
+/**
+* model class
+* @todo Error Handling!
+*/
+abstract class Model implements Iterator {
+	/**
+	* name of the database table
+	*/
+	protected $table_name = '';
 
-    public function __construct() {
-        $this->name = '';
-        $this->key = false;
-        $this->required = false;
-        $this->validators = array();
-    }
-}
+	/**
+	* all of the fields for the model
+	*/
+	private $fields = array();
 
-class ModelError {
-    public $type;
-    public $field;
-    public $msg;
-    public $trace;
-    public $code;
-    public $validator;
+	/**
+	* holds all of the relationship information for the model
+	*/
+	private $relationships = array();
 
-    // Errors must be handled by user code
-    const TYPE_INVALID_FIELD = 0;
-    const TYPE_REQUIRED_FIELD_MISSING = 1;
-    const TYPE_KEY_MISSING = 2;
-    const TYPE_DUPLICATE_UNIQUE = 3; // NOT SUPPORTED YET
-    
-    // Errors will throw exception and stop execution
-    const TYPE_DB_OPERATION_FAILED = 4;
+	/**
+	* all errors generated from validation methods
+	*/
+	private $errors = array();
 
-    public function __construct() {
-        $this->type = -1;
-        $this->field = null;
-        $this->msg = '';
-        $this->trace = '';
-        $this->code = null;
-        $this->validator = '';
-    }
-}
+	/**
+	* holds the data for the row
+	*/
+	private $data = array();
 
-class Model {
-    private $db_driver;
-    private $table_name;
-    private $fields;
-    private $errors = array();
+	/**
+	* holds the identifier for the current data set
+	*/
+	private $current_row = 0;
 
-    const KEY = 'key';
-    const REQUIRED = 'required';
-    const VALIDATE = 'validate';
-    const UNIQUE = 'unique';
 
-    public function __construct() {
-        $this->db_driver = null;
-        $this->table_name = '';
-        $this->fields = array();
-        $this->errors = array();
-    }
+	/**
+	* sets the table name for the model
+	*/
+	public function setTableName($name) {
+		$this->table_name = $name;
 
-    public function setTableName($table_name) {
-        $this->table_name = $table_name;
-    }
+		return true;
+	}
 
-    public function addField($name, $options=false) {
-        $field = new ModelField();
-        $field->name = $name;
+	/**
+	* gets the table name for the model
+	*/
+	public function getTableName() {
+		return $this->table_name;
+	}
 
-        if ($options) {
-            if (in_array(Model::KEY, $options) || array_key_exists(Model::KEY, $options)) {
-                $field->key = true;
-                if (!empty($options[Model::KEY])) {
-                	$field->errorMessages[Model::KEY] = $options[Model::KEY];
-                }
-            }
+	/**
+	* adds a field to the model
+	*
+	* array(
+	*	'name'			=> name of field,
+	*	'key'		=> true|false, (default: false)
+	*	'validate'	=> array(
+	*		'function1'	=> 'message',
+	*		...),
+	*	'format'		=> see self::$valid_formats
+	* );
+	*
+	* @todo possibly make these their own objects
+	*/
+	protected function addField($name, $options = array()) {
+		$errors = array();
 
-            if (in_array(Model::REQUIRED, $options) || array_key_exists(Model::REQUIRED, $options)) {
-                $field->required = true;
-                if (!empty($options[Model::REQUIRED])) {
-                	$field->errorMessages[Model::REQUIRED] = $options[Model::REQUIRED];
-                }
-            }
+		// set defaults for the field
+		$field_data = array(
+			'key'		=> false,
+			'validate'	=> array(),
+			'format'	=> Model_Format::getDefault(),
+		);
 
-            if (array_key_exists(Model::VALIDATE, $options)) {  
-                if (is_array($options[Model::VALIDATE])) {
-                    foreach ($options[Model::VALIDATE] as $option) {
-                        $field->validators[] = $option;
-                    }
-                } else {
-                    $field->validators[] = $options[Model::VALIDATE];
-                }
-            }
-        }
+		// check primary key
+		if (in_array('key', $options) || isset($field_data['key']) && $field_data['key'] == true) {
+			$field_data['key'] = true;
+		}
 
-        $this->fields[] = $field;
-    }
+		// check if required
+		if (in_array('required', $options) || array_key_exists('required', $options)) {
+			$field_data['validate']['notEmpty'] = (!empty($options['required'])) ? $options['required'] : '';
+		}
 
-    public function addError($field=null, $msg='', $type=ModelError::TYPE_INVALID_FIELD, $trace='', $code=null) {
-        $modelError = new ModelError();
-        $modelError->type = $type;
-        $modelError->field = $field;
-        $modelError->msg = $msg;
-        $modelError->trace = $trace;
-        $modelError->code = $code;
-        
-        $this->errors[] = $modelError;
-        
-        if ($type == ModelError::TYPE_DB_OPERATION_FAILED) {
-            $params = array();
-            $params['db_message'] = $msg;
-            $params['db_trace'] = $trace;
-            $params['db_model'] = get_class($this);
-            Error::trigger("MODEL_DB_FAILURE", $params);
-        }
-    }
+		// validate the validate methods
+		if (isset($options['validate'])) {
+			if (is_array($options['validate'])) {
+				// if validate is an array then go through each one
+				foreach($options['validate'] as $function => $message) {
+					// if the function is a number then a custom error message wasn't set
+					// update the variables appropriately
+					if (is_numeric($function)) {
+						$function = $message;
+						$message = '';
+					}
 
-    public function clearErrors() {
-        unset($this->errors);
-    }
+					// make sure the method exists
+					if (method_exists($this, $function)) {
+						$field_data['validate'][$function] = $message;
+					} else {
+						$errors[] = 'Invalid validation method: ' . $function;
+					}
+				}
+			} else {
+				// it is a string for one method
+				if (method_exists($this, $options['validate'])) {
+					$field_data['validate'][$options['validate']] = '';
+				} else {
+					$errors[] = 'Invalidate validation method: ' . $options['validate'];
+				}
+			}
+		}
 
-    public function hasErrors() {
-        return (count(((isset($this->errors)) ? $this->errors : array())) > 0);
-    }
+		// set the format
+		if (!empty($options['format'])) {
+			if (Model_Format::isValid($options['format'])) {
+				$field_data['format'] = $options['format'];
+			} else {
+				$errors[] = 'Invalid field format: ' . $options['format'];
+			}
+		}
 
-    public function getErrors() {
-        return ((isset($this->errors)) ? $this->errors : false);
-    }
-    
-    public function getErrorMessages($field=false) {
-        $messages = array();
-        if (isset($this->errors)) {
-            foreach ($this->errors as $error) {
-                if (!$field || ($field && $field == $error->field)) {
-                    $messages[] = $error->msg;
-                }
-            }
-        }
-        return $messages;
-    }
-    
-    public function getErrorMessage($field, $validator) {
-        if (isset($this->errors)) {
-            if (isset($this->errors)) {
-                foreach ($this->errors as $error) {
-                    if ($error->field == $field && $error->validator == $validator) {
-                        return $error->msg;
-                    }
-                }
-            }
-        }
-        
-        return null;
-    }
-    
-    public function validateFailed($field=false, $validator=false) {
-        if (isset($this->errors)) {
-            foreach ($this->errors as $error) {
-                if ((!$field || ($field && $error->field == $field)) && (!$validator || $validator == $error->validator)) {
-                    return true;
-                }
-            }   
-        }
-        
-        return false;
-    }
-    
-    public function requiredFailed($field=false) {
-        if (isset($this->errors)) {
-            foreach ($this->errors as $error) {
-                if ($error->type == ModelError::TYPE_REQUIRED_FIELD_MISSING) {
-                    if (!$field || ($field && $error->field == $field)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        
-        return false;
-    }
-    
-    public function keyFailed($field=false) {
-        if (isset($this->errors)) {
-            foreach ($this->errors as $error) {
-                if ($error->type == ModelError::TYPE_KEY_MISSING) {
-                    if (!$field || ($field && $error->field == $field)) {
-                        return true;
-                    }
-                }
-            }
-        }
-        
-        return false;
-    }
+		if (!empty($errors)) {
+			return $errors;
+		} else {
+			$this->fields[$name] = $field_data;
 
-    private function setup_driver() {
-        if (!$this->db_driver) {
-            $specific_driver = Config::read("Database.driver");
-            $driver_name = "DB_{$specific_driver}_Driver";
-            $this->db_driver = new $driver_name($this->table_name, get_class($this), $this->fields, $this);
-        }
-    }
+			return true;
+		}
+	}
 
-    public function db() {
-        $this->setup_driver();
-        return $this->db_driver->db();
-    }
+	/**
+	* gets the fields for a model
+	*/
+	public function getFields() {
+		return $this->fields;
+	}
 
-    public function db_driver() {
-        $this->setup_driver();
-        return $this->db_driver;
-    }
+	/**
+	* gets the field names
+	*/
+	public function getFieldNames($table = true) {
+		$names = array_keys($this->fields);
 
-    public function query($statement) {
-        $this->clearErrors();
-        $this->setup_driver();
-        return $this->db_driver->query($statement);
-    }
+		if ($table == true) {
+			array_walk($names, create_function('&$value, $key', '$value = "' . $this->getTableName() . '." . $value;'));
+		}
 
-    //$this->set_column_operations('password', FL_CREATE|FL_RETRIEVE);
-    public function setColumnOperations($column, $flags) {
-        $this->setup_driver();
-        $this->db_driver->set_column_operations($column, $flags);
-    }
+		return $names;
+	}
 
-    public function create() {
-        $this->clearErrors();
-        $this->setup_driver();
-        $this->preCreate();
+	/**
+	* adds an one-to-one relationship
+	*
+	* array(
+	*	'local'		=> 'column in local model',
+	*	'foreign'	=> 'column in foreign table',
+	*	'alias'		=> 'alias for the foriegn table',
+	* );
+	*/
+	protected function hasOne($class_name, array $options, $branch = '') {
 
-        $this->checkRequiredFields();
-        $this->checkValidators();
+	}
 
-        if (!$this->hasErrors()) {
-            $result = $this->db_driver->create();
-            $this->postCreate();
-            return $result;
-        }
+	/**
+	* adds an one-to-many relationship
+	*
+	* array(
+	*	'local'		=> 'column in local model',
+	*	'foreign'	=> 'column in foreign table',
+	*	'alias'		=> 'alias for the foriegn table',
+	* );
+	*/
+	protected function hasMany($class_name, array $options, $branch = '') {
 
-        return false;
-    }
+	}
 
-    public function retrieve($id=false) {
-        $this->clearErrors();
-        $this->setup_driver();
-        $this->preRetrieve();
-        $result = $this->db_driver->retrieve($id);
+	/**
+	* retrieve one row using the primary key
+	*
+	* @return false if there are no primary keys
+	*/
+	public function retrieve($id) {
+		$this->clearData();
 
-        if ($result) {
-            $this->postRetrieve();
-            return $result;
-        }
+		$primary = $this->_getPrimary();
 
-        return false;
-    }
+		// execute the query
+		$results = DB::find($this->getFieldNames(), $this->getTableName(), array(
+			'where'	=> array($this->table_name . '.' . $primary . ' = ?', $id),
+			'limit'	=> 1,
+		));
 
-    public function update() {
-        $this->clearErrors();
-        $this->setup_driver();
-        $this->preUpdate();
+		// fetch the row
+		$results = DB::fetch($results);
 
-        $this->checkKeys();
-        $this->checkRequiredFields();
-        $this->checkValidators();
+		// if the results isn't false and the array is bigger than 0 then populate the object
+		if ($results !== false && sizeof($results) > 0) {
+			$this->setProperties($results);
 
-        if (!$this->hasErrors()) {
-            $result = $this->db_driver->update();
-            $this->postUpdate();
-            return $result;
-        }
+			return true;
+		}
 
-        return false;
-    }
+		// the row wasn't retrieved. Return false.
+		return false;
+	}
 
-    public function delete() {
-        $this->clearErrors();
-        $this->setup_driver();
-        $this->preDelete();
-        $result = $this->db_driver->delete();
+	/*
+	* finds multiple rows AKA a SELECT query
+	*
+	* if the first parameter is a string then that is the alias for a relationship
+	* and the function will find within the alias
+	*/
+	public function find($options = array(), $options2 = array()) {
+		$this->clearData();
 
-        if ($result) {
-            $this->postDelete();
-            return $result;
-        }
+		$alias = '';
 
-        return false;
-    }
+		// if the first option is a string then that is the alias we want to search in
+		if (is_string($options)) {
+			$alias = $options;
+			$options = $options2;
+			unset($options);
+		}
+		$this->_prepareOptions($options);
 
-    public function save() {
-        $this->clearErrors();
-        $this->setup_driver();
+		$results = DB::find($this->getFieldNames(), $this->getTableName(), $options);
+
+		if ($results !== false) {
+			// loop through the results and clone the existing object
+			while($row = DB::fetch($results)) {
+				$this->setProperties($row, true);
+			}
+
+			return $this;
+		}
+
+		return false;
+	}
+
+	/**
+	* UPDATE or INSERT a row into the DB
+	* calls create() or update()
+	*/
+	public function save() {
+		$primary = $this->_getPrimary();
+
+		if (!empty($this->data[$this->current_row][$primary])) {
+			return $this->update();
+		} else {
+			return $this->create();
+		}
+	}
+
+	/**
+	* INSERTs a row into the DB
+	*/
+	public function create() {
+		// prepare the data. This needs to be based on the fields.
+		$data = array();
+		foreach($this->fields as $name => $options) {
+			
+			if ($name == $this->_getPrimary()) continue; // skip primary, so you don't have to enter one
+			
+			$data[$name] = (isset($this->data[$this->current_row][$name])) ? $this->data[$this->current_row][$name] : '';
+		}
+
+		// execute the query
+		$id = intval(DB::insert($data, $this->getTableName()));
+
+		$primary = $this->_getPrimary();
+		$this->data[$this->current_row][$primary] = $id;
+
+		return $id;
+	}
+
+	/**
+	* UPDATEs a row in the DB
+	*/
+	public function update() {
+		// prepare the data. This needs to be based on the fields.
+		$data = array();
+		foreach($this->fields as $name => $options) {
+			$data[$name] = (isset($this->data[$this->current_row][$name])) ? $this->data[$this->current_row][$name] : '';
+		}
+
+		// execute the query
+		DB::update($this->_getPrimary(), $data, $this->getTableName());
+
+		return true;
+	}
+
+	/**
+	* DELETEs a row from the DB
+	*/
+	public function delete() {
 		
-        $this->checkRequiredFields();
-		$this->checkValidators();
+		$value = $this->data[$this->current_row][$this->_getPrimary()];
 		
-        if (!$this->hasErrors()) {
-            return $this->db_driver->save();
-        }
+		return DB::delete($this->_getPrimary(), $value, $this->getTableName());
+	}
 
-        return false;
-    }
+	/**
+	* gets the relationship data
+	*/
+	public function get($alias) {
 
-    public function find($arg1=null, $arg2=null) {
-        $this->clearErrors();
-        $this->setup_driver();
-        return $this->db_driver->find($arg1, $arg2);
-    }
+	}
 
-    public function getFoundRowsCount() {
-        $this->setup_driver();
-        return $this->db_driver->get_found_rows_count();
-    }
+	/**
+	* populates a model from an array
+	*/
+	public function setProperties($data = array(), $new = false) {
+		// increment the internal counter if forced but don't do it if no data exists
+		if ($new === true && sizeof($this->data) != 0) {
+			$this->current_row += 1;
+		}
 
-    public function get($property) {
-        $this->setup_driver();
-        return $this->db_driver->get($property);
-    }
+		// loop through the fields and populate them
+		foreach($data as $key => $value) {
+			$this->{$key} = $value;
+		}
+	}
 
-    public function set($property, $value) {
-        $this->setup_driver();
-        $this->db_driver->set($property, $value);
-    }
+	/**
+	* returns the model properties as an array
+	*/
+	public function getProperties() {
+		$data = array();
 
-    public function setProperties($properties) {
-        $this->setup_driver();
-        $this->db_driver->set_properties($properties);
-    }
+		foreach($this->data[$this->current_row] as $key => $value) {
+			$data[$key] = $value;
+		}
 
-    public function getProperties() {
-        $this->setup_driver();
-        return $this->db_driver->get_properties();
-    }
+		return $data;
+	}
 
-    protected function preCreate() {}
-    protected function preRetrieve() {}
-    protected function preUpdate() {}
-    protected function preDelete() {}
+	/**
+	* gets the primary key for a table
+	*/
+	private function _getPrimary() {
+		foreach($this->fields as $name => $options) {
+			if ($options['key'] === true) {
+				return $name;
+			}
+		}
 
-    protected function postCreate() {}
-    protected function postRetrieve() {}
-    protected function postUpdate() {}
-    protected function postDelete() {}
+		return false;
+	}
 
-    protected function hasOne($rel_class_name, array $refs) {
-        $this->setup_driver();
-        $this->db_driver->has_one($rel_class_name, $refs);
-    }
+	/**
+	* prepares the options by appending the table name to the front of the columns
+	*/
+	private function _prepareOptions(&$options) {
+		$fields = implode('|', $this->getFieldNames(false));
+		$table = $this->getTableName();
 
-    protected function hasMany($rel_class_name, array $refs) {
-        $this->setup_driver();
-        $this->db_driver->has_many($rel_class_name, $refs);
-    }
+		$replace_names = create_function('&$item', '$item = preg_replace("#(' . $fields . ')#i", "' . $table . '.$1", $item);');
 
-    private function checkRequiredFields() {
-        // Check for required fields
-        foreach ($this->fields as $field) {
-            if ($field->required && (!property_exists($this, $field->name) || empty($this->{$field->name}))) {
-                $this->addError($field->name, (isset($field->errorMessages[self::REQUIRED]) ? $field->errorMessages[self::REQUIRED] : ''), ModelError::TYPE_REQUIRED_FIELD_MISSING);
-                
-                $errors = $this->errors;
-                $curError = array_pop($errors);
-                $curError->validator = self::REQUIRED;
-            }
-        }
-    }
+		// loop through each option and append the table name to the front of the columns
+		// looping so that it doesn't replace keywords such as where, limit, order, etc
+		foreach($options as &$item) {
+			if (is_array($item)) {
+				array_walk_recursive($item, $replace_names);
+			} else {
+				$replace_names($item);
+			}
+		}
 
-    private function checkKeys() {
-        foreach ($this->fields as $field) {
-            if ($field->key && !property_exists($this, $field->name)) {
-                $this->addError($field->name, (isset($field->errorMessages[self::KEY]) ? $field->errorMessages[self::KEY] : ''), ModelError::TYPE_KEY_MISSING);
-                
-                $errors = $this->errors;
-                $curError = array_pop($errors);
-                $curError->validator = self::KEY;
-            }
-        }
-    }
+		unset($replace_names);
+	}
 
-    private function checkValidators() {
-        foreach ($this->fields as $field) {
-            if (count($field->validators)) {
-                foreach ($field->validators as $validator) {
-                    $prop = $field->name;
-                    $result = $this->{$validator}($prop, $this->$prop);
-					
-                    if ($result) {
-                        $this->addError($prop, $result);
-                        
-                        $errors = $this->errors;
-                        $curError = array_pop($errors);
-                        $curError->validator = $validator;
-                    }
-                }
-            }
-        }
-    }
+	/**
+	* returns the total rows
+	*/
+	public function totalRows() {
+		return sizeof($this->data);
+	}
+
+	/**
+	* sets a variable
+	*/
+	public function __set($name, $value) {
+		$this->data[$this->current_row][$name] = $value;
+	}
+
+	/**
+	* gets a variable
+	*/
+	public function __get($name) {
+		return $this->data[$this->current_row][$name];
+	}
+
+	/**
+	* sees if a variable is set
+	*/
+	public function __isset($name) {
+		return isset($this->data[$this->current_row][$name]);
+	}
+
+	/**
+	* unsets a variable
+	*/
+	public function __unset($name) {
+		unset($this->data[$this->current_row][$name]);
+	}
+
+	/**
+	* prepares the object to be cloned
+	*/
+	public function __clone() {
+		$this->clearData();
+	}
+
+	/**
+	* creates a new object for the current row
+	*/
+	public function extract() {
+		$model = clone $this;
+		$model->setProperties($this->getProperties());
+
+		return $model;
+	}
+
+	/**
+	* turns every row into its own object
+	*/
+	public function extractAll() {
+		$this->current_row = 0;
+
+		$models = array();
+		foreach($this as $row) {
+			$models[] = $row->extract();
+		}
+
+		return $models;
+	}
+
+	/**
+	* clears the data in the object
+	*/
+	private function clearData() {
+		$this->data = array();
+		$this->current_row = 0;
+	}
+
+	/**
+	* iterator methods
+	*
+	* resets the array
+	*/
+	public function rewind() {
+		$this->current_row = 0;
+	}
+
+	/**
+	* iterator methods
+	*
+	* Gets the current row which is the object. The current row has already been incremented.
+	*/
+	public function current() {
+		return $this;
+	}
+
+	/**
+	* iterator methods
+	*
+	* gets the key for the current row
+	*/
+	public function key() {
+		return $this->current_row;
+	}
+
+	/**
+	* iterator methods
+	*
+	* moves to the next row
+	*/
+	public function next() {
+		$this->current_row += 1;
+	}
+
+	/**
+	* iterator methods
+	*
+	* sees if the next row is valid
+	*/
+	public function valid() {
+		return isset($this->data[$this->current_row]);
+	}
 }
 
-?>
+/**
+* formats the field types for the model
+*/
+class Model_Format {
+	/**
+	* all of the valid data format
+	*
+	* @todo add a bunch of these
+	*/
+	private static $valid_formats = array(
+		'none'		=> '',
+		'plaintext'	=> 'plaintext',
+		'htmltext'	=> 'htmltext',
+		'integer'	=> 'integer',
+		'timestamp'	=> 'integer',
+		'datetime'	=> '',
+	);
+
+	/**
+	* checks to see if it is a valid format
+	*/
+	public static function isValid($format) {
+		if (array_key_exists($format, self::$valid_formats)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	* gets the default valid format
+	*/
+	public static function getDefault() {
+		return key(self::$valid_formats);
+	}
+
+	/**
+	* formats the value for the column
+	*/
+	public static function format($format, $value) {
+		$function = self::$valid_formats[$format];
+
+		if (!empty($function) && method_exists('Model_Format', $function)) {
+			$value = call_user_func(array('Model_Format', $function), $value);
+		}
+
+		return $value;
+	}
+
+	/**
+	* integer format
+	*/
+	public static function integer($value) {
+		return intval($value);
+	}
+
+	/**
+	* plain text format
+	*/
+	public static function plaintext($value) {
+		return stripslashes(htmlspecialchars($value));
+	}
+
+	/**
+	* html text format
+	*/
+	public static function htmltext($value) {
+		return $value;
+	}
+}
