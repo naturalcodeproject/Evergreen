@@ -39,12 +39,8 @@ class Formhandler {
 	}
 	
 	public function decode (&$content) {
-		## Newline Fix
-		$content = str_replace("\n", "<newline>", $content);
 		## Form Fix
-		$content = preg_replace_callback("/<form\s*(.*?)[^(->)]>(.*?)<\\/form>/im", array($this, 'formReplace'), $content);
-		## Back to Normal
-		$content = str_replace("<newline>", "\n", $content);
+		$content = preg_replace_callback("/<form\s*(.*?)[^(->)]>(.*?)<\\/form>/is", array($this, 'formReplace'), $content);
 	}
 	
 	private function formReplace($args) {
@@ -98,8 +94,8 @@ class Formhandler {
 		
 		## Set Up Elements
 		$this->current_form = $properties['name'];
-		$insides = preg_replace_callback("/<(input)\s*(.*?)>/im", array($this, 'formInsides'), $insides);
-		$insides = preg_replace_callback("/<(textarea|select)\s*(.*?)>(.*?)<\\/([(textarea|select)]*?)>/im", array($this, 'formInsides'), $insides);
+		$insides = preg_replace_callback("/<(input)\s*(.*?)>/is", array($this, 'formInsides'), $insides);
+		$insides = preg_replace_callback("/<(textarea|select)\s*(.*?)>(.*?)<\\/([(textarea|select)]*?)>/is", array($this, 'formInsides'), $insides);
 		
 		## Replace Form
 		unset($this->current_form);
@@ -193,7 +189,7 @@ class Formhandler {
 		} elseif ($type == "textarea" || $type == "select") {
 			if ($type == "select") {
 				$this->current_select = preg_replace("/(.+)\[\]/i", "\\1", str_replace(" ", "_", $properties['name']));
-				$insides = preg_replace_callback("/<option (.*?)>(.*?)<\\/option>/im", array($this, 'selectInsides'), $insides);
+				$insides = preg_replace_callback("/<option (.*?)>(.*?)<\\/option>/is", array($this, 'selectInsides'), $insides);
 				$this->current_select = "";
 			} elseif ($type == "textarea") {
 				if (!empty($properties['name']) && isset($this->forms_arr[$this->current_form]['update']) && is_array($this->forms_arr[$this->current_form]['update'])) {

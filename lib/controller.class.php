@@ -48,27 +48,20 @@ abstract class Controller {
 		## Set up the actual page
 		$this->_loadView();
 		
-		## Full Page Content Holder
-		$fullPage = $this->_getFullPageContent();
-		
 		## First Designer Fix
-		$fullPage = $this->_designerFix($fullPage);
+		$this->_designerFix($this->fullPageContent);
 		
 		## Form Fix
-		$this->formhandler->decode($fullPage);
+		$this->formhandler->decode($this->fullPageContent);
 		
 		## Second Designer Fix
-		$fullPage = $this->_designerFix($fullPage);
-		
-		## Set Full Page Content After Fixes
-		$this->_setFullPageContent($fullPage);
+		//$this->_designerFix($fullPage);
 		
 		## Output Page
 		$this->_runFilters('Page.output.before');
-		echo $this->_getFullPageContent();
+		echo $this->fullPageContent;
 		$this->_runFilters('Page.output.after');
 		$this->_controllerDestruct();
-		unset($fullPage);
 	}
 	
 	final private function _loadView() {
@@ -88,7 +81,7 @@ abstract class Controller {
 					$this->_getView($this->viewToLoad);
 				}
 				$this->_runFilters('View.content.after');
-			$this->_setViewContent(ob_get_clean());
+			$this->viewContent = ob_get_clean();
 			$this->_runFilters('View.after');
 		} else {
 			$error = true;
@@ -97,12 +90,12 @@ abstract class Controller {
 		
 		$this->_runFilters('Layout.before');
 		if(!$this->_renderLayout() && !$error) {
-			echo $this->_getViewContent();
+			echo $this->viewContent;
 		}
 		unset($this->viewContent);
 		$this->_runFilters('Layout.after');
 		
-		$this->_setFullPageContent(ob_get_clean());
+		$this->fullPageContent = ob_get_clean();
 		$this->_runFilters('Page.after');
 	}
 	
@@ -495,8 +488,8 @@ abstract class Controller {
 		return $link[1].((!empty($return)) ? $return : $link[2]);
 	}
 	
-	public function _designerFix ($content) {
-		return preg_replace_callback("/(=\"|=\'|=)([\[\]][^(\"|\'|[:space:]|>)]+)/", array($this, "_designerFixCallback"), $content);
+	public function _designerFix (&$content) {
+		$content = preg_replace_callback("/(=\"|=\'|=)([\[\]][^(\"|\'|[:space:]|>)]+)/", array($this, "_designerFixCallback"), $content);
 	}
 
 }
