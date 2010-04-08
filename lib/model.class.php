@@ -371,7 +371,10 @@ abstract class Model implements Iterator, Countable {
 				$replace_names($item);
 			}
 		}
-
+		
+		if (isset($options['limit']) && is_array($options['limit'])) {
+			$options['limit'] = trim(implode(', ', $options['limit']), ', ');
+		}
 		unset($replace_names);
 	}
 
