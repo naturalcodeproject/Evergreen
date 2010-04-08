@@ -4,7 +4,7 @@
 * model class
 * @todo Error Handling!
 */
-abstract class Model implements Iterator {
+abstract class Model implements Iterator, Countable {
 	/**
 	* name of the database table
 	*/
@@ -34,7 +34,8 @@ abstract class Model implements Iterator {
 	* holds the identifier for the current data set
 	*/
 	private $current_row = 0;
-
+	
+	private $currentItem = null;
 
 	/**
 	* sets the table name for the model
@@ -377,8 +378,8 @@ abstract class Model implements Iterator {
 	/**
 	* returns the total rows
 	*/
-	public function totalRows() {
-		return sizeof($this->data);
+	public function count() {
+		return count($this->data);
 	}
 
 	/**
@@ -413,17 +414,9 @@ abstract class Model implements Iterator {
 	* prepares the object to be cloned
 	*/
 	public function __clone() {
+		$currentData = $this->data[$this->current_row];
 		$this->clearData();
-	}
-
-	/**
-	* creates a new object for the current row
-	*/
-	public function extract() {
-		$model = clone $this;
-		$model->setProperties($this->getProperties());
-
-		return $model;
+		$this->setProperties($currentData);
 	}
 
 	/**
@@ -434,7 +427,7 @@ abstract class Model implements Iterator {
 
 		$models = array();
 		foreach($this as $row) {
-			$models[] = $row->extract();
+			$models[] = $row;
 		}
 
 		return $models;
@@ -463,7 +456,7 @@ abstract class Model implements Iterator {
 	* Gets the current row which is the object. The current row has already been incremented.
 	*/
 	public function current() {
-		return $this;
+		return clone $this;
 	}
 
 	/**

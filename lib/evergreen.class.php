@@ -95,7 +95,10 @@ class AutoLoaders {
 		}
 		
 		## Base System Includes ##
-		require_once("lib/config.class.php");
+		if (!class_exists('Config', false)) {
+			include("lib/config.class.php");
+			Config::setup();
+		}
 		
 		## Parse Class Name ##
 		$class = self::parseClassName($class_name);

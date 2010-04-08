@@ -395,19 +395,19 @@ abstract class Controller {
 		return false;
 	}
 	
-	final protected function _getViewContent() {
+	final protected function &_getViewContent() {
 		return $this->viewContent;
 	}
 	
-	final protected function _setViewContent($content) {
+	final protected function _setViewContent(&$content) {
 		$this->viewContent = $content;
 	}
 	
-	final protected function _getFullPageContent() {
+	final protected function &_getFullPageContent() {
 		return $this->fullPageContent;
 	}
 	
-	final protected function _setFullPageContent($content) {
+	final protected function _setFullPageContent(&$content) {
 		$this->fullPageContent = $content;
 	}
 	

@@ -14,7 +14,7 @@ class Blog_Controller extends ApplicationController_Controller {
 		$post->user_id = 1;
 		
 		echo '<pre>';
-		var_dump($post->save());
+		//var_dump($post->save());
 		//var_dump($post);
 		echo '</pre>';
 
@@ -22,7 +22,7 @@ class Blog_Controller extends ApplicationController_Controller {
 
 		// get one post by the primary key
 		echo '<h2>Retrieve</h2>';
-		$blogpost->retrieve(1);
+		//$blogpost->retrieve(1);
 		echo '<p>' . $blogpost->title . '</p>';
 
 		echo '<p>Isset: ' . var_export(isset($blogpost->title), true) . '</p>';
@@ -39,7 +39,7 @@ class Blog_Controller extends ApplicationController_Controller {
 		$blogpost->time = time();
 		$blogpost->title = 'this is my new title - ' . date('r');
 		echo '<pre>';
-		var_dump($blogpost->save());
+		//var_dump($blogpost->save());
 		echo '</pre>';
 
 		echo '<p>';
@@ -52,11 +52,30 @@ class Blog_Controller extends ApplicationController_Controller {
 
 		// find multiple posts
 		echo '<h2>Find</h2>';
-		// $blogpost->find(array(
-		// 			'where'	=> array('user_id = ?', 1),
-		// 			'order'	=> array('time DESC'),
-		// 			'limit'	=> 0,
-		// 		));
+		$blogpost->find(array(
+ 			'where'	=> array('user_id = ?', 1),
+ 			'order'	=> array('time DESC'),
+ 			'limit'	=> 100,
+ 		));
+		 		
+		 var_dump(count($blogpost));
+		 
+		 echo "<br />";
+		 foreach($blogpost as $key => $post) {
+							//var_dump($post);
+		 				echo '<h3>' . $key . ': ' . $post->title . '</h3>';
+		 		
+		 					echo $post->body;
+		 			if ($key == 10) {
+		 				$externalTest = $post;
+		 			}
+		}
+		unset($blogpost, $key, $post);
+		
+		echo "<pre>";
+		var_dump($externalTest);
+		echo "</pre>";
+
 		// 
 		// 		echo '<p>total: ' . $blogpost->totalRows() . '</p>';
 		// 		$i = 0;
@@ -82,9 +101,7 @@ class Blog_Controller extends ApplicationController_Controller {
 
 		echo '<h2>DB::queryObject</h2>';
 
-		$results = DB::queryObject('SELECT
-					blog_posts.id,blog_posts.time,blog_posts.title,blog_posts.user_id,blog_posts.body
-					FROM blog_posts WHERE blog_posts.user_id = ? ORDER BY blog_posts.time DESC LIMIT 10', array(1), 'Blogpost_Model');
+		//$results = DB::queryObject('SELECT blog_posts.id,blog_posts.time,blog_posts.title,blog_posts.user_id,blog_posts.body FROM blog_posts WHERE blog_posts.user_id = ? ORDER BY blog_posts.time DESC LIMIT 10', array(1), 'Blogpost_Model');
 		
 		// 		foreach($results as $key => $post) {
 		// 					//var_dump($post);

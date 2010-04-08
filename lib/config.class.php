@@ -7,7 +7,7 @@ final class Config {
 	## Route Config Holder ##
 	protected static $routes;
 	
-	private static function setup() {
+	public static function setup() {
 		if (!self::$isSetup) {
 			// Setup the System.version configuration setting
 			self::$config['System']['version'] = "0.3.0";
@@ -49,10 +49,10 @@ final class Config {
 		
 		// Indicate that the setup function has been run and doesnt need to be run again
 		self::$isSetup = true;
+		return true;
 	}
 	
 	public static function register($name, $value = "") {
-		self::setup();
 		if (!is_array($name)) {
 			$name = array(
 				$name => $value
@@ -78,7 +78,6 @@ final class Config {
 	}
 	
 	public static function read($key) {
-		self::setup();
 		$path = explode('.', $key);
 		$config_holder =& self::$config;
 		foreach($path as $i => $path_key) {
@@ -92,7 +91,6 @@ final class Config {
 	}
 	
 	public static function remove($key) {
-		self::setup();
 		$path = explode('.', $key);
 		$config_holder =& self::$config;
 		foreach($path as $i => $path_key) {
@@ -111,7 +109,6 @@ final class Config {
 	}
 	
 	public static function registerRoute($definition, $action, $validation=array()) {
-		self::setup();
 		
 		// Check if in a branch and make it so the route loads up data for the branch by default
 		if (!isset($action['branch']) && self::read("Branch.name")) {
@@ -126,7 +123,6 @@ final class Config {
 	}
 	
 	public static function processURI() {
-		self::setup();
 		
 		if (!is_array(self::read("URI.map")) || count(self::read("URI.map")) < 2) {
 			Error::trigger("NO_URI_MAP");
@@ -412,7 +408,6 @@ final class Config {
 	}
 	
 	public static function loadBranchConfig($branch_name) {
-		self::setup();
 		if (file_exists(self::read("Path.physical")."/branches/".self::uriToFile(self::classToFile($branch_name))."/config/config.php")) {
 			// Load the branch configuration
 			include(self::read("Path.physical")."/branches/".self::uriToFile(self::classToFile($branch_name))."/config/config.php");
@@ -449,7 +444,6 @@ final class Config {
 		- figure out how to allow null named positions
 	*/
 	private static function checkRoutes($request_uri) {
-		self::setup();
 		
 		if (is_array(self::$routes)) {
 			foreach(self::$routes as $route) {
