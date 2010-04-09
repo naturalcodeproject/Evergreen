@@ -255,7 +255,7 @@ abstract class Model implements Iterator, Countable {
 	* UPDATE or INSERT a row into the DB
 	* calls create() or update()
 	*/
-	public function save() {
+	public final function save() {
 		$primary = $this->_getPrimaryKeys();
 		
 		// For multiple primary key models, save will always call create, as update must
@@ -272,8 +272,11 @@ abstract class Model implements Iterator, Countable {
 	/**
 	* INSERTs a row into the DB
 	*/
-	public function create() {
+	public final function create() {
 		$this->clearErrors();
+		if (method_exists($this, 'preCreate') && is_callable(array($this, 'preCreate'))) {
+			$this->preCreate();
+		}
         $this->checkRequiredFields();
         $this->checkValidators();
         
@@ -300,7 +303,9 @@ abstract class Model implements Iterator, Countable {
 					}
 				}
 			}
-	
+			if (method_exists($this, 'postCreate') && is_callable(array($this, 'postCreate'))) {
+				$this->postCreate();
+			}
 			return $id;
 		}
 		return false;
@@ -309,8 +314,11 @@ abstract class Model implements Iterator, Countable {
 	/**
 	* UPDATEs a row in the DB
 	*/
-	public function update() {
+	public final function update() {
 		$this->clearErrors();
+		if (method_exists($this, 'preUpdate') && is_callable(array($this, 'preUpdate'))) {
+			$this->preUpdate();
+		}
         $this->checkKeys();
         $this->checkRequiredFields();
         $this->checkValidators();
@@ -326,7 +334,11 @@ abstract class Model implements Iterator, Countable {
 	
 			// execute the query
 			DB::update($this->_getPrimaryKeys(), $data, $this->getTableName());
-	
+			
+			if (method_exists($this, 'postUpdate') && is_callable(array($this, 'postUpdate'))) {
+				$this->postUpdate();
+			}
+			
 			return true;
 		}
 		return false;
@@ -335,8 +347,11 @@ abstract class Model implements Iterator, Countable {
 	/**
 	* DELETEs a row from the DB
 	*/
-	public function delete() {
+	public final function delete() {
 		$this->clearErrors();
+		if (method_exists($this, 'preDelete') && is_callable(array($this, 'preDelete'))) {
+			$this->preDelete();
+		}
         $this->checkKeys();
 		if (!$this->hasErrors()) {
 			$keys = $this->_getPrimaryKeys();
@@ -346,6 +361,10 @@ abstract class Model implements Iterator, Countable {
 			}
 			
 			DB::delete($keys, $values, $this->getTableName());
+			
+			if (method_exists($this, 'postDelete') && is_callable(array($this, 'postDelete'))) {
+				$this->postDelete();
+			}
 			
 			return true;
 		}
