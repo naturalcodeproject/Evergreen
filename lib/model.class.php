@@ -84,7 +84,7 @@ abstract class Model implements Iterator, Countable {
 
 		// check if required
 		if (in_array('required', $options) || array_key_exists('required', $options)) {
-			$field_data['validate']['notEmpty'] = (!empty($options['required'])) ? $options['required'] : '';
+			$field_data['required'] = (!empty($options['required'])) ? $options['required'] : '';
 		}
 
 		// validate the validate methods
@@ -92,15 +92,12 @@ abstract class Model implements Iterator, Countable {
 			if (is_array($options['validate'])) {
 				// if validate is an array then go through each one
 				foreach($options['validate'] as $function => $message) {
-					// if the function is a number then a custom error message wasn't set
-					// update the variables appropriately
 					if (is_numeric($function)) {
 						$function = $message;
-						$message = '';
+						$message = null;
 					}
-
 					// make sure the method exists
-					if (method_exists($this, $function)) {
+					if (method_exists($this, $function) && is_callable(array($this, $function))) {
 						$field_data['validate'][$function] = $message;
 					} else {
 						$errors[] = 'Invalid validation method: ' . $function;
@@ -108,8 +105,8 @@ abstract class Model implements Iterator, Countable {
 				}
 			} else {
 				// it is a string for one method
-				if (method_exists($this, $options['validate'])) {
-					$field_data['validate'][$options['validate']] = '';
+				if (method_exists($this, $options['validate']) && is_callable(array($this, $options['validate']))) {
+					$field_data['validate'][$options['validate']] = null;
 				} else {
 					$errors[] = 'Invalidate validation method: ' . $options['validate'];
 				}
@@ -126,6 +123,7 @@ abstract class Model implements Iterator, Countable {
 		}
 
 		if (!empty($errors)) {
+			$this->fields[$name] = $field_data;
 			return $errors;
 		} else {
 			$this->fields[$name] = $field_data;
@@ -202,7 +200,7 @@ abstract class Model implements Iterator, Countable {
 
 		// execute the query
 		$results = DB::find($this->getFieldNames(), $this->getTableName(), array(
-			'where'	=> array_merge((array)implode(' && ', $where), $ids),
+			'where'	=> array_merge((array)implode(' AND ', $where), $ids),
 			'limit'	=> 1,
 		));
 
@@ -275,61 +273,83 @@ abstract class Model implements Iterator, Countable {
 	* INSERTs a row into the DB
 	*/
 	public function create() {
-		// prepare the data. This needs to be based on the fields.
-		$data = array();
-		foreach($this->fields as $name => $options) {
-			if (isset($this->data[$this->current_row][$name])) {
-				$data[$name] = $this->data[$this->current_row][$name];
-			}
-		}
-
-		// execute the query
-		$id = intval(DB::insert($data, $this->getTableName()));
-
-		$primary = $this->_getPrimaryKeys();
-		if (count($primary) == 1) {
-			$this->data[$this->current_row][$primary[0]] = $id;
-		} else {
-			$id = array();
-			foreach($primary as $item) {
-				if (isset($this->data[$this->current_row][$item])) {
-					$id[$item] =  $this->data[$this->current_row][$item];
+		$this->clearErrors();
+        $this->checkRequiredFields();
+        $this->checkValidators();
+        
+        if (!$this->hasErrors()) {
+			// prepare the data. This needs to be based on the fields.
+			$data = array();
+			foreach($this->fields as $name => $options) {
+				if (isset($this->data[$this->current_row][$name])) {
+					$data[$name] = $this->data[$this->current_row][$name];
 				}
 			}
+	
+			// execute the query
+			$id = intval(DB::insert($data, $this->getTableName()));
+	
+			$primary = $this->_getPrimaryKeys();
+			if (count($primary) == 1) {
+				$this->data[$this->current_row][$primary[0]] = $id;
+			} else {
+				$id = array();
+				foreach($primary as $item) {
+					if (isset($this->data[$this->current_row][$item])) {
+						$id[$item] =  $this->data[$this->current_row][$item];
+					}
+				}
+			}
+	
+			return $id;
 		}
-
-		return $id;
+		return false;
 	}
 
 	/**
 	* UPDATEs a row in the DB
 	*/
 	public function update() {
-		// prepare the data. This needs to be based on the fields.
-		$data = array();
-		foreach($this->fields as $name => $options) {
-			if (isset($this->data[$this->current_row][$name])) {
-				$data[$name] = $this->data[$this->current_row][$name];
+		$this->clearErrors();
+        $this->checkKeys();
+        $this->checkRequiredFields();
+        $this->checkValidators();
+        
+        if (!$this->hasErrors()) {
+			// prepare the data. This needs to be based on the fields.
+			$data = array();
+			foreach($this->fields as $name => $options) {
+				if (isset($this->data[$this->current_row][$name])) {
+					$data[$name] = $this->data[$this->current_row][$name];
+				}
 			}
+	
+			// execute the query
+			DB::update($this->_getPrimaryKeys(), $data, $this->getTableName());
+	
+			return true;
 		}
-
-		// execute the query
-		DB::update($this->_getPrimaryKeys(), $data, $this->getTableName());
-
-		return true;
+		return false;
 	}
 
 	/**
 	* DELETEs a row from the DB
 	*/
 	public function delete() {
-		$keys = $this->_getPrimaryKeys();
-		$values = array();
-		foreach($keys as $key) {
-			$values[] = $this->data[$this->current_row][$key];
+		$this->clearErrors();
+        $this->checkKeys();
+		if (!$this->hasErrors()) {
+			$keys = $this->_getPrimaryKeys();
+			$values = array();
+			foreach($keys as $key) {
+				$values[] = $this->data[$this->current_row][$key];
+			}
+			
+			DB::delete($keys, $values, $this->getTableName());
+			
+			return true;
 		}
-		
-		return DB::delete($keys, $values, $this->getTableName());
+		return false;
 	}
 
 	/**
@@ -446,8 +466,10 @@ abstract class Model implements Iterator, Countable {
 	*/
 	public function __clone() {
 		$currentData = $this->data[$this->current_row];
+		$currentErrors = $this->errors[$this->current_row];
 		$this->clearData();
 		$this->setProperties($currentData);
+		$this->setErrors($currentErrors);
 	}
 
 	/**
@@ -515,6 +537,93 @@ abstract class Model implements Iterator, Countable {
 	*/
 	public function valid() {
 		return isset($this->data[$this->current_row]);
+	}
+	
+	public function addError($field=null, $msg='', $validator='', $type=ModelFieldError::TYPE_INVALID_FIELD, $code=null) {
+	    $modelError = new ModelFieldError();
+	    $modelError->type = $type;
+	    $modelError->field = $field;
+	    $modelError->msg = $msg;
+	    $modelError->code = $code;
+		$modelError->validator = $validator;
+	    
+	    $this->errors[$this->current_row][] = $modelError;
+	}
+	
+	public function clearAllErrors() {
+	    unset($this->errors);
+	}
+	
+	public function clearErrors() {
+	    unset($this->errors[$this->current_row]);
+	}
+	
+	public function setErrors($errors) {
+	    $this->errors[$this->current_row] = (array)$errors;
+	}
+	
+	public function hasErrors() {
+	    return (count(((isset($this->errors[$this->current_row])) ? $this->errors[$this->current_row] : array())) > 0);
+	}
+	
+	public function getErrors() {
+	    return ((isset($this->errors[$this->current_row])) ? $this->errors[$this->current_row] : false);
+	}
+	
+	public function getErrorMessages($field=false) {
+	    $messages = array();
+	    if (isset($this->errors[$this->current_row])) {
+	        foreach ($this->errors[$this->current_row] as $error) {
+	            if (!$field || ($field && $field == $error->field)) {
+	                $messages[] = $error->msg;
+	            }
+	        }
+	    }
+	    return $messages;
+	}
+	
+	public function getErrorMessage($field, $validator) {
+	    if (isset($this->errors[$this->current_row])) {
+			foreach ($this->errors[$this->current_row] as $error) {
+				if ($error->field == $field && $error->validator == $validator) {
+					return $error->msg;
+				}
+			}
+	    }
+	    
+	    return null;
+	}
+	
+	private function checkRequiredFields() {
+		foreach ($this->fields as $name => $field) {
+			if (isset($field['required']) && empty($this->{$name})) {
+				$this->addError($name, (!empty($field['required']) ? $field['required'] : 'The validator \'required\' failed on the \''.$name.'\' field'), 'required', ModelFieldError::TYPE_REQUIRED_FIELD_MISSING);
+			}
+		}
+	}
+	
+	private function checkKeys() {
+		foreach ($this->fields as $name => $field) {
+			if ($field['key'] && empty($this->{$name})) {
+				$this->addError($name, (!empty($field['key']) ? $field['key'] : 'The validator \'key\' failed on the \''.$name.'\' field'), 'key', ModelFieldError::TYPE_KEY_MISSING);
+			}
+		}
+	}
+	
+	private function checkValidators() {
+		foreach ($this->fields as $name => $field) {
+			if (count($field['validate'])) {
+				foreach ($field['validate'] as $validator => $message) {
+					$result = $this->{$validator}($name, $this->$name);
+					if ($result === false) {
+						$result = (($message != null) ? $message : 'The validator \''.$validator.'\' failed on the \''.$name.'\' field');
+					}
+					if (!empty($result) && $result !== true) {
+						$this->addError($name, $result, $validator, ModelFieldError::TYPE_CUSTOM_VALIDATOR_FAILED);
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -587,4 +696,26 @@ class Model_Format {
 	public static function htmltext($value) {
 		return $value;
 	}
+}
+
+class ModelFieldError {
+    public $type;
+    public $field;
+    public $msg;
+    public $code;
+    public $validator;
+
+    // Errors must be handled by user code
+    const TYPE_INVALID_FIELD = 0;
+	const TYPE_KEY_MISSING = 1;
+    const TYPE_REQUIRED_FIELD_MISSING = 2;
+    const TYPE_CUSTOM_VALIDATOR_FAILED = 3;
+
+    public function __construct() {
+        $this->type = -1;
+        $this->field = null;
+        $this->msg = '';
+        $this->code = null;
+        $this->validator = '';
+    }
 }

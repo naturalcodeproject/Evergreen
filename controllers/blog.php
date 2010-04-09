@@ -48,16 +48,20 @@ echo '<h2>Insert</h2>';
 		echo '</p>';
 */
 
-		/*echo '<pre>';
-		var_dump($blogpost);
-		echo '</pre>';*/
+		$blogpost = new Blogpost_Model();
+		$blogpost->title = 'hiya';
+		//echo '<pre>';
+		if(!$blogpost->save()) {
+			echo implode('<br />', $blogpost->getErrorMessages());
+		}
+		//echo '</pre>';
 
 		// find multiple posts
-		$userdataRet = new Usersdata_Model();
-		$userdataRet->retrieve(1, 2);
-		echo "<pre>";
-		var_dump($userdataRet);
-		echo "</pre>";
+		//$userdataRet = new Usersdata_Model();
+		//$userdataRet->retrieve(1, 2);
+		//echo "<pre>";
+		//var_dump($userdataRet);
+		//echo "</pre>";
 		echo '<h2>Find</h2>';
 		/*
 $userdata = new Usersdata_Model();

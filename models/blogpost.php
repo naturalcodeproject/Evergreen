@@ -11,7 +11,7 @@ class Blogpost_Model extends Model {
         ));
 
         $this->addField('time', array(
-        	'required' => 'A required message',
+        	'required',
         	'format'	=> 'timestamp',
         ));
 
@@ -19,14 +19,14 @@ class Blogpost_Model extends Model {
         	'required',
         	'validate' => array(
         		'maxlength',
-        		'minlength',
+        		'minlength' => 'Custom error message',
         	),
         	'format' => 'plaintext',
         ));
 
         $this->addField('user_id', array(
         	'validate' => array(
-        		'isValidUser' => 'Please select a valid user',
+        		'isValidUser',
         	),
         	'type' => 'integer',
         ));
@@ -43,16 +43,16 @@ class Blogpost_Model extends Model {
 		$this->hasMany('Blogcomment', array('local'=>'id', 'foreign'=>'blog_post_id', 'alias'=>'comments'));*/
 	}
 
-	private function isValidUser() {
+	private function isValidUser($field, $value) {
 		return true;
 	}
 
-	private function maxlength() {
-		return true;
+	protected function maxlength($field, $value) {
+		return $field.' failed';
 	}
 
-	private function minlength() {
-		return true;
+	protected function minlength() {
+		return false;
 	}
 
 	private function test() {
