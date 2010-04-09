@@ -6,7 +6,8 @@ class Blog_Controller extends ApplicationController_Controller {
 	}
 
 	public function index () {
-		echo '<h2>Insert</h2>';
+		/*
+echo '<h2>Insert</h2>';
 		
 		$post = new Blogpost_Model();
 		$post->time = time();
@@ -45,17 +46,39 @@ class Blog_Controller extends ApplicationController_Controller {
 		echo '<p>';
 		echo $blogpost->title;
 		echo '</p>';
+*/
 
 		/*echo '<pre>';
 		var_dump($blogpost);
 		echo '</pre>';*/
 
 		// find multiple posts
+		$userdataRet = new Usersdata_Model();
+		$userdataRet->retrieve(1, 2);
+		echo "<pre>";
+		var_dump($userdataRet);
+		echo "</pre>";
 		echo '<h2>Find</h2>';
-		$blogpost->find(array(
+		/*
+$userdata = new Usersdata_Model();
+		$userdata->find();
+		
+		foreach($userdata as $key => $item) {
+			if ($key == 3) {
+				$item->delete();
+				continue;
+			}
+			$item->info = "World";
+			$item->update();
+			echo $item->info."<br />";
+		}
+*/
+		
+		/*
+$blogpost->find(array(
  			'where'	=> array('user_id = ?', 1),
  			'order'	=> array('time DESC'),
- 			'limit'	=> 100,
+ 			'limit'	=> array(76, 100),
  		));
 		 		
 		 var_dump(count($blogpost));
@@ -75,6 +98,7 @@ class Blog_Controller extends ApplicationController_Controller {
 		echo "<pre>";
 		var_dump($externalTest);
 		echo "</pre>";
+*/
 
 		// 
 		// 		echo '<p>total: ' . $blogpost->totalRows() . '</p>';

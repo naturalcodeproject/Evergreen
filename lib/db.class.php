@@ -68,22 +68,28 @@ class DB {
 	/**
 	* Update a row. Helper function
 	*/
-	public static function update($key, $values, $table) {
+	public static function update($keys, $values, $table) {
 		$data = $values;
-		unset($data[$key]);
+		$keyValues = array();
+		foreach($keys as $key) {
+			if (isset($data[$key])) {
+				$keyValues[] = $data[$key];
+				unset($data[$key]);
+			}
+		}
 
-		$query = self::$driver->update($key, array_keys($data), $table);
+		$query = self::$driver->update($keys, array_keys($data), $table);
 		
-		return self::execute($query, array_merge(array_values($data), array($values[$key])));
+		return self::execute($query, array_merge(array_values($data), $keyValues));
 	}
 
 	/**
 	* Deletes a row. Helper function.
 	*/
-	public static function delete($key, $value, $table) {
-		$query = self::$driver->delete($key, $value, $table);
+	public static function delete($keys, $values, $table) {
+		$query = self::$driver->delete($keys, $values, $table);
 		
-		return self::execute($query, array($value));
+		return self::execute($query, (array)$values);
 	}
 
 	/**

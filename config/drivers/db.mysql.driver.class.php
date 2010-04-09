@@ -25,19 +25,26 @@ class DB_MySQL_Driver implements DBDriverInterface {
 		return $query;
 	}
 
-	public function update($key, $fields, $table) {
-		foreach($fields as &$value) {
-			$value .= ' = ?';
+	public function update($keys, $fields, $table) {
+		foreach($fields as &$fieldValue) {
+			$fieldValue .= ' = ?';
 		}
-
-		$query = 'UPDATE ' . $table . ' SET ' . implode(', ', $fields) . ' WHERE ' . $key . ' = ?';
-
+		
+		foreach($keys as &$keyValue) {
+			$keyValue .= ' = ?';
+		}
+		
+		$query = 'UPDATE ' . $table . ' SET ' . implode(', ', $fields) . ' WHERE ' . implode(' AND ', $keys);
+		
 		return $query;
 	}
 
-	public function delete($key, $value, $table) {
+	public function delete($keys, $values, $table) {
+		foreach($keys as &$keyValue) {
+			$keyValue .= ' = ?';
+		}
 		
-		$query = 'DELETE FROM ' . $table . ' WHERE ' . $key . ' = ?';
+		$query = 'DELETE FROM ' . $table . ' WHERE ' . implode(' AND ', $keys);
 		
 		return $query;
 	}

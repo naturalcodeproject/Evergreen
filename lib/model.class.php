@@ -187,12 +187,22 @@ abstract class Model implements Iterator, Countable {
 	*/
 	public function retrieve($id) {
 		$this->clearData();
-
-		$primary = $this->_getPrimary();
+		
+		$primary = $this->_getPrimaryKeys();
+		$ids = func_get_args();
+		if (count($ids) != count($primary)) {
+			// the row wasn't retrieved because there were to many or to few args. Return false.
+			return false;
+		}
+		
+		$where = array();
+		foreach($primary as $item) {
+			$where[] = $this->table_name . '.' . $item . ' = ?';
+		}
 
 		// execute the query
 		$results = DB::find($this->getFieldNames(), $this->getTableName(), array(
-			'where'	=> array($this->table_name . '.' . $primary . ' = ?', $id),
+			'where'	=> array_merge((array)implode(' && ', $where), $ids),
 			'limit'	=> 1,
 		));
 
@@ -248,9 +258,13 @@ abstract class Model implements Iterator, Countable {
 	* calls create() or update()
 	*/
 	public function save() {
-		$primary = $this->_getPrimary();
+		$primary = $this->_getPrimaryKeys();
+		
+		// For multiple primary key models, save will always call create, as update must
+        // be called explicitly.  For single primary key models, create will be called if
+        // a value has not been set for the primary key, otherwise update will be called.
 
-		if (!empty($this->data[$this->current_row][$primary])) {
+		if (count($primary) == 1 && !empty($this->data[$this->current_row][$primary[0]])) {
 			return $this->update();
 		} else {
 			return $this->create();
@@ -264,17 +278,25 @@ abstract class Model implements Iterator, Countable {
 		// prepare the data. This needs to be based on the fields.
 		$data = array();
 		foreach($this->fields as $name => $options) {
-			
-			if ($name == $this->_getPrimary()) continue; // skip primary, so you don't have to enter one
-			
-			$data[$name] = (isset($this->data[$this->current_row][$name])) ? $this->data[$this->current_row][$name] : '';
+			if (isset($this->data[$this->current_row][$name])) {
+				$data[$name] = $this->data[$this->current_row][$name];
+			}
 		}
 
 		// execute the query
 		$id = intval(DB::insert($data, $this->getTableName()));
 
-		$primary = $this->_getPrimary();
-		$this->data[$this->current_row][$primary] = $id;
+		$primary = $this->_getPrimaryKeys();
+		if (count($primary) == 1) {
+			$this->data[$this->current_row][$primary[0]] = $id;
+		} else {
+			$id = array();
+			foreach($primary as $item) {
+				if (isset($this->data[$this->current_row][$item])) {
+					$id[$item] =  $this->data[$this->current_row][$item];
+				}
+			}
+		}
 
 		return $id;
 	}
@@ -286,11 +308,13 @@ abstract class Model implements Iterator, Countable {
 		// prepare the data. This needs to be based on the fields.
 		$data = array();
 		foreach($this->fields as $name => $options) {
-			$data[$name] = (isset($this->data[$this->current_row][$name])) ? $this->data[$this->current_row][$name] : '';
+			if (isset($this->data[$this->current_row][$name])) {
+				$data[$name] = $this->data[$this->current_row][$name];
+			}
 		}
 
 		// execute the query
-		DB::update($this->_getPrimary(), $data, $this->getTableName());
+		DB::update($this->_getPrimaryKeys(), $data, $this->getTableName());
 
 		return true;
 	}
@@ -299,10 +323,13 @@ abstract class Model implements Iterator, Countable {
 	* DELETEs a row from the DB
 	*/
 	public function delete() {
+		$keys = $this->_getPrimaryKeys();
+		$values = array();
+		foreach($keys as $key) {
+			$values[] = $this->data[$this->current_row][$key];
+		}
 		
-		$value = $this->data[$this->current_row][$this->_getPrimary()];
-		
-		return DB::delete($this->_getPrimary(), $value, $this->getTableName());
+		return DB::delete($keys, $values, $this->getTableName());
 	}
 
 	/**
@@ -343,14 +370,15 @@ abstract class Model implements Iterator, Countable {
 	/**
 	* gets the primary key for a table
 	*/
-	private function _getPrimary() {
+	private function _getPrimaryKeys() {
+		$return = array();
 		foreach($this->fields as $name => $options) {
 			if ($options['key'] === true) {
-				return $name;
+				$return[] = $name;
 			}
 		}
 
-		return false;
+		return (!empty($return)) ? $return : false;
 	}
 
 	/**
