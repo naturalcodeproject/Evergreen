@@ -372,8 +372,13 @@ abstract class Controller {
 	
 	final private function _runBounceBack() {
 		if (((isset($this->bounceback['check']) && method_exists($this, $this->bounceback['check'])) && (isset($this->bounceback['bounce']) && method_exists($this, $this->bounceback['bounce']))) && !$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) {
+			$keys = array_keys(Config::read('URI.working'));
 			$values = array_values(Config::read('URI.working'));
-			$this->params = array_combine(array_keys(Config::read('URI.working')), array_slice(array_merge(array($values[0]), array($this->bounceback['bounce']),array_slice($values, 1)), 0, count(array_keys(Config::read('URI.working')))));
+			$controllerPos = array_search('controller', $keys);
+			if ($controllerPos === false) {
+				$controllerPos = 0;
+			}
+			$this->params = array_combine($keys, array_slice(array_merge(array_slice($values, 0, ($controllerPos+1)), array($this->bounceback['bounce']), array_slice($values, $controllerPos+1)), 0, count($keys)));
 			Config::register('Param', $this->params);
 			$this->viewToLoad = Config::uriToMethod($this->params['view']);
 			
