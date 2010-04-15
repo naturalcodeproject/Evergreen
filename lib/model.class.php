@@ -161,8 +161,18 @@ abstract class Model implements Iterator, Countable {
 	*	'alias'		=> 'alias for the foriegn table',
 	* );
 	*/
-	protected function hasOne($class_name, array $options, $branch = '') {
-
+	protected function hasOne($class_name, array $options) {
+		if (!isset($options['local']) || !isset($options['foreign']) || !isset($options['alias']) || isset($this->fields[$options['alias']])) {
+			return false;
+		}
+		
+		$this->relationships[$options['alias']] = array(
+			'class_name' => $class_name,
+			'type' => 'one',
+			'options' => $options
+		);
+		
+		return true;
 	}
 
 	/**
@@ -174,8 +184,18 @@ abstract class Model implements Iterator, Countable {
 	*	'alias'		=> 'alias for the foriegn table',
 	* );
 	*/
-	protected function hasMany($class_name, array $options, $branch = '') {
-
+	protected function hasMany($class_name, array $options) {
+		if (!isset($options['local']) || !isset($options['foreign']) || !isset($options['alias']) || !isset($this->fields[$options['alias']])) {
+			return false;
+		}
+		
+		$this->relationships[$options['alias']] = array(
+			'class_name' => $class_name,
+			'type' => 'many',
+			'options' => $options
+		);
+		
+		return true;
 	}
 
 	/**
@@ -238,7 +258,7 @@ abstract class Model implements Iterator, Countable {
 		$this->_prepareOptions($options);
 
 		$results = DB::find($this->getFieldNames(), $this->getTableName(), $options);
-
+		
 		if ($results !== false) {
 			// loop through the results and clone the existing object
 			while($row = DB::fetch($results)) {
@@ -375,7 +395,25 @@ abstract class Model implements Iterator, Countable {
 	* gets the relationship data
 	*/
 	public function get($alias) {
-
+		if (!isset($this->relationships[$alias])) {
+			return false;
+		}
+		$relObj = new $this->relationships[$alias]['class_name']();
+		$local = $this->relationships[$alias]['options']['local'];
+		$options = array(
+			"where" => array($this->relationships[$alias]['options']['foreign'].' = ?', $this->$local)
+		);
+		
+		if ($this->relationships[$alias]['type'] == 'one') {
+			$options['limit'] = 1;
+		}
+		
+		$relObj->find($options);
+		
+		if (count($relObj)) {
+			return $relObj;
+		}
+		return false;
 	}
 
 	/**
@@ -463,7 +501,11 @@ abstract class Model implements Iterator, Countable {
 	* gets a variable
 	*/
 	public function __get($name) {
-		return $this->data[$this->current_row][$name];
+		if (isset($this->data[$this->current_row][$name])) {
+			return $this->data[$this->current_row][$name];
+		} else {
+			return NULL;
+		}
 	}
 
 	/**

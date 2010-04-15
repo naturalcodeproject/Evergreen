@@ -6,6 +6,12 @@ class Blog_Controller extends ApplicationController_Controller {
 	}
 
 	public function index () {
+		$blogs = new Blogpost_Model();
+		$blogs->retrieve(1);
+		echo "<pre>";
+		var_dump($blogs->get('createdBy'));
+		echo "</pre>";
+		//var_dump($blogs);
 		/*
 echo '<h2>Insert</h2>';
 		
@@ -48,12 +54,12 @@ echo '<h2>Insert</h2>';
 		echo '</p>';
 */
 
-		$blogpost = new Blogpost_Model();
+		/*$blogpost = new Blogpost_Model();
 		$blogpost->title = 'hiya';
 		//echo '<pre>';
 		if(!$blogpost->save()) {
 			echo implode('<br />', $blogpost->getErrorMessages());
-		}
+		}*/
 		//echo '</pre>';
 
 		// find multiple posts

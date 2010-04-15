@@ -36,8 +36,8 @@ class Blogpost_Model extends Model {
         	'format' => 'htmltext',
         ));
 
-		/*$this->hasOne('Bloguser', array('local'=>'user_id', 'foreign'=>'id', 'alias'=>'createdBy'));
-		$this->hasOne('Bloguser', array('local'=>'edited_by', 'foreign'=>'id', 'alias'=>'editedBy'));
+		$this->hasOne('Client_Model', array('local'=>'user_id', 'foreign'=>'id', 'alias'=>'createdBy'));
+		/*$this->hasOne('Bloguser', array('local'=>'edited_by', 'foreign'=>'id', 'alias'=>'editedBy'));
 		$this->hasOne('Blogsection', array('local'=>'section_id', 'foreign'=>'id', 'alias'=>'section'));
 
 		$this->hasMany('Blogcomment', array('local'=>'id', 'foreign'=>'blog_post_id', 'alias'=>'comments'));*/
