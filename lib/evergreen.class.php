@@ -120,7 +120,7 @@ class AutoLoaders {
 			} else if ($class['type'] == 'driver') {
 				## Driver Include ##
 				if (isset($class['specificDriver'])) {
-					if (Config::read("Branch.name") != "") {
+					if (!empty($class['branch'])) {
 						$branchDriverPath = Config::read("Path.physical")."/branches/".$class['branch']."/config/drivers/".strtolower(str_replace('_', '.', $class['original'])).".class.php";
 						if (file_exists($branchDriverPath)) {
 							include_once($branchDriverPath);

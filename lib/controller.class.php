@@ -102,14 +102,11 @@ abstract class Controller {
 	final protected function _getView($args, $controller="", $override = false) {
 		if (!is_array($args)) {
 			$args = array(
-				'name' => $args
-			);
-		}
-		$args = array_merge(array(
 				'name' => $args,
 				'controller' => $controller,
 				'override' => $override
-			), $args);
+			);
+		}
 		if (empty($args['name'])) {
 			return false;
 		}
@@ -141,14 +138,11 @@ abstract class Controller {
 	final protected function _viewExists($args, $controller="", $checkmethod = false) {
 		if (!is_array($args)) {
 			$args = array(
-				'name' => $args
-			);
-		}
-		$args = array_merge(array(
 				'name' => $args,
 				'controller' => $controller,
-				'checkmethod' => $checkmethod
-			), $args);
+				'override' => $override
+			);
+		}
 		if (empty($args['name'])) {
 			return false;
 		}
