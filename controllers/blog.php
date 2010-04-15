@@ -7,9 +7,9 @@ class Blog_Controller extends ApplicationController_Controller {
 
 	public function index () {
 		$blogs = new Blogpost_Model();
-		$blogs->retrieve(1);
+		//$blogs->retrieve(1);
 		echo "<pre>";
-		var_dump($blogs->get('createdBy'));
+		//var_dump($blogs->get('createdBy'));
 		echo "</pre>";
 		//var_dump($blogs);
 		/*
@@ -69,11 +69,30 @@ echo '<h2>Insert</h2>';
 		//var_dump($userdataRet);
 		//echo "</pre>";
 		echo '<h2>Find</h2>';
-		/*
-$userdata = new Usersdata_Model();
+		
+		$userdata = new Usersdata_Model();
 		$userdata->find();
 		
-		foreach($userdata as $key => $item) {
+		for($i = 0, $total = sizeof($userdata); $i < $total; $i++) {
+			echo $userdata[$i]->info . '<br />';
+			
+			$userdata[$i]->info = 'foo';
+			
+			$userdata[$i] = 'blah';
+		}
+		echo '<br />';
+		
+		echo $userdata[3]->info . '<br />';
+		var_dump(empty($userdata[5]));
+		
+		echo '<br /><br />';
+		
+		foreach($userdata as $user) {
+			echo $user->info . '<br />';
+		}
+		
+		
+		/*foreach($userdata as $key => $item) {
 			if ($key == 3) {
 				$item->delete();
 				continue;
@@ -81,8 +100,8 @@ $userdata = new Usersdata_Model();
 			$item->info = "World";
 			$item->update();
 			echo $item->info."<br />";
-		}
-*/
+		}*/
+
 		
 		/*
 $blogpost->find(array(

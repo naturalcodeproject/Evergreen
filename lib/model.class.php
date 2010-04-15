@@ -4,7 +4,7 @@
 * model class
 * @todo Error Handling!
 */
-abstract class Model implements Iterator, Countable {
+abstract class Model implements Iterator, Countable, arrayaccess {
 	/**
 	* name of the database table
 	*/
@@ -34,8 +34,6 @@ abstract class Model implements Iterator, Countable {
 	* holds the identifier for the current data set
 	*/
 	private $current_row = 0;
-	
-	private $currentItem = null;
 
 	/**
 	* sets the table name for the model
@@ -526,8 +524,8 @@ abstract class Model implements Iterator, Countable {
 	* prepares the object to be cloned
 	*/
 	public function __clone() {
-		$currentData = $this->data[$this->current_row];
-		$currentErrors = $this->errors[$this->current_row];
+		$currentData = (isset($this->data[$this->current_row])) ? $this->data[$this->current_row] : array();
+		$currentErrors = (isset($this->errors[$this->current_row])) ? $this->errors[$this->current_row] : null;
 		$this->clearData();
 		$this->setProperties($currentData);
 		$this->setErrors($currentErrors);
@@ -598,6 +596,44 @@ abstract class Model implements Iterator, Countable {
 	*/
 	public function valid() {
 		return isset($this->data[$this->current_row]);
+	}
+	
+	/**
+	* arrayaccess method
+	*
+	* sees if the offset actually exists
+	*/
+	public function offsetExists($offset) {
+		return isset($this->data[$offset]);
+	}
+	
+	/**
+	* arrayaccess method
+	*
+	* gets the row depending on the offset
+	*/
+	public function offsetGet($offset) {
+		$this->current_row = $offset;
+		
+		return clone $this;
+	}
+	
+	/**
+	* arrayaccess method
+	*
+	* let's you set the value of the array but we don't need that and don't want to allow people to do that
+	*/
+	public function offsetSet($offset, $value) {
+		return false;
+	}
+	
+	/**
+	* arrayaccess method
+	*
+	* unsets a row
+	*/
+	public function offsetUnset($offset) {
+		unset($this->data[$offset]);
 	}
 	
 	public function addError($field=null, $msg='', $validator='', $type=ModelFieldError::TYPE_INVALID_FIELD, $code=null) {
