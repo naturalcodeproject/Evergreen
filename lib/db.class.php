@@ -41,10 +41,10 @@ class DB {
 	*/
 	public static function setup() {
 		// connect to the DB
-		self::$pdo = new PDO('mysql:host=' . Config::read('Database.host') . ';dbname=' .  Config::read('Database.database'), Config::read('Database.username'), Config::read('Database.password'));
+		self::$pdo = new PDO('mysql:host=' . Reg::get('Database.host') . ';dbname=' .  Reg::get('Database.database'), Reg::get('Database.username'), Reg::get('Database.password'));
 
 		// load the driver
-        $specific_driver = Config::read("Database.driver");
+        $specific_driver = Reg::get("Database.driver");
         $driver_name = "DB_{$specific_driver}_Driver";
         self::$driver = new $driver_name();
 	}
@@ -164,6 +164,7 @@ class DB {
 			// handle the error
 			$error = $statement->errorInfo();
 			Error::trigger('MODEL_DB_FAILURE', array(
+				'trace' => $error,
 				'errorMessage' => end($error),
 				'errorId' => (isset($error[1]) ? $error[1] : 0),
 				'query' => $query,

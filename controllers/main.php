@@ -13,7 +13,7 @@ class Main_Controller extends ApplicationController_Controller {
 	public function index () {
 		$this->home_selected = "selected";
 		//$helper = new Test_Helper();
-		$model = new Users_Model();
+		//$model = new Users_Model();
 		//$model->query('select *');
 		//$results = DB::query("select * from users", "Users_Model");
 	}

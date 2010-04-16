@@ -68,6 +68,12 @@ echo '<h2>Insert</h2>';
 		//echo "<pre>";
 		//var_dump($userdataRet);
 		//echo "</pre>";
+		Reg::set('System.version', '0.3');
+		
+		if (Reg::has('System.version')) {
+			echo Reg::get('System.version');
+		}
+		
 		echo '<h2>Find</h2>';
 		
 		$userdata = new Usersdata_Model();
@@ -84,7 +90,7 @@ echo '<h2>Insert</h2>';
 		}
 		echo '<br />';
 		
-		echo $userdata[3]->info . '<br />';
+		echo $userdata[2]->info . '<br />';
 		var_dump(empty($userdata[5]));
 		
 		echo '<br /><br />';

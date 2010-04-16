@@ -90,9 +90,9 @@ final class Error {
 			$str = $data[$m1];
 			$used_keys[$m1] = $m1;
 			return sprintf("%".$m2,$str);
-		} else if (Config::read($m1) != null) {
+		} else if (Reg::get($m1) != null) {
 			$used_keys[$m1] = $m1;
-			return sprintf("%".$m2,Config::read($m1));
+			return sprintf("%".$m2,Reg::get($m1));
 		} else {
 			return "NULL";
 		}
@@ -133,11 +133,11 @@ final class Error {
 			}
 		}
 		
-		if (isset(self::$params['code']) && array_key_exists(self::$params['code'], Config::read("Error"))) {
+		if (isset(self::$params['code']) && array_key_exists(self::$params['code'], Reg::get("Error"))) {
 			if (isset(self::$params['url'])) {
 				Error::loadURL(self::$params['url']);
 			} else {
-				Error::loadURL(Config::read("Error.".self::$params['code']));
+				Error::loadURL(Reg::get("Error.".self::$params['code']));
 			}
 		} else {
 			if (isset(self::$params['url'])) {
@@ -150,13 +150,13 @@ final class Error {
 
                 switch ($code) {
                     case 'GEN':
-                        include(Config::read("System.defaultErrorGEN"));
+                        include(Reg::get("System.defaultErrorGEN"));
                         break;
                     case 'DB':
-                        include(Config::read("System.defaultErrorDB"));
+                        include(Reg::get("System.defaultErrorDB"));
                         break;
                     default:
-                        include(Config::read("System.defaultErrorGEN"));
+                        include(Reg::get("System.defaultErrorGEN"));
                         break;
                 }
 			}
@@ -197,56 +197,56 @@ final class Error {
 			}
 			
 			if (is_array($url)) {
-				$url = '/'.implode('/', array_merge(Config::read("URI.map"), $url));
+				$url = '/'.implode('/', array_merge(Reg::get("URI.map"), $url));
 			}
 			
-			$url = str_replace(Config::read('Path.root'), "", $url);
-			Config::register("URI.working", $url);
+			$url = str_replace(Reg::get('Path.root'), "", $url);
+			Reg::set("URI.working", $url);
 			Config::remove("Branch.name");
 			Config::processURI();
 			
-			$load['name'] = Config::uriToClass(Config::read("URI.working.controller"));
-			if (Config::read("Branch.name") != '') {
-				$load['branch'] = Config::uriToClass(Config::read("Branch.name"));
+			$load['name'] = Config::uriToClass(Reg::get("URI.working.controller"));
+			if (Reg::get("Branch.name") != '') {
+				$load['branch'] = Config::uriToClass(Reg::get("Branch.name"));
 			}
 			$load['type'] = 'Controller';
 			$load = implode('_', $load);
 			
 			$controller = new $load();
 			if (!is_object($controller)) {
-				if (!file_exists(Config::read("System.defaultError404"))) {
-					include(Config::read("System.defaultError404"));
+				if (!file_exists(Reg::get("System.defaultError404"))) {
+					include(Reg::get("System.defaultError404"));
 				} else {
-					echo Config::read("System.defaultError404");
+					echo Reg::get("System.defaultError404");
 				}
 			} else {
 				try {
 					$controller->_showView();
 				} catch(Exception $e) {
-					if (Config::read("System.mode") == "development") {
+					if (Reg::get("System.mode") == "development") {
                         if (isset(self::$params['code'])) {
                             $code = self::$params['code'];
                         }
                         switch ($code) {
                             case 'GEN':
-                            	if (file_exists(Config::read("System.defaultErrorGEN"))) {
-	                                include(Config::read("System.defaultErrorGEN"));
+                            	if (file_exists(Reg::get("System.defaultErrorGEN"))) {
+	                                include(Reg::get("System.defaultErrorGEN"));
 	                            } else {
-	                            	echo Config::read("System.defaultErrorGEN");
+	                            	echo Reg::get("System.defaultErrorGEN");
 	                            }
                                 break;
                             case 'DB':
-                            	if (file_exists(Config::read("System.defaultErrorDB"))) {
-	                                include(Config::read("System.defaultErrorDB"));
+                            	if (file_exists(Reg::get("System.defaultErrorDB"))) {
+	                                include(Reg::get("System.defaultErrorDB"));
 	                            } else {
-	                            	echo Config::read("System.defaultErrorDB");
+	                            	echo Reg::get("System.defaultErrorDB");
 	                            }
                                 break;
                             default:
-                            	if (file_exists(Config::read("System.defaultErrorGEN"))) {
-	                                include(Config::read("System.defaultErrorGEN"));
+                            	if (file_exists(Reg::get("System.defaultErrorGEN"))) {
+	                                include(Reg::get("System.defaultErrorGEN"));
 	                            } else {
-	                            	echo Config::read("System.defaultErrorGEN");
+	                            	echo Reg::get("System.defaultErrorGEN");
 	                            }
                                 break;
                         }
@@ -255,10 +255,10 @@ final class Error {
 			}
 			
 		} else {
-			if (file_exists(Config::read("System.defaultErrorGEN"))) {
-				include(Config::read("System.defaultErrorGEN"));
+			if (file_exists(Reg::get("System.defaultErrorGEN"))) {
+				include(Reg::get("System.defaultErrorGEN"));
 			} else {
-				echo Config::read("System.defaultErrorGEN");
+				echo Reg::get("System.defaultErrorGEN");
 			}
 		}
 	}
@@ -269,11 +269,11 @@ final class Error {
    		$notify = false;
    		$halt_script = true;
         
-        if (Config::read('Error.viewErrors')) {
+        if (Reg::get('Error.viewErrors')) {
             $display = true;
         }
         
-        if (Config::read('Error.logErrors')) {
+        if (Reg::get('Error.logErrors')) {
             $notify = true;
         }
    		
@@ -318,11 +318,11 @@ final class Error {
         if($display) echo '<PRE>' . $error_msg . '</PRE>';
 
 		if($notify) {
-            $logDir = Config::read("Error.logDirectory");
+            $logDir = Reg::get("Error.logDirectory");
             if (empty($logDir)) {
                 error_log($error_msg, $errno);
             } else {
-                $log_file = Config::read("Path.physical")."/".$logDir."/";
+                $log_file = Reg::get("Path.physical")."/".$logDir."/";
                 
                 $year = date('Y');
                 $month = date('m');

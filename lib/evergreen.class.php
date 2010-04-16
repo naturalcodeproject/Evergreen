@@ -12,28 +12,28 @@ final class Evergreen {
 			set_error_handler(array("Error", "logError"), ini_get("error_reporting"));
 			
 			## Load Base Configuration ##
-			if (file_exists(Config::read("Path.physical")."/config/config.php")) {
+			if (file_exists(Reg::get("Path.physical")."/config/config.php")) {
 				// Load in the config.php file
-				include_once(Config::read("Path.physical")."/config/config.php");
+				include_once(Reg::get("Path.physical")."/config/config.php");
 			} else {
 				echo "You are missing the configuration file and without it Evergreen cannot run.";
 				exit;
 			}
 			
 			## Load Base Errors ##
-			if (file_exists(Config::read("Path.physical")."/config/errors.php")) {
+			if (file_exists(Reg::get("Path.physical")."/config/errors.php")) {
 				// Load in the errors.php file
-				include(Config::read("Path.physical")."/config/errors.php");
+				include(Reg::get("Path.physical")."/config/errors.php");
 			}
 			
 			## Check to see if the welcome content is present ##
-			if (file_exists(Config::read("Path.physical")."/public/welcome.php")) {
+			if (file_exists(Reg::get("Path.physical")."/public/welcome.php")) {
 				// Load the Designer class
 				$designer = new Designer();
 				
 				// Load the welcome content and save the result to the $welcome_content variable
 				ob_start();
-					include(Config::read("Path.physical")."/public/welcome.php");
+					include(Reg::get("Path.physical")."/public/welcome.php");
 				$welcome_content = ob_get_clean();
 				
 				// Do the Designer class fixes on the $welcome_content variable content
@@ -48,9 +48,9 @@ final class Evergreen {
 			Config::processURI();
 			
 			## Load in the requested controller ##
-			$load['name'] = Config::uriToClass(Config::read("URI.working.controller"));
-			if (Config::read("Branch.name") != '') {
-				$load['branch'] = Config::uriToClass(Config::read("Branch.name"));
+			$load['name'] = Config::uriToClass(Reg::get("URI.working.controller"));
+			if (Reg::get("Branch.name") != '') {
+				$load['branch'] = Config::uriToClass(Reg::get("Branch.name"));
 			}
 			$load['type'] = 'Controller';
 			$load = implode('_', $load);
@@ -62,12 +62,14 @@ final class Evergreen {
 			Error::processError($e);
 		}
 
-		if (Config::read('System.displayPageLoadInfo') == true) {
+		if (Reg::get('System.displayPageLoadInfo') == true) {
 			$mtime = explode(' ', microtime());
 			$totaltime = $mtime[0] + $mtime[1] - $starttime;
 			echo sprintf('Time : %.3fs seconds', $totaltime);
 			
-			echo ' | Queries Executed : ' . DB::queryCount();
+			if (class_exists('DB', false)) {
+				echo ' | Queries Executed : ' . DB::queryCount();
+			}
 			
 			if (function_exists('memory_get_usage')) {
 				// php has to be compiled with --enable-memory-limit for this to exist
@@ -106,7 +108,7 @@ class AutoLoaders {
 		$class = self::parseClassName($class_name);
 		
 		if (isset($class['type'])) {
-			$basePath = Config::read("Path.physical").((!empty($class['branch'])) ? "/branches/".$class['branch'] : "");
+			$basePath = Reg::get("Path.physical").((!empty($class['branch'])) ? "/branches/".$class['branch'] : "");
 			if ($class['type'] == 'controller' && file_exists($basePath."/controllers/{$class['class']}.php")) {
 				## Controller Include ##
 				include_once($basePath."/controllers/{$class['class']}.php");
@@ -123,29 +125,29 @@ class AutoLoaders {
 				## Driver Include ##
 				if (isset($class['specificDriver'])) {
 					if (!empty($class['branch'])) {
-						$branchDriverPath = Config::read("Path.physical")."/branches/".$class['branch']."/config/drivers/".strtolower(str_replace('_', '.', $class['original'])).".class.php";
+						$branchDriverPath = Reg::get("Path.physical")."/branches/".$class['branch']."/config/drivers/".strtolower(str_replace('_', '.', $class['original'])).".class.php";
 						if (file_exists($branchDriverPath)) {
 							include_once($branchDriverPath);
 						}
 						unset($branchDriverPath);
 					}
 					
-					$mainDriverPath = Config::read("Path.physical")."/config/drivers/".strtolower(str_replace('_', '.', $class['original'])).".class.php";
+					$mainDriverPath = Reg::get("Path.physical")."/config/drivers/".strtolower(str_replace('_', '.', $class['original'])).".class.php";
 					if (!class_exists($class['original'], false) && file_exists($mainDriverPath)) {
 						include_once($mainDriverPath);
 					}
 					unset($mainDriverPath);
 				} else {
-					if (file_exists(Config::read("Path.physical")."/lib/".strtolower(str_replace('_', '.', $class['original'])).".class.php")) {
-						include_once(Config::read("Path.physical")."/lib/".strtolower(str_replace('_', '.', $class['original'])).".class.php");
+					if (file_exists(Reg::get("Path.physical")."/lib/".strtolower(str_replace('_', '.', $class['original'])).".class.php")) {
+						include_once(Reg::get("Path.physical")."/lib/".strtolower(str_replace('_', '.', $class['original'])).".class.php");
 					}
 				}
 			}
 			unset($basePath);
 		} else {
 			## Lib Includes ##
-			if (file_exists(Config::read("Path.physical")."/lib/{$class['class']}.class.php")) {
-				include_once(Config::read("Path.physical")."/lib/{$class['class']}.class.php");
+			if (file_exists(Reg::get("Path.physical")."/lib/{$class['class']}.class.php")) {
+				include_once(Reg::get("Path.physical")."/lib/{$class['class']}.class.php");
 			}
 		}
 		
@@ -186,17 +188,17 @@ class AutoLoaders {
 			}
 			if (isset($class['type']) && in_array($class['type'], array('helper', 'plugin'))) {
 				$classVars = get_class_vars($class['original']);
-				if (isset($classVars['requiredSystemMode']) && $classVars['requiredSystemMode'] != Config::read("System.mode")) {
+				if (isset($classVars['requiredSystemMode']) && $classVars['requiredSystemMode'] != Reg::get("System.mode")) {
 					// The system does not have the required mode so don't load the object
 					Error::trigger("REQUIRED_SYSTEM_MODE", array('messageArgs'=>array('name'=>$class['original'], 'type'=>ucwords($class['type']), 'class-required-mode'=>$classVars['requiredSystemMode'])));
 				}
 
-				if (isset($classVars['minimumSystemVersion']) && !version_compare(Config::read("System.version"), $classVars['minimumSystemVersion'], ">")) {
+				if (isset($classVars['minimumSystemVersion']) && !version_compare(Reg::get("System.version"), $classVars['minimumSystemVersion'], ">")) {
 					// The system version is lower than the object's required minimum so don't load the object
 					Error::trigger("MINIMUM_SYSTEM_VERSION", array('messageArgs'=>array('name'=>', '.$class['original'].',', 'type'=>ucwords($class['type']), 'class-required-version'=>$classVars['minimumSystemVersion'])));
 				}
 
-				if (isset($classVars['maximumSystemVersion'])  && !version_compare(Config::read("System.version"), $classVars['maximumSystemVersion'], "<")) {
+				if (isset($classVars['maximumSystemVersion'])  && !version_compare(Reg::get("System.version"), $classVars['maximumSystemVersion'], "<")) {
 					// The system version is higher than the object's required maximum so don't load the object
 					Error::trigger("MAXIMUM_SYSTEM_VERSION", array('messageArgs'=>array('name'=>', '.$class['original'].',', 'type'=>ucwords($class['type']), 'class-required-version'=>$classVars['maximumSystemVersion'])));
 				}

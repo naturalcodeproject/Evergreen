@@ -2,13 +2,13 @@
 	## NEED TO DO SOMETHING WITH THIS ##
 	//$config['default_layout'] = "index";
 	
-	Config::register("Branch.active", true);
-	Config::register("Branch.requiredSystemMode", "development");
-	Config::register("Branch.minimumSystemVersion", "0.2.0");
-	//Config::register("Branch.maximumSystemVersion", "1.0.0");
+	Reg::set("Branch.active", true);
+	Reg::set("Branch.requiredSystemMode", "development");
+	Reg::set("Branch.minimumSystemVersion", "0.2.0");
+	//Reg::set("Branch.maximumSystemVersion", "1.0.0");
 	
 	/*
-Config::register("URI.map", array(
+Reg::set("URI.map", array(
 		"controller"=>"tester",
 		"view"=>"index",
 		"action"=>"",
@@ -16,14 +16,14 @@ Config::register("URI.map", array(
 	));
 */
 	
-	Config::register("Errors.404", "/anothererror");
+	Reg::set("Errors.404", "/anothererror");
 	
 	## Database Setup ##
-	Config::register("Database.host", "localhost_dev");
-	Config::register("Database.username", "root_dev");
-	Config::register("Database.password", "root_dev");
-	Config::register("Database.database", "developer_database");
-	Config::register("Database.driver", "MySQL");
+	Reg::set("Database.host", "localhost_dev");
+	Reg::set("Database.username", "root_dev");
+	Reg::set("Database.password", "root_dev");
+	Reg::set("Database.database", "developer_database");
+	Reg::set("Database.driver", "MySQL");
 	
 	## Routes ##
 	Config::registerRoute("/apples/*", array(

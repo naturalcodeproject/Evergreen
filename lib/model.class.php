@@ -534,14 +534,14 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	/**
 	* turns one row into its own object
 	*/
-	public function extract($id = null) {
-		if ($id == null) {
-			$id = $this->current_row;
+	public function extract($key = null) {
+		if ($key == null) {
+			$key = $this->current_row;
 		}
 		
-		if (!empty($this->data[$id])) {
+		if (!empty($this->data[$key])) {
 			$obj = clone $this;
-			$obj->setProperties($this->data[$id]);
+			$obj->setProperties($this->data[$key]);
 			return $obj;
 		}
 
@@ -553,10 +553,9 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	*/
 	public function extractAll() {
 		$return = array();
-		foreach($this->data as $key => $data) {
-			$return[] = $this->extract($key);
+		for($i = 0, $total = count($this->data); $i < $total; $i++) {
+			$return[] = $this->extract($i);
 		}
-		unset($key, $data);
 		
 		return $return;
 	}
@@ -629,9 +628,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	* gets the row depending on the offset
 	*/
 	public function offsetGet($offset) {
-		$this->current_row = $offset;
-		
-		return clone $this;
+		return $this->extract($offset);
 	}
 	
 	/**

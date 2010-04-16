@@ -26,9 +26,9 @@ abstract class Controller {
 	
 	final private function _controllerSetup() {
 		## Construct Code ##
-		$this->params = Config::read("URI.working");
+		$this->params = Reg::get("URI.working");
 		if (!strlen($this->params['view'])) {
-			$this->params['view'] = Config::read("URI.map.view");
+			$this->params['view'] = Reg::get("URI.map.view");
 		}
 		
 		$this->viewToLoad = Config::uriToMethod($this->params['view']);
@@ -119,14 +119,14 @@ abstract class Controller {
 			$this->overriddenViewToLoad = $args;
 			return true;
 		}
-		if ((strlen(Config::read("Branch.name")) == 0)) {
-			$path = Config::read("Path.physical")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
+		if ((strlen(Reg::get("Branch.name")) == 0)) {
+			$path = Reg::get("Path.physical")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
 			if (((file_exists($path) && (include($path)) == true))) {
 				return true;
 			}
 			unset($path);
 		} else {
-			$path = Config::read("Path.physical")."/branches/".Config::uriToFile(Config::classToFile(Config::read("Branch.name")))."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
+			$path = Reg::get("Path.physical")."/branches/".Config::uriToFile(Config::classToFile(Reg::get("Branch.name")))."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
 			if (((file_exists($path) && (include($path)) == true))) {
 				return true;
 			}
@@ -157,7 +157,7 @@ abstract class Controller {
 					return false;
 				}
 			} else {
-				$path = Config::read("Path.physical").((strlen(Config::read("Branch.name"))) ? "/branches/".Config::uriToFile(Config::classToFile(Config::read("Branch.name"))) : "")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
+				$path = Reg::get("Path.physical").((strlen(Reg::get("Branch.name"))) ? "/branches/".Config::uriToFile(Config::classToFile(Reg::get("Branch.name"))) : "")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
 				if (file_exists($path)) {
 					if ($args['checkmethod'] == 'both') {
 						if (method_exists($this, $args['name'])) {
@@ -179,21 +179,21 @@ abstract class Controller {
 	
 	final protected function _setLayout($name, $branch = '') {
 		$layout = array('name' => $name, 'branch' => $branch);
-		if (($layout['branch'] == Config::read('System.rootIdentifier')) || (!strlen(Config::read("Branch.name")) && empty($layout['branch']))) {
-			$path = Config::read("Path.physical")."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
+		if (($layout['branch'] == Reg::get('System.rootIdentifier')) || (!strlen(Reg::get("Branch.name")) && empty($layout['branch']))) {
+			$path = Reg::get("Path.physical")."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
 			if (file_exists($path)) {
 				$this->layout = $layout;
 				return true;
 			} else {
 				return false;
 			}
-		} else if ((strlen(Config::read("Branch.name")) && empty($layout['branch'])) || !empty($layout['branch'])) {
+		} else if ((strlen(Reg::get("Branch.name")) && empty($layout['branch'])) || !empty($layout['branch'])) {
 			if (!empty($layout['branch'])) {
 				$branchToUse = $layout['branch'];
 			} else {
-				$branchToUse = Config::read("Branch.name");
+				$branchToUse = Reg::get("Branch.name");
 			}
-			$path = Config::read("Path.physical")."/branches/".Config::uriToFile(Config::classToFile($branchToUse))."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
+			$path = Reg::get("Path.physical")."/branches/".Config::uriToFile(Config::classToFile($branchToUse))."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
 			if (file_exists($path)) {
 				$this->layout = $layout;
 				return true;
@@ -214,20 +214,20 @@ abstract class Controller {
 		if (empty($layout['name'])) {
 			return false;
 		}
-		if (($layout['branch'] == Config::read('System.rootIdentifier')) || (!strlen(Config::read("Branch.name")) && empty($layout['branch']))) {
-			$path = Config::read("Path.physical")."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
+		if (($layout['branch'] == Reg::get('System.rootIdentifier')) || (!strlen(Reg::get("Branch.name")) && empty($layout['branch']))) {
+			$path = Reg::get("Path.physical")."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
 			if ((file_exists($path) && (include($path)) == true)) {
 				return true;
 			} else {
 				return false;
 			}
-		} else if ((strlen(Config::read("Branch.name")) && empty($layout['branch'])) || !empty($layout['branch'])) {
+		} else if ((strlen(Reg::get("Branch.name")) && empty($layout['branch'])) || !empty($layout['branch'])) {
 			if (!empty($layout['branch'])) {
 				$branchToUse = $layout['branch'];
 			} else {
-				$branchToUse = Config::read("Branch.name");
+				$branchToUse = Reg::get("Branch.name");
 			}
-			$path = Config::read("Path.physical")."/branches/".Config::uriToFile(Config::classToFile($branchToUse))."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
+			$path = Reg::get("Path.physical")."/branches/".Config::uriToFile(Config::classToFile($branchToUse))."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
 			if ((file_exists($path) && (include($path)) == true)) {
 				return true;
 			} else {
@@ -372,14 +372,14 @@ abstract class Controller {
 	
 	final private function _runBounceBack() {
 		if (((isset($this->bounceback['check']) && method_exists($this, $this->bounceback['check'])) && (isset($this->bounceback['bounce']) && method_exists($this, $this->bounceback['bounce']))) && !$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) {
-			$keys = array_keys(Config::read('URI.working'));
-			$values = array_values(Config::read('URI.working'));
+			$keys = array_keys(Reg::get('URI.working'));
+			$values = array_values(Reg::get('URI.working'));
 			$controllerPos = array_search('controller', $keys);
 			if ($controllerPos === false) {
 				$controllerPos = 0;
 			}
 			$this->params = array_combine($keys, array_slice(array_merge(array_slice($values, 0, ($controllerPos+1)), array($this->bounceback['bounce']), array_slice($values, $controllerPos+1)), 0, count($keys)));
-			Config::register('Param', $this->params);
+			Reg::set('Param', $this->params);
 			$this->viewToLoad = Config::uriToMethod($this->params['view']);
 			
 			if ($this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true)) !== true) {
@@ -418,45 +418,45 @@ abstract class Controller {
 		$return = '';
 		switch ($link_arr[0]) {
 			case "[current]":
-				$new_base = explode("/", Config::read("Path.current"));
+				$new_base = explode("/", Reg::get("Path.current"));
 				$return = implode("/", (($up_link_count) ? array_slice($new_base, 0, -$up_link_count) : $new_base)) . implode("/", array_pad(array_slice($link_arr, $up_link_count+1), -(count(array_slice($link_arr, $up_link_count+1))+1), ""));
 			break;
 			
 			case "[site]":
-				$new_base = explode("/", Config::read("Path.site"));
+				$new_base = explode("/", Reg::get("Path.site"));
 				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
 			break;
 			
 			case "[skin]":
-				$new_base = explode("/", Config::read("Path.skin"));
+				$new_base = explode("/", Reg::get("Path.skin"));
 				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
 			break;
 			
 			case "[root]":
-				$new_base = explode("/", Config::read("Path.root"));
+				$new_base = explode("/", Reg::get("Path.root"));
 				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
 			break;
 			
 			case "[branch.site]":
-				$new_base = explode("/", Config::read("Path.branch"));
+				$new_base = explode("/", Reg::get("Path.branch"));
 				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
 			break;
 			
 			case "[branch.skin]":
-				$new_base = explode("/", Config::read("Path.branchSkin"));
+				$new_base = explode("/", Reg::get("Path.branchSkin"));
 				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
 			break;
 			
 			case "[branch.root]":
-				$new_base = explode("/", Config::read("Path.branchRoot"));
+				$new_base = explode("/", Reg::get("Path.branchRoot"));
 				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
 			break;
 			
 			default:
-				$working_uri = Config::read("URI.working");
+				$working_uri = Reg::get("URI.working");
 				
-				if (strlen(Config::read("Branch.name"))) {
-					$working_uri = array_merge(array("branch"=>Config::read("Branch.name")), $working_uri);
+				if (strlen(Reg::get("Branch.name"))) {
+					$working_uri = array_merge(array("branch"=>Reg::get("Branch.name")), $working_uri);
 				}
 				
 				foreach($working_uri as $key => $item) {
@@ -464,7 +464,7 @@ abstract class Controller {
 					
 					if ($link_arr[0] == $tmp_key) {
 						$position = array_search($key, array_keys($working_uri));
-						$new_base = explode("/", Config::read("Path.root"));
+						$new_base = explode("/", Reg::get("Path.root"));
 						
 						$new_url = array_merge( array_merge($new_base, array_slice($working_uri, 0, ($position+1))), array_pad(array_slice($link_arr, $up_link_count+1), -(count(array_slice($link_arr, $up_link_count+1))), "") );
 						
@@ -477,7 +477,7 @@ abstract class Controller {
 		
 		$return = str_replace("//", "/", $return);
 		
-		if (!Config::read("URI.useModRewrite") && !empty($return)) {
+		if (!Reg::get("URI.useModRewrite") && !empty($return)) {
 			if (substr_count($return, "?", 0) > 1) {
 				$return = strrev(preg_replace("/\?/i", "&", strrev($return), (substr_count($return, "?", 0) - 1)));
 			}
