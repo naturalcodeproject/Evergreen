@@ -193,12 +193,12 @@ class AutoLoaders {
 					Error::trigger("REQUIRED_SYSTEM_MODE", array('messageArgs'=>array('name'=>$class['original'], 'type'=>ucwords($class['type']), 'class-required-mode'=>$classVars['requiredSystemMode'])));
 				}
 
-				if (isset($classVars['minimumSystemVersion']) && !version_compare(Reg::get("System.version"), $classVars['minimumSystemVersion'], ">")) {
+				if (isset($classVars['minimumSystemVersion']) && !version_compare(Reg::get("System.version"), $classVars['minimumSystemVersion'], ">=")) {
 					// The system version is lower than the object's required minimum so don't load the object
 					Error::trigger("MINIMUM_SYSTEM_VERSION", array('messageArgs'=>array('name'=>', '.$class['original'].',', 'type'=>ucwords($class['type']), 'class-required-version'=>$classVars['minimumSystemVersion'])));
 				}
 
-				if (isset($classVars['maximumSystemVersion'])  && !version_compare(Reg::get("System.version"), $classVars['maximumSystemVersion'], "<")) {
+				if (isset($classVars['maximumSystemVersion'])  && !version_compare(Reg::get("System.version"), $classVars['maximumSystemVersion'], "<=")) {
 					// The system version is higher than the object's required maximum so don't load the object
 					Error::trigger("MAXIMUM_SYSTEM_VERSION", array('messageArgs'=>array('name'=>', '.$class['original'].',', 'type'=>ucwords($class['type']), 'class-required-version'=>$classVars['maximumSystemVersion'])));
 				}

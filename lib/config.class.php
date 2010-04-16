@@ -384,12 +384,12 @@ final class Config {
 			Error::trigger("BRANCH_REQUIRED_SYSTEM_MODE");
 		}
 		
-		if (Reg::get("Branch.minimumSystemVersion") !== null && !version_compare(Reg::get("System.version"), Reg::get("Branch.minimumSystemVersion"), ">")) {
+		if (Reg::get("Branch.minimumSystemVersion") !== null && !version_compare(Reg::get("System.version"), Reg::get("Branch.minimumSystemVersion"), ">=")) {
 			// The system version is lower than the branch's required minimum so don't load the branch
 			Error::trigger("BRANCH_MINIMUM_SYSTEM_VERSION");
 		}
 		
-		if (Reg::get("Branch.maximumSystemVersion") !== null && !version_compare(Reg::get("System.version"), Reg::get("Branch.maximumSystemVersion"), "<")) {
+		if (Reg::get("Branch.maximumSystemVersion") !== null && !version_compare(Reg::get("System.version"), Reg::get("Branch.maximumSystemVersion"), "<=")) {
 			// The system version is higher than the branch's required maximum so don't load the branch
 			Error::trigger("BRANCH_MAXIMUM_SYSTEM_VERSION");
 		}
