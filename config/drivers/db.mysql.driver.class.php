@@ -90,6 +90,43 @@ class DB_MySQL_Driver implements DBDriverInterface {
 
 		return '';
 	}
+	
+	/**
+	* returns operators
+	*/
+	public function equalsOperator() {
+		return '=';
+	}
+	public function notEqualsOperator() {
+		return '!=';
+	}
+	public function startsWithOperator() {
+		return 'like';
+	}
+	public function endsWithOperator() {
+		return 'like';
+	}
+	public function containsOperator() {
+		return 'like';
+	}
+	public function greaterThanOperator() {
+		return '>';
+	}
+	public function greaterThanOrEqualOperator() {
+		return '>=';
+	}
+	public function lessThanOperator() {
+		return '<';
+	}
+	public function lessThanOrEqualOperator() {
+		return '<=';
+	}
+	public function andOperator() {
+		return 'AND';
+	}
+	public function orOperator() {
+		return 'OR';
+	}
 }
 
 ?>

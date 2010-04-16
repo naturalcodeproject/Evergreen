@@ -6,6 +6,20 @@
 * handles database connections and queries
 */
 class DB {
+	/**
+	* operator constants
+	*/
+	const EQUALS 				= '=';
+    const NOT_EQUALS			= '!=';
+    const STARTS_WITH 			= '.starts_with';
+    const ENDS_WITH 			= '.ends_with';
+    const CONTAINS 				= '.contains';
+    const GREATER_THAN 			= '>';
+    const GREATER_THAN_OR_EQUAL = '>=';
+    const LESS_THAN 			= '<';
+    const LESS_THAN_OR_EQUAL 	= '<=';
+    const AND_THIS				= '&&';
+    const OR_THIS				= '||';
 
 	/**
 	* holds the PDO connection
@@ -139,6 +153,9 @@ class DB {
 			array_shift($values); // first argument is the sql query
 		}
 		
+		// fix operators in query
+		$query = self::fixOperators($query);
+		
 		// prepare the statement and get it ready to be executed
 		$statement = self::$pdo->prepare($query);
 
@@ -163,6 +180,24 @@ class DB {
 		}
 		
 		return false;
+	}
+	
+	/**
+	* return the query with the oporators fixed
+	*/
+	public static function fixOperators($query) {
+		$query = str_replace(DB::EQUALS,					self::$driver->equalsOperator(),					$query);
+		$query = str_replace(DB::NOT_EQUALS,				self::$driver->notEqualsOperator(),					$query);
+		$query = str_replace(DB::STARTS_WITH,				self::$driver->startsWithOperator(),				$query);
+		$query = str_replace(DB::ENDS_WITH,					self::$driver->endsWithOperator(),					$query);
+		$query = str_replace(DB::CONTAINS,					self::$driver->containsOperator(),					$query);
+		$query = str_replace(DB::GREATER_THAN,				self::$driver->greaterThanOperator(),				$query);
+		$query = str_replace(DB::GREATER_THAN_OR_EQUAL,		self::$driver->greaterThanOrEqualOperator(),		$query);
+		$query = str_replace(DB::LESS_THAN,					self::$driver->lessThanOperator(),					$query);
+		$query = str_replace(DB::LESS_THAN_OR_EQUAL,		self::$driver->lessThanOrEqualOperator(),			$query);
+		$query = str_replace(DB::AND_THIS,					self::$driver->andOperator(),						$query);
+		$query = str_replace(DB::OR_THIS,					self::$driver->orOperator(),						$query);
+		return $query;
 	}
 
 	/**
@@ -203,4 +238,15 @@ interface DBDriverInterface {
 	public function insert($fields, $table);
 	public function update($key, $fields, $table);
 	public function delete($key, $value, $table);
+	public function equalsOperator();
+	public function notEqualsOperator();
+	public function startsWithOperator();
+	public function endsWithOperator();
+	public function containsOperator();
+	public function greaterThanOperator();
+	public function greaterThanOrEqualOperator();
+	public function lessThanOperator();
+	public function lessThanOrEqualOperator();
+	public function andOperator();
+	public function orOperator();
 }

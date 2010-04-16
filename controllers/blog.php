@@ -71,7 +71,9 @@ echo '<h2>Insert</h2>';
 		echo '<h2>Find</h2>';
 		
 		$userdata = new Usersdata_Model();
-		$userdata->find();
+		$userdata->find(array(
+			'where' => array('userid = ? || userid = ?', 1, 2)
+		));
 		
 		for($i = 0, $total = sizeof($userdata); $i < $total; $i++) {
 			echo $userdata[$i]->info . '<br />';
