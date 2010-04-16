@@ -29,7 +29,7 @@ final class Error {
 				$params['messageArgs'] = array_merge(self::$registeredErrors[$message]['messageArgs'], $params['messageArgs']);
 			}
 			$params = array_merge(self::$registeredErrors[$message], $params);
-			$message = self::$registeredErrors[$message]['message'];
+			$message = $params['message'];
 		}
 		
 		if (isset($params['messageArgs']) && is_array($params['messageArgs'])) {

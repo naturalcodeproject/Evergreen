@@ -11,12 +11,9 @@ if (Config::read("System.mode") != "development") {
 
 $params = Error::getTriggerParams();
 
-$dbMsg = $params['db_message'];
-$dbTrace = $params['db_trace'];
-$dbModel = $params['db_model'];
+$dbMsg = $params['errorMessage'];
+$dbTrace = $params['query'];
 
 ?>
-
-<p><b>Model Failed:</b> <?php echo $dbModel; ?></p>
 <p><b>Failure:</b> <?php echo $dbMsg; ?></p>
-<p><b>Trace:</b><br/><PRE><?php echo $dbTrace; ?></PRE></p>
+<p><b>Query:</b><br/><PRE><?php echo $dbTrace; ?></PRE></p>

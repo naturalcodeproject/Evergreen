@@ -164,7 +164,7 @@ $blogpost->find(array(
 		// 		}
 		// unset($results, $key, $post);
 		echo '<pre>';
-		var_dump(sizeof($results));
+		//var_dump(sizeof($results));
 		//var_dump($results);
 		echo '</pre>';
 

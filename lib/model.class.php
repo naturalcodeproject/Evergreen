@@ -525,24 +525,40 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	*/
 	public function __clone() {
 		$currentData = (isset($this->data[$this->current_row])) ? $this->data[$this->current_row] : array();
-		$currentErrors = (isset($this->errors[$this->current_row])) ? $this->errors[$this->current_row] : null;
+		$currentErrors = (isset($this->errors[$this->current_row])) ? $this->errors[$this->current_row] : array();
 		$this->clearData();
 		$this->setProperties($currentData);
 		$this->setErrors($currentErrors);
+	}
+	
+	/**
+	* turns one row into its own object
+	*/
+	public function extract($id = null) {
+		if ($id == null) {
+			$id = $this->current_row;
+		}
+		
+		if (!empty($this->data[$id])) {
+			$obj = clone $this;
+			$obj->setProperties($this->data[$id]);
+			return $obj;
+		}
+
+		return false;
 	}
 
 	/**
 	* turns every row into its own object
 	*/
 	public function extractAll() {
-		$this->current_row = 0;
-
-		$models = array();
-		foreach($this as $row) {
-			$models[] = $row;
+		$return = array();
+		foreach($this->data as $key => $data) {
+			$return[] = $this->extract($key);
 		}
-
-		return $models;
+		unset($key, $data);
+		
+		return $return;
 	}
 
 	/**
@@ -568,7 +584,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	* Gets the current row which is the object. The current row has already been incremented.
 	*/
 	public function current() {
-		return clone $this;
+		return $this;
 	}
 
 	/**

@@ -67,6 +67,8 @@ final class Evergreen {
 			$totaltime = $mtime[0] + $mtime[1] - $starttime;
 			echo sprintf('Time : %.3fs seconds', $totaltime);
 			
+			echo ' | Queries Executed : ' . DB::queryCount();
+			
 			if (function_exists('memory_get_usage')) {
 				// php has to be compiled with --enable-memory-limit for this to exist
 				// prior to version 5.2.1

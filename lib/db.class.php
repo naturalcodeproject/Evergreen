@@ -47,10 +47,10 @@ class DB {
 		if (isset($options['where']) && is_array($options['where'])) {
 			$values = array_slice($options['where'], 1);
 		}
-
+		
 		// execute the query
 		$results = self::execute($query, $values);
-
+		
 		return $results;
 	}
 
@@ -145,16 +145,24 @@ class DB {
 		// execute the query
 		if ($statement->execute($values) === false) {
 			// handle the error
-			var_dump($statement->errorInfo());
+			$error = $statement->errorInfo();
+			Error::trigger('MODEL_DB_FAILURE', array(
+				'errorMessage' => end($error),
+				'errorId' => (isset($error[1]) ? $error[1] : 0),
+				'query' => $query,
+				'queryValues' => $values
+			));
+		} else {	
+			// store the query
+			self::$queries[] = array($query, $values);
+	
+			// set the default fetch mode for the query
+			$statement->setFetchMode(PDO::FETCH_ASSOC);
+	
+			return $statement;
 		}
-
-		// store the query
-		self::$queries[] = array($query, $values);
-
-		// set the default fetch mode for the query
-		$statement->setFetchMode(PDO::FETCH_ASSOC);
-
-		return $statement;
+		
+		return false;
 	}
 
 	/**
@@ -176,6 +184,13 @@ class DB {
 	*/
 	public static function fetchObject($statement, $class_name = 'stdClass') {
 		return $statement->fetchObject($class_name);
+	}
+	
+	/**
+	* returns a count of all the queries executed on a page
+	*/
+	public static function queryCount() {
+		return count(self::$queries);
 	}
 }
 
