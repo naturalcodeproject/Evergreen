@@ -90,7 +90,7 @@ final class Error {
 			$str = $data[$m1];
 			$used_keys[$m1] = $m1;
 			return sprintf("%".$m2,$str);
-		} else if (Reg::get($m1) != null) {
+		} else if (Reg::hasVal($m1)) {
 			$used_keys[$m1] = $m1;
 			return sprintf("%".$m2,Reg::get($m1));
 		} else {
@@ -206,7 +206,7 @@ final class Error {
 			Config::processURI();
 			
 			$load['name'] = Config::uriToClass(Reg::get("URI.working.controller"));
-			if (Reg::get("Branch.name") != '') {
+			if (Reg::hasVal("Branch.name")) {
 				$load['branch'] = Config::uriToClass(Reg::get("Branch.name"));
 			}
 			$load['type'] = 'Controller';
@@ -269,11 +269,11 @@ final class Error {
    		$notify = false;
    		$halt_script = true;
         
-        if (Reg::get('Error.viewErrors')) {
+        if (Reg::get('Error.viewErrors') == true) {
             $display = true;
         }
         
-        if (Reg::get('Error.logErrors')) {
+        if (Reg::get('Error.logErrors') == true) {
             $notify = true;
         }
    		

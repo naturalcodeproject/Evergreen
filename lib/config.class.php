@@ -1,54 +1,45 @@
 <?php
 final class Config {
-	## Base Config Holder ##
-	protected static $config;
-	protected static $isSetup = false;
-	
 	## Route Config Holder ##
 	protected static $routes;
 	
 	public static function setup() {
-		if (!self::$isSetup) {
-			// Setup the System.version configuration setting
-			Reg::set('System.version', "0.3.0");
-			
-			// Setup the root identifier
-			Reg::set('System.rootIdentifier', "MAIN");
-			
-			// Setup the Path.physical configuration setting
-			Reg::set('Path.physical', dirname(dirname(__FILE__)));
-			
-			// Setup the URI.base configuration setting
-			$base_uri = dirname($_SERVER['SCRIPT_NAME']);
-			$base_uri = ($base_uri{strlen($base_uri)-1} == '/') ? substr($base_uri, 0, strlen($base_uri)-1) : $base_uri;
-			Reg::set('URI.base', $base_uri);
-			
-			// Setup the System.defaultError's configuration setting
-			Reg::set('System.defaultError404', Reg::get('Path.physical')."/public/errors/404.php");
-			Reg::set('System.defaultErrorGEN', Reg::get('Path.physical')."/public/errors/general.php");
-            Reg::set('System.defaultErrorDB', Reg::get('Path.physical')."/public/errors/db.php");
-			
-			// Setup Configuration defaults
-			Reg::set('System.mode', "development");
-			Reg::set('System.displayPageLoadInfo', false);
-			Reg::set('URI.prependIdentifier', "url");
-			Reg::set('URI.useModRewrite', true);
-			Reg::set('URI.useDashes', true);
-			Reg::set('URI.forceDashes', true);
-			Reg::set('URI.map', array(
-				"controller" 	=> "main",
-				"view" 			=> "index",
-				"action" 		=> "",
-				"id" 			=> ""
-			));
-			Reg::set('Error.viewErrors', true);
-    		Reg::set('Error.logErrors', true);
-			Reg::set('Error.generalErrorMessage', "An error occurred. Please contact the administrator.");
-			Reg::set('Database.viewQueries', false);
-		}
+		// Setup the System.version configuration setting
+		Reg::set('System.version', "0.3.0");
 		
-		// Indicate that the setup function has been run and doesnt need to be run again
-		self::$isSetup = true;
+		// Setup the root identifier
+		Reg::set('System.rootIdentifier', "MAIN");
+		
+		// Setup the Path.physical configuration setting
+		Reg::set('Path.physical', dirname(dirname(__FILE__)));
+		
+		// Setup the URI.base configuration setting
+		$base_uri = dirname($_SERVER['SCRIPT_NAME']);
+		$base_uri = ($base_uri{strlen($base_uri)-1} == '/') ? substr($base_uri, 0, strlen($base_uri)-1) : $base_uri;
+		Reg::set('URI.base', $base_uri);
+		
+		// Setup the System.defaultError's configuration setting
+		Reg::set('System.defaultError404', Reg::get('Path.physical')."/public/errors/404.php");
+		Reg::set('System.defaultErrorGEN', Reg::get('Path.physical')."/public/errors/general.php");
+        Reg::set('System.defaultErrorDB', Reg::get('Path.physical')."/public/errors/db.php");
+		
+		// Setup Configuration defaults
+		Reg::set('System.mode', "development");
+		Reg::set('System.displayPageLoadInfo', false);
+		Reg::set('URI.prependIdentifier', "url");
+		Reg::set('URI.useModRewrite', true);
+		Reg::set('URI.useDashes', true);
+		Reg::set('URI.forceDashes', true);
+		Reg::set('URI.map', array(
+			"controller" 	=> "main",
+			"view" 			=> "index",
+			"action" 		=> "",
+			"id" 			=> ""
+		));
+		Reg::set('Error.viewErrors', true);
+		Reg::set('Error.logErrors', true);
+		Reg::set('Error.generalErrorMessage', "An error occurred. Please contact the administrator.");
+		Reg::set('Database.viewQueries', false);
 		return true;
 	}
 	
@@ -67,7 +58,7 @@ final class Config {
 	public static function registerRoute($definition, $action, $validation=array()) {
 		
 		// Check if in a branch and make it so the route loads up data for the branch by default
-		if (!isset($action['branch']) && Reg::get("Branch.name")) {
+		if (!isset($action['branch']) && Reg::hasVal("Branch.name")) {
 			$action = array_merge(array('branch' => Reg::get("Branch.name")), $action);
 		}
 		
@@ -88,7 +79,7 @@ final class Config {
 			//Error::trigger("NO_URI_MAP");
 		}
 		
-		if (!Reg::get("URI.working")) {
+		if (!Reg::hasVal("URI.working")) {
 			if (Reg::get("URI.useModRewrite")) {
 				if (strpos($_SERVER['REQUEST_URI'], "?")) {
 					$_SERVER['REQUEST_URI'] = substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], "?"));
@@ -249,11 +240,11 @@ final class Config {
 		// Clean up the generated working uri variable
 		unset($uri_params);
 		
-		if (Reg::get("URI.useModRewrite")) {
+		if (Reg::get("URI.useModRewrite") == true) {
 			$uri_paths = explode("/", ltrim($_SERVER['REQUEST_URI'], '/'));
 		} else {
 			if (isset($_GET[Reg::get("URI.prependIdentifier")])) {
-				$uri_paths = explode("/", ltrim($_GET[Reg::get("URI.prependIdentifier")], '/'));
+				$uri_paths = explode("/", trim($_GET[Reg::get("URI.prependIdentifier")], '/'));
 			} else {
 				$uri_paths = array();
 			}
@@ -261,7 +252,7 @@ final class Config {
 		
 		// Setup the additional Path configuration settings based off the URI.map, the Skin, and the Branch
 		Reg::set("Path.site", Reg::get("URI.base").Reg::get("URI.prepend"));
-		if (Reg::get("Branch.name") != "") {
+		if (Reg::hasVal("Branch.name")) {
 			Reg::set("Path.branch", str_replace("//", "/", Reg::get("Path.site")."/".Reg::get("Branch.name")));
 			Reg::set("Path.branchRoot", str_replace("//", "/", Reg::get("URI.base")."/branches/".Reg::get("Branch.name")));
 			Reg::set("Path.branchSkin", str_replace("//", "/", Reg::get("Path.branchRoot")."/public"));
@@ -577,7 +568,7 @@ final class Reg {
 		$config_holder =& self::$config;
 		foreach($path as $i => $path_key) {
 			if ($i == (count($path) - 1)) {
-				return empty($config_holder[$path_key]);
+				return !empty($config_holder[$path_key]);
 			} else {
 				$config_holder =& $config_holder[$path_key];
 			}

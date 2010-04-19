@@ -119,7 +119,7 @@ abstract class Controller {
 			$this->overriddenViewToLoad = $args;
 			return true;
 		}
-		if ((strlen(Reg::get("Branch.name")) == 0)) {
+		if (!Reg::hasVal("Branch.name")) {
 			$path = Reg::get("Path.physical")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
 			if (((file_exists($path) && (include($path)) == true))) {
 				return true;
@@ -157,7 +157,7 @@ abstract class Controller {
 					return false;
 				}
 			} else {
-				$path = Reg::get("Path.physical").((strlen(Reg::get("Branch.name"))) ? "/branches/".Config::uriToFile(Config::classToFile(Reg::get("Branch.name"))) : "")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
+				$path = Reg::get("Path.physical").((Reg::hasVal("Branch.name")) ? "/branches/".Config::uriToFile(Config::classToFile(Reg::get("Branch.name"))) : "")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
 				if (file_exists($path)) {
 					if ($args['checkmethod'] == 'both') {
 						if (method_exists($this, $args['name'])) {
@@ -179,7 +179,7 @@ abstract class Controller {
 	
 	final protected function _setLayout($name, $branch = '') {
 		$layout = array('name' => $name, 'branch' => $branch);
-		if (($layout['branch'] == Reg::get('System.rootIdentifier')) || (!strlen(Reg::get("Branch.name")) && empty($layout['branch']))) {
+		if (($layout['branch'] == Reg::get('System.rootIdentifier')) || (!Reg::hasVal("Branch.name") && empty($layout['branch']))) {
 			$path = Reg::get("Path.physical")."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
 			if (file_exists($path)) {
 				$this->layout = $layout;
@@ -187,7 +187,7 @@ abstract class Controller {
 			} else {
 				return false;
 			}
-		} else if ((strlen(Reg::get("Branch.name")) && empty($layout['branch'])) || !empty($layout['branch'])) {
+		} else if ((Reg::hasVal("Branch.name") && empty($layout['branch'])) || !empty($layout['branch'])) {
 			if (!empty($layout['branch'])) {
 				$branchToUse = $layout['branch'];
 			} else {
@@ -214,14 +214,14 @@ abstract class Controller {
 		if (empty($layout['name'])) {
 			return false;
 		}
-		if (($layout['branch'] == Reg::get('System.rootIdentifier')) || (!strlen(Reg::get("Branch.name")) && empty($layout['branch']))) {
+		if (($layout['branch'] == Reg::get('System.rootIdentifier')) || (!Reg::hasVal("Branch.name") && empty($layout['branch']))) {
 			$path = Reg::get("Path.physical")."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
 			if ((file_exists($path) && (include($path)) == true)) {
 				return true;
 			} else {
 				return false;
 			}
-		} else if ((strlen(Reg::get("Branch.name")) && empty($layout['branch'])) || !empty($layout['branch'])) {
+		} else if ((Reg::hasVal("Branch.name") && empty($layout['branch'])) || !empty($layout['branch'])) {
 			if (!empty($layout['branch'])) {
 				$branchToUse = $layout['branch'];
 			} else {
@@ -455,7 +455,7 @@ abstract class Controller {
 			default:
 				$working_uri = Reg::get("URI.working");
 				
-				if (strlen(Reg::get("Branch.name"))) {
+				if (Reg::hasVal("Branch.name")) {
 					$working_uri = array_merge(array("branch"=>Reg::get("Branch.name")), $working_uri);
 				}
 				
@@ -477,7 +477,7 @@ abstract class Controller {
 		
 		$return = str_replace("//", "/", $return);
 		
-		if (!Reg::get("URI.useModRewrite") && !empty($return)) {
+		if (Reg::get("URI.useModRewrite") != true && !empty($return)) {
 			if (substr_count($return, "?", 0) > 1) {
 				$return = strrev(preg_replace("/\?/i", "&", strrev($return), (substr_count($return, "?", 0) - 1)));
 			}

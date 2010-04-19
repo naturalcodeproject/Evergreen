@@ -28,19 +28,8 @@ final class Evergreen {
 			
 			## Check to see if the welcome content is present ##
 			if (file_exists(Reg::get("Path.physical")."/public/welcome.php")) {
-				// Load the Designer class
-				$designer = new Designer();
-				
-				// Load the welcome content and save the result to the $welcome_content variable
-				ob_start();
-					include(Reg::get("Path.physical")."/public/welcome.php");
-				$welcome_content = ob_get_clean();
-				
-				// Do the Designer class fixes on the $welcome_content variable content
-				$designer->doFixes($welcome_content);
-				
-				// Print out the welcome content
-				echo $welcome_content;
+				// Load the welcome content
+				include(Reg::get("Path.physical")."/public/welcome.php");
 				exit;
 			}
 			
@@ -49,7 +38,7 @@ final class Evergreen {
 			
 			## Load in the requested controller ##
 			$load['name'] = Config::uriToClass(Reg::get("URI.working.controller"));
-			if (Reg::get("Branch.name") != '') {
+			if (Reg::hasVal("Branch.name")) {
 				$load['branch'] = Config::uriToClass(Reg::get("Branch.name"));
 			}
 			$load['type'] = 'Controller';
