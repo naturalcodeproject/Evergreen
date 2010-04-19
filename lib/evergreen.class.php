@@ -1,42 +1,43 @@
 <?php
 final class Evergreen {
+	/**
+	* constructor for the evergreen class that sets up all the necessary parts of the framework so it can run
+	*/
 	function __construct() {
 		$starttime = explode(' ', microtime());
 		$starttime = $starttime[1] + $starttime[0];
 		
 		try {
-			## Register Autoloader Class ##
+			// register the Autoloaders class as an autoloader
 			spl_autoload_register(array('AutoLoaders', 'main'));
 			
-			## Register Error Handler Class ##
+			// setup error handling
 			set_error_handler(array("Error", "logError"), ini_get("error_reporting"));
 			
-			## Load Base Configuration ##
+			// load the main config.php file
 			if (file_exists(Reg::get("Path.physical")."/config/config.php")) {
-				// Load in the config.php file
 				include_once(Reg::get("Path.physical")."/config/config.php");
 			} else {
 				echo "You are missing the configuration file and without it Evergreen cannot run.";
 				exit;
 			}
 			
-			## Load Base Errors ##
+			// load the main errors.php file
 			if (file_exists(Reg::get("Path.physical")."/config/errors.php")) {
-				// Load in the errors.php file
 				include(Reg::get("Path.physical")."/config/errors.php");
 			}
 			
-			## Check to see if the welcome content is present ##
+			// check if the welcome content is present and if it is show it
 			if (file_exists(Reg::get("Path.physical")."/public/welcome.php")) {
 				// Load the welcome content
 				include(Reg::get("Path.physical")."/public/welcome.php");
 				exit;
 			}
 			
-			## Process the URI ##
+			// process the uri and setup the Reg variables
 			Config::processURI();
 			
-			## Load in the requested controller ##
+			// build the controller class name
 			$load['name'] = Config::uriToClass(Reg::get("URI.working.controller"));
 			if (Reg::hasVal("Branch.name")) {
 				$load['branch'] = Config::uriToClass(Reg::get("Branch.name"));
@@ -44,13 +45,16 @@ final class Evergreen {
 			$load['type'] = 'Controller';
 			$load = implode('_', $load);
 			
+			// create an instance of the controller
 			$controller = new $load();
+			// run the _showView method in the loaded controller
 			$controller->_showView();
 		} catch(Exception $e) {
-			// Load error if something triggered an error
+			// process the error if something in the try triggered an error
 			Error::processError($e);
 		}
-
+		
+		// display page load info as in how many queries were run, how much memory it took to run, and how long it took to run
 		if (Reg::get('System.displayPageLoadInfo') == true) {
 			$mtime = explode(' ', microtime());
 			$totaltime = $mtime[0] + $mtime[1] - $starttime;
@@ -73,6 +77,9 @@ final class Evergreen {
 		}
 	}
 	
+	/**
+	* returns the converted bytes format for the page load info
+	*/
 	public function convertBytes($size)
 	{
 		$unit = array('b','kb','mb','gb','tb','pb');
@@ -81,38 +88,43 @@ final class Evergreen {
 }
 
 class AutoLoaders {
+	/**
+	* the main autoloader class that runs whenever a class is called
+	*/
 	public static function main($class_name) {
-		## Don't Run if Class Exists ##
+		// if class already exists then dont continue
 		if (class_exists($class_name, false)) {
 		   return true;
 		}
 		
-		## Base System Includes ##
+		// setup the config
 		if (!class_exists('Config', false)) {
 			include("lib/config.class.php");
 			Config::setup();
 		}
 		
-		## Parse Class Name ##
+		// parse the incoming class name and assign the resulting array to $class
 		$class = self::parseClassName($class_name);
 		
+		// run through $class and find what needs to be loaded
 		if (isset($class['type'])) {
 			$basePath = Reg::get("Path.physical").((!empty($class['branch'])) ? "/branches/".$class['branch'] : "");
 			if ($class['type'] == 'controller' && file_exists($basePath."/controllers/{$class['class']}.php")) {
-				## Controller Include ##
+				//controller include
 				include_once($basePath."/controllers/{$class['class']}.php");
 			} else if ($class['type'] == 'model' && file_exists($basePath."/models/{$class['class']}.php")) {
-				## Model Include ##
+				// model include
 				include_once($basePath."/models/{$class['class']}.php");
 			} else if ($class['type'] == 'helper' && file_exists($basePath."/helpers/{$class['class']}.php")) {
-				## Helper Include ##
+				// helper include
 				include_once($basePath."/helpers/{$class['class']}.php");
 			} else if ($class['type'] == 'plugin' && file_exists($basePath."/plugins/{$class['class']}.php")) {
-				## Plugin Include ##
+				// plugin include
 				include_once($basePath."/plugins/{$class['class']}.php");
 			} else if ($class['type'] == 'driver') {
-				## Driver Include ##
+				// model driver include
 				if (isset($class['specificDriver'])) {
+					// check if driver needs to be loaded from a branch
 					if (!empty($class['branch'])) {
 						$branchDriverPath = Reg::get("Path.physical")."/branches/".$class['branch']."/config/drivers/".strtolower(str_replace('_', '.', $class['original'])).".class.php";
 						if (file_exists($branchDriverPath)) {
@@ -121,12 +133,14 @@ class AutoLoaders {
 						unset($branchDriverPath);
 					}
 					
+					// load main driver if not loading from a branch
 					$mainDriverPath = Reg::get("Path.physical")."/config/drivers/".strtolower(str_replace('_', '.', $class['original'])).".class.php";
 					if (!class_exists($class['original'], false) && file_exists($mainDriverPath)) {
 						include_once($mainDriverPath);
 					}
 					unset($mainDriverPath);
 				} else {
+					// other db class includes
 					if (file_exists(Reg::get("Path.physical")."/lib/".strtolower(str_replace('_', '.', $class['original'])).".class.php")) {
 						include_once(Reg::get("Path.physical")."/lib/".strtolower(str_replace('_', '.', $class['original'])).".class.php");
 					}
@@ -134,14 +148,16 @@ class AutoLoaders {
 			}
 			unset($basePath);
 		} else {
-			## Lib Includes ##
+			// lib file includes
 			if (file_exists(Reg::get("Path.physical")."/lib/{$class['class']}.class.php")) {
 				include_once(Reg::get("Path.physical")."/lib/{$class['class']}.class.php");
 			}
 		}
 		
+		// after running through all the loads if the desired class now still doesnÕt exist then create a dummy class that will throw an error
 		if (!class_exists($class['original'], false)) {
 			if (isset($class['type'])) {
+				// specific type / driver error class
 				if ($class['type'] == 'driver' && isset($class['specificDriver'])) {
 					$class['type'] = 'model_driver';
 				}
@@ -158,6 +174,7 @@ class AutoLoaders {
 						}
 					}', $class['original'], strtoupper($class['type'])));
 			} else {
+				// catch all error class
 				eval(sprintf('
 					class %1$s{
 						public function __construct() {
@@ -172,9 +189,12 @@ class AutoLoaders {
 					}', $class['original']));
 			}
 		} else {
+			// if the db class was called then run setup
 			if (strtolower($class['original']) == 'db') {
 				DB::setup();
 			}
+			
+			// if the class has a type and it is a helper or a plugin check for versioning and mode requirements
 			if (isset($class['type']) && in_array($class['type'], array('helper', 'plugin'))) {
 				$classVars = get_class_vars($class['original']);
 				if (isset($classVars['requiredSystemMode']) && $classVars['requiredSystemMode'] != Reg::get("System.mode")) {
@@ -198,6 +218,9 @@ class AutoLoaders {
 		unset($class);
 	}
 	
+	/**
+	* parses a class name and returns an array with the original name, target class name, type/driver, and branch
+	*/
 	static function parseClassName($className) {
 		$classArr = array( 'original'=>$className );
 		$classPieces = explode('_', $classArr['original']);

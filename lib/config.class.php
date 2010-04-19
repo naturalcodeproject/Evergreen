@@ -123,7 +123,7 @@ final class Config {
 		
 		if (count($url_vals) > 0 && empty($url_vals[count($url_vals)-1])) {
 			unset($url_vals[count($url_vals)-1]);
-			if (!is_array(Reg::get("Route.current"))) {
+			if (!is_array(Reg::get("Route.current")) && !Error::triggered()) {
 				if (empty($_POST) && empty($_FILES) && !headers_sent()) {
 					header("HTTP/1.1 301 Moved Permanently");
 					header("Location: ".Reg::get("URI.base").Reg::get("URI.prepend")."/".implode("/", $url_vals) . ((!empty($_SERVER['QUERY_STRING'])) ? ((!Reg::get("URI.useModRewrite")) ? "&" . $_SERVER['QUERY_STRING'] : "?" . $_SERVER['QUERY_STRING']) : ""));
@@ -153,7 +153,7 @@ final class Config {
 						);
 						
 						if (!empty($uriMap['controller']) && $uriMap['controller'] == $value) {
-							if (empty($_POST) && empty($_FILES) && !headers_sent() && !is_array(Reg::get("Route.current"))) {
+							if (empty($_POST) && empty($_FILES) && !headers_sent() && !is_array(Reg::get("Route.current")) && !Error::triggered()) {
 								header("HTTP/1.1 301 Moved Permanently");
 								header("Location: ".Reg::get("URI.base") . Reg::get("URI.prepend") . ((Reg::get("Branch.name")) ? "/" . Reg::get("Branch.name") : "") ."/".implode("/", array_merge($uri_vals['prepend'], array_slice($uri_vals['main'], 1))) . ((!empty($_SERVER['QUERY_STRING'])) ? ((!Reg::get("URI.useModRewrite")) ? "&" . $_SERVER['QUERY_STRING'] : "?" . $_SERVER['QUERY_STRING']) : ""));
 								header("Connection: close");

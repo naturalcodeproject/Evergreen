@@ -1,6 +1,7 @@
 <?php
 final class Error {
 	static private $registeredErrors = array();
+	static private $triggered = false;
 	
 	## Used to track the current error ##
 	static private $key;
@@ -45,6 +46,8 @@ final class Error {
         if (count(self::$triggerParams)) {
             $errMsg .= "\n" . print_r(self::$triggerParams, true);
         }
+        
+        self::$triggered = true;
         
         trigger_error($errMsg);
 		
@@ -161,6 +164,10 @@ final class Error {
                 }
 			}
 		}
+	}
+	
+	final public static function triggered() {
+		return self::$triggered;
 	}
 	
 	final public static function getMessage() {
