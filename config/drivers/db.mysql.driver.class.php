@@ -38,14 +38,14 @@ class DB_MySQL_Driver implements DBDriverInterface {
 		
 		return $query;
 	}
+	
+	public function delete($table, $options) {
+		$query = 'DELETE FROM ' . $table .
+			$this->_getJoins($options) .
+			$this->_getWhere($options) .
+			$this->_getOrder($options) .
+			$this->_getLimit($options);
 
-	public function delete($keys, $values, $table) {
-		foreach($keys as &$keyValue) {
-			$keyValue .= ' = ?';
-		}
-		
-		$query = 'DELETE FROM ' . $table . ' WHERE ' . implode(' AND ', $keys);
-		
 		return $query;
 	}
 

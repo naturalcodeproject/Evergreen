@@ -607,7 +607,10 @@ final class Config {
 */
 final class Reg {
 	// holder for all of the variables
-	protected static $variables;
+	private static $variables;
+	
+	// array to indicate variables that are protected and cannot be re-set
+	private static $protectedVariables;
 	
 	/**
 	* sets a variable with either an array or as the first argument being the key and the second being the value

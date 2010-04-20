@@ -365,25 +365,36 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	/**
 	* DELETEs a row from the DB
 	*/
-	public final function delete() {
-		$this->clearErrors();
-		if (method_exists($this, 'preDelete') && is_callable(array($this, 'preDelete'))) {
-			$this->preDelete();
-		}
-        $this->checkKeys();
-		if (!$this->hasErrors()) {
-			$keys = $this->_getPrimaryKeys();
-			$values = array();
-			foreach($keys as $key) {
-				$values[] = $this->data[$this->current_row][$key];
+	public final function delete($options = array()) {
+		if (empty($options)) {
+			$this->clearErrors();
+			if (method_exists($this, 'preDelete') && is_callable(array($this, 'preDelete'))) {
+				$this->preDelete();
 			}
-			
-			DB::delete($keys, $values, $this->getTableName());
-			
-			if (method_exists($this, 'postDelete') && is_callable(array($this, 'postDelete'))) {
-				$this->postDelete();
+	        $this->checkKeys();
+			if (!$this->hasErrors()) {
+				$keys = $this->_getPrimaryKeys();
+				$values = array();
+				$columns = array();
+				foreach($keys as $key) {
+					$columns[] = "{$key} = ?";
+					$values[] = $this->data[$this->current_row][$key];
+				}
+				
+				$options = array(
+					"where" => array_merge((array)implode(' && ', $columns), $values)
+				);
+				
+				DB::delete($this->getTableName(), $options);
+				
+				if (method_exists($this, 'postDelete') && is_callable(array($this, 'postDelete'))) {
+					$this->postDelete();
+				}
+				
+				return true;
 			}
-			
+		} else {
+			DB::delete($this->getTableName(), $options);
 			return true;
 		}
 		return false;
@@ -392,15 +403,20 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	/**
 	* gets the relationship data
 	*/
-	public function get($alias) {
+	public function get($alias, $options = array()) {
 		if (!isset($this->relationships[$alias])) {
 			return false;
 		}
 		$relObj = new $this->relationships[$alias]['class_name']();
 		$local = $this->relationships[$alias]['options']['local'];
-		$options = array(
-			"where" => array($this->relationships[$alias]['options']['foreign'].' = ?', $this->$local)
-		);
+		
+		if (!empty($options['where'])) {
+			$query = '('.implode('', array_slice((array)$options['where'], 0, 1)).') && ('.$this->relationships[$alias]['options']['foreign'].' = ?)';
+			$values = array_merge(array_slice((array)$options['where'], 1), (array)$this->$local);
+			$options['where'] = array_merge((array)$query, $values);
+		} else {
+			$options['where'] = array($this->relationships[$alias]['options']['foreign'].' = ?', $this->$local);
+		}
 		
 		if ($this->relationships[$alias]['type'] == 'one') {
 			$options['limit'] = 1;

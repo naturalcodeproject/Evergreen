@@ -7,6 +7,29 @@ class Blog_Controller extends ApplicationController_Controller {
 
 	public function index () {
 		$blogs = new Blogpost_Model();
+/*
+		$blogs->retrieve(1);
+		echo "<br />";
+		$blogs->get('createdBy', array(
+			'where' => 'active = 1'
+		));
+		echo "<br />";
+		$blogs->get('createdBy', array(
+			'where' => array('active = ?', 1)
+		));
+		echo "<br />";
+		$blogs->get('createdBy');
+*/
+		//$blogs->delete();
+		//echo "<br />";
+		/*$blogs->delete(array(
+			"where"=>array(
+				'id = ?', 2
+			),
+			"limit"=>1
+		));*/
+		
+		
 		//$blogs->retrieve(1);
 		echo "<pre>";
 		//var_dump($blogs->get('createdBy'));
