@@ -243,16 +243,14 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	* and the function will find within the alias
 	*/
 	public function find($options = array(), $options2 = array()) {
-		$this->clearData();
-
-		$alias = '';
-
-		// if the first option is a string then that is the alias we want to search in
-		if (is_string($options)) {
-			$alias = $options;
-			$options = $options2;
-			unset($options);
+		$alias = $this->_determineOptions($options, $options2);
+		
+		if (isset($this->relationships[$alias])) {
+			return $this->get($alias, $options);
+		} else {
+			$this->clearData();
 		}
+		
 		$this->_prepareOptions($options);
 
 		$results = DB::find($this->getFieldNames(), $this->getTableName(), $options);
@@ -365,7 +363,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	/**
 	* DELETEs a row from the DB
 	*/
-	public final function delete($options = array()) {
+	public final function delete($options = array(), $options2 = array()) {
 		if (empty($options)) {
 			$this->clearErrors();
 			if (method_exists($this, 'preDelete') && is_callable(array($this, 'preDelete'))) {
@@ -385,6 +383,8 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 					"where" => array_merge((array)implode(' && ', $columns), $values)
 				);
 				
+				$this->_prepareOptions($options);
+				
 				DB::delete($this->getTableName(), $options);
 				
 				if (method_exists($this, 'postDelete') && is_callable(array($this, 'postDelete'))) {
@@ -394,6 +394,18 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 				return true;
 			}
 		} else {
+			$alias = $this->_determineOptions($options, $options2);
+			
+			if (isset($this->relationships[$alias])) {
+				return $this->_relationshipDelete($alias, $options);
+			}
+			
+			if (!isset($options['where'])) {
+				return false;
+			}
+			
+			$this->_prepareOptions($options);
+			
 			DB::delete($this->getTableName(), $options);
 			return true;
 		}
@@ -412,7 +424,8 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		
 		if (!empty($options['where'])) {
 			$query = '('.implode('', array_slice((array)$options['where'], 0, 1)).') && ('.$this->relationships[$alias]['options']['foreign'].' = ?)';
-			$values = array_merge(array_slice((array)$options['where'], 1), (array)$this->$local);
+			$values = array_slice((array)$options['where'], 1);
+			array_splice($values, count($values), 0, (array)$this->$local);
 			$options['where'] = array_merge((array)$query, $values);
 		} else {
 			$options['where'] = array($this->relationships[$alias]['options']['foreign'].' = ?', $this->$local);
@@ -429,6 +442,37 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
 		return false;
 	}
+	
+	/**
+	* processes a relationship delete
+	*/
+	private function _relationshipDelete($alias, $options = array()) {
+		if (!isset($this->relationships[$alias])) {
+			return false;
+		}
+		$relObj = new $this->relationships[$alias]['class_name']();
+		$local = $this->relationships[$alias]['options']['local'];
+		
+		if (!empty($options['where'])) {
+			$query = '('.implode('', array_slice((array)$options['where'], 0, 1)).') && ('.$this->relationships[$alias]['options']['foreign'].' = ?)';
+			$values = array_slice((array)$options['where'], 1);
+			array_splice($values, count($values), 0, (array)$this->$local);
+			$options['where'] = array_merge((array)$query, $values);
+		} else {
+			$options['where'] = array($this->relationships[$alias]['options']['foreign'].' = ?', $this->$local);
+		}
+		
+		if ($this->relationships[$alias]['type'] == 'one') {
+			$options['limit'] = 1;
+		}
+		
+		if ($relObj->delete($options)) {
+			return true;
+		}
+		
+		return false;
+	}
+
 
 	/**
 	* populates a model from an array
@@ -470,6 +514,28 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
 
 		return (!empty($return)) ? $return : false;
+	}
+	
+	/**
+	* takes the options that are being passed to a function and based on what is being passed determines what the options are and if there is an alias being passed
+	*/
+	private function _determineOptions(&$options, $options2 = array()) {
+		if (is_string($options)) {
+			if (isset($this->relationships[$options]) && is_array($options2)) {
+				$alias = $options;
+				$options = $options2;
+				return $alias;
+			} else {
+				$options = array(
+					'where' => array_merge((array)$options, (array)$options2)
+				);
+				return true;
+			}
+		} else if(is_array($options)) {
+			return true;
+		}
+		
+		return false;
 	}
 
 	/**
@@ -517,6 +583,8 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	public function __get($name) {
 		if (isset($this->data[$this->current_row][$name])) {
 			return $this->data[$this->current_row][$name];
+		} else if (isset($this->relationships[$name])) {
+			return $this->get($name);
 		} else {
 			return NULL;
 		}

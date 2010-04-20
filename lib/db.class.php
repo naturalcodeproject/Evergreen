@@ -100,10 +100,19 @@ class DB {
 	/**
 	* Deletes a row. Helper function.
 	*/
-	public static function delete($table, $options = array()) {
+	public static function delete($table, $options) {
 		$query = self::$driver->delete($table, $options);
 		
 		return self::execute($query, (array)$values);
+	}
+	
+	/**
+	* Truncate a table. Helper function.
+	*/
+	public static function truncate($table) {
+		$query = self::$driver->truncate($table);
+		
+		return self::execute($query);
 	}
 
 	/**
@@ -239,6 +248,7 @@ interface DBDriverInterface {
 	public function insert($fields, $table);
 	public function update($key, $fields, $table);
 	public function delete($table, $options);
+	public function truncate($table);
 	public function equalsOperator();
 	public function notEqualsOperator();
 	public function startsWithOperator();

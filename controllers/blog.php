@@ -7,8 +7,17 @@ class Blog_Controller extends ApplicationController_Controller {
 
 	public function index () {
 		$blogs = new Blogpost_Model();
+		$blogs->retrieve(1413);
+		echo "<br />";
+		//$blogs->createdBy;
+		/*
+$blogs->find('createdBy', array(
+			'where' => array('active = ?', 1)
+		));
+*/
+		//$blogs->retrieve(1);
 /*
-		$blogs->retrieve(1);
+		
 		echo "<br />";
 		$blogs->get('createdBy', array(
 			'where' => 'active = 1'
@@ -20,14 +29,32 @@ class Blog_Controller extends ApplicationController_Controller {
 		echo "<br />";
 		$blogs->get('createdBy');
 */
-		//$blogs->delete();
+		//$blogs->delete('id = 2');
 		//echo "<br />";
-		/*$blogs->delete(array(
+		/*
+$blogs->delete(array(
 			"where"=>array(
 				'id = ?', 2
 			),
 			"limit"=>1
-		));*/
+		));
+*/
+		
+		//$blogs->delete('id = ?', array(2));
+		//echo "<br />";
+		//$blogs->delete('createdBy', array(
+		//	'where' => array('active = ?', 1)
+		//));
+/*
+DB::delete('blog_posts', array(
+			"where" => array(
+				'id = ?', 2
+			)
+		));
+*/
+
+//DB::truncate('blog_posts');
+
 		
 		
 		//$blogs->retrieve(1);

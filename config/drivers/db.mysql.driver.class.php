@@ -43,8 +43,13 @@ class DB_MySQL_Driver implements DBDriverInterface {
 		$query = 'DELETE FROM ' . $table .
 			$this->_getJoins($options) .
 			$this->_getWhere($options) .
-			$this->_getOrder($options) .
 			$this->_getLimit($options);
+
+		return $query;
+	}
+	
+	public function truncate($table) {
+		$query = 'TRUNCATE TABLE ' . $table;
 
 		return $query;
 	}
