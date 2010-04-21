@@ -132,6 +132,9 @@ class DB_MySQL_Driver implements DBDriverInterface {
 	public function orOperator() {
 		return 'OR';
 	}
+	public function wildcardOperator() {
+		return '%';
+	}
 }
 
 ?>

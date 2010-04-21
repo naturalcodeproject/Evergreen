@@ -7,8 +7,13 @@ class Blog_Controller extends ApplicationController_Controller {
 
 	public function index () {
 		$blogs = new Blogpost_Model();
-		$blogs->retrieve(1413);
-		echo "<br />";
+		//$blogs->retrieve(1413);
+		echo "<br /><br />";
+		$blogs->find(array(
+ 			'where'	=> array('id in ? && title = ? && user_id in (?) && title endsWith ?', array(3, 6), 'something', array(1,3,4), 'some'),
+ 			'order'	=> array('time DESC'),
+ 			'limit'	=> array(76, 100),
+ 		));
 		//$blogs->createdBy;
 		/*
 $blogs->find('createdBy', array(

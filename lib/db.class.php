@@ -11,9 +11,9 @@ class DB {
 	*/
 	const EQUALS 				= '=';
     const NOT_EQUALS			= '!=';
-    const STARTS_WITH 			= '.starts_with';
-    const ENDS_WITH 			= '.ends_with';
-    const CONTAINS 				= '.contains';
+    const STARTS_WITH 			= 'startsWith';
+    const ENDS_WITH 			= 'endsWith';
+    const CONTAINS 				= 'contains';
     const GREATER_THAN 			= '>';
     const GREATER_THAN_OR_EQUAL = '>=';
     const LESS_THAN 			= '<';
@@ -163,7 +163,7 @@ class DB {
 		}
 		
 		// fix operators in query
-		$query = self::fixOperators($query);
+		$query = self::fixOperators($query, $values);
 		
 		// prepare the statement and get it ready to be executed
 		$statement = self::$pdo->prepare($query);
@@ -195,19 +195,63 @@ class DB {
 	/**
 	* return the query with the oporators fixed
 	*/
-	public static function fixOperators($query) {
-		$query = str_replace(DB::EQUALS,					self::$driver->equalsOperator(),					$query);
-		$query = str_replace(DB::NOT_EQUALS,				self::$driver->notEqualsOperator(),					$query);
-		$query = str_replace(DB::STARTS_WITH,				self::$driver->startsWithOperator(),				$query);
-		$query = str_replace(DB::ENDS_WITH,					self::$driver->endsWithOperator(),					$query);
-		$query = str_replace(DB::CONTAINS,					self::$driver->containsOperator(),					$query);
-		$query = str_replace(DB::GREATER_THAN,				self::$driver->greaterThanOperator(),				$query);
-		$query = str_replace(DB::GREATER_THAN_OR_EQUAL,		self::$driver->greaterThanOrEqualOperator(),		$query);
-		$query = str_replace(DB::LESS_THAN,					self::$driver->lessThanOperator(),					$query);
-		$query = str_replace(DB::LESS_THAN_OR_EQUAL,		self::$driver->lessThanOrEqualOperator(),			$query);
-		$query = str_replace(DB::AND_THIS,					self::$driver->andOperator(),						$query);
-		$query = str_replace(DB::OR_THIS,					self::$driver->orOperator(),						$query);
+	public static function fixOperators($query, &$values) {
+		$query = str_replace(DB::AND_THIS, self::$driver->andOperator(), $query);
+		$query = str_replace(DB::OR_THIS, self::$driver->orOperator(), $query);
+		
+		global $count, $processedValues;
+		$count = 0;
+		$processedValues = $values;
+		$query = preg_replace_callback('/\s([^\s]+)\s[\(]?(\?)+[\)]?/is', create_function('\$matches', 'global \$count,\$processedValues; \$return = DB::operatorCallback(\$matches, \$processedValues, \$count); \$count++; return \$return;'), $query);
+		$values = $processedValues;
+		
 		return $query;
+	}
+	
+	/**
+	* callback for each operator and value pair matched in the query
+	*/
+	public static function operatorCallback($found, &$values, &$key) {
+		$whole = $found[0];
+		$operator = $found[1];
+		
+		if (strtolower($operator) == 'in') {
+			if (isset($values[$key]) && is_array($values[$key])) {
+				$inValCount = count($values[$key]);
+				$whole = preg_replace('/[\(]?(\?)+[\)]?$/is', '('.implode(', ', array_pad(array('?'), $inValCount, '?')).')', $whole);
+				array_splice($values, $key, 1, $values[$key]);
+				$key += ($inValCount - 1);
+				unset($inValCount);
+			}
+		} else if ($operator == DB::STARTS_WITH) {
+			$whole = str_replace(DB::STARTS_WITH, self::$driver->startsWithOperator(), $whole);
+			$values[$key] = $values[$key].self::$driver->wildcardOperator();
+		} else if ($operator == DB::ENDS_WITH) {
+			$whole = str_replace(DB::ENDS_WITH, self::$driver->endsWithOperator(), $whole);
+			$values[$key] = self::$driver->wildcardOperator().$values[$key];
+		} else if ($operator == DB::CONTAINS) {
+			$whole = str_replace(DB::CONTAINS, self::$driver->containsOperator(), $whole);
+			$values[$key] = self::$driver->wildcardOperator().$values[$key].self::$driver->wildcardOperator();
+		} else if ($operator == DB::EQUALS) {
+			$whole = str_replace(DB::EQUALS, self::$driver->equalsOperator(), $whole);
+		} else if ($operator == DB::NOT_EQUALS) {
+			$whole = str_replace(DB::NOT_EQUALS, self::$driver->notEqualsOperator(), $whole);
+		} else if ($operator == DB::GREATER_THAN) {
+			$whole = str_replace(DB::GREATER_THAN, self::$driver->greaterThanOperator(), $whole);
+		} else if ($operator == DB::GREATER_THAN_OR_EQUAL) {
+			$whole = str_replace(DB::GREATER_THAN_OR_EQUAL, self::$driver->greaterThanOrEqualOperator(), $whole);
+		} else if ($operator == DB::LESS_THAN) {
+			$whole = str_replace(DB::LESS_THAN, self::$driver->lessThanOperator(), $whole);
+		} else if ($operator == DB::LESS_THAN_OR_EQUAL) {
+			$whole = str_replace(DB::LESS_THAN_OR_EQUAL, self::$driver->lessThanOrEqualOperator(), $whole);
+		} else if ($operator == DB::AND_THIS) {
+			$whole = str_replace(DB::AND_THIS, self::$driver->andOperator(), $whole);
+		} else if ($operator == DB::OR_THIS) {
+			$whole = str_replace(DB::OR_THIS, self::$driver->orOperator(), $whole);
+		}
+		
+		unset($operator);
+		return $whole;
 	}
 
 	/**
@@ -260,4 +304,5 @@ interface DBDriverInterface {
 	public function lessThanOrEqualOperator();
 	public function andOperator();
 	public function orOperator();
+	public function wildcardOperator();
 }
