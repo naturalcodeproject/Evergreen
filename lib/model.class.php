@@ -513,6 +513,11 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		$data = array();
 
 		foreach($this->data[$this->current_row] as $key => $value) {
+			// apply the formatter for the field
+			if ($this->isField($key) === true && !empty($this->fields[$key]['format'])) {
+				$value = Model_Format::format($this->fields[$key]['format'], $value, $this->fields[$key]['format_extra']);
+			}
+			
 			$data[$key] = $value;
 		}
 
