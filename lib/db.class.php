@@ -202,7 +202,7 @@ class DB {
 		global $count, $processedValues;
 		$count = 0;
 		$processedValues = $values;
-		$query = preg_replace_callback('/\s([^\s]+)\s[\(]?(\?)+[\)]?/is', create_function('\$matches', 'global \$count,\$processedValues; \$return = DB::operatorCallback(\$matches, \$processedValues, \$count); \$count++; return \$return;'), $query);
+		$query = preg_replace_callback('/\s([^\s]+)\s[\(]?(\?)+[\)]?/is', create_function('$matches', 'global $count, $processedValues; $return = DB::_operatorCallback($matches, $processedValues, $count); $count++; return $return;'), $query);
 		$values = $processedValues;
 		
 		return $query;
@@ -211,7 +211,7 @@ class DB {
 	/**
 	* callback for each operator and value pair matched in the query
 	*/
-	public static function operatorCallback($found, &$values, &$key) {
+	public static function _operatorCallback($found, &$values, &$key) {
 		$whole = $found[0];
 		$operator = $found[1];
 		
