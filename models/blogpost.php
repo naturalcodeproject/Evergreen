@@ -12,7 +12,7 @@ class Blogpost_Model extends Model {
 
         $this->addField('time', array(
         	'required',
-        	'format'	=> 'timestamp',
+        	'format'	=> array('Blogpost_model', 'formatter'),
         ));
 
         $this->addField('title'	, array(
@@ -48,15 +48,20 @@ class Blogpost_Model extends Model {
 	}
 
 	protected function maxlength($field, $value) {
-		return $field.' failed';
+		return true;
+		//return $field.' failed';
 	}
 
 	protected function minlength() {
-		return false;
+		return true;
 	}
 
 	private function test() {
 		return true;
+	}
+	
+	public function formatter($value) {
+		return date('m/d/y', $value);
 	}
 }
 

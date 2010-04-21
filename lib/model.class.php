@@ -72,7 +72,8 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		$field_data = array(
 			'key'		=> false,
 			'validate'	=> array(),
-			'format'	=> Model_Format::getDefault(),
+			'format'		=> Model_Format::getDefault(),
+			'format_extra'	=> array(),
 		);
 
 		// check primary key
@@ -113,10 +114,26 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 
 		// set the format
 		if (!empty($options['format'])) {
-			if (Model_Format::isValid($options['format'])) {
-				$field_data['format'] = $options['format'];
+			if (!is_array($options['format'])) {
+				// user is using a provided formatter
+				if (Model_Format::isValid($options['format'])) {
+					$field_data['format'] = $options['format'];
+				} else {
+					$errors[] = 'Invalid field format: ' . $options['format'];
+				}
 			} else {
-				$errors[] = 'Invalid field format: ' . $options['format'];
+				// user is providing a class and method for the formatter
+				if (sizeof($options['format']) != 2) {
+					$errors[] = "Invalid field format. Format needs to be in the form of array('class', 'method')";
+				} else {				
+					// make sure the class and method exists
+					if (!class_exists($options['format'][0]) || !method_exists($options['format'][0], $options['format'][1])) {
+						$errors[] = 'Invalid field format. Class/function does not exists: ' . $options['format'][0] . '::' . $options['format'][1];
+					} else {
+						$field_data['format'] = 'custom';
+						$field_data['format_extra'] = $options['format'];
+					}
+				}
 			}
 		}
 
@@ -425,10 +442,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		if (!empty($options['where'])) {
 			$query = '('.implode('', array_slice((array)$options['where'], 0, 1)).') && ('.$this->relationships[$alias]['options']['foreign'].' = ?)';
 			$values = array_slice((array)$options['where'], 1);
-			array_splice($values, count($values), 0, (array)$this->$local);
+			array_splice($values, count($values), 0, (array)$this->data[$this->current_row][$local]);
 			$options['where'] = array_merge((array)$query, $values);
 		} else {
-			$options['where'] = array($this->relationships[$alias]['options']['foreign'].' = ?', $this->$local);
+			$options['where'] = array($this->relationships[$alias]['options']['foreign'].' = ?', $this->data[$this->current_row][$local]);
 		}
 		
 		if ($this->relationships[$alias]['type'] == 'one') {
@@ -456,10 +473,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		if (!empty($options['where'])) {
 			$query = '('.implode('', array_slice((array)$options['where'], 0, 1)).') && ('.$this->relationships[$alias]['options']['foreign'].' = ?)';
 			$values = array_slice((array)$options['where'], 1);
-			array_splice($values, count($values), 0, (array)$this->$local);
+			array_splice($values, count($values), 0, (array)$this->data[$this->current_row][$local]);
 			$options['where'] = array_merge((array)$query, $values);
 		} else {
-			$options['where'] = array($this->relationships[$alias]['options']['foreign'].' = ?', $this->$local);
+			$options['where'] = array($this->relationships[$alias]['options']['foreign'].' = ?', $this->data[$this->current_row][$local]);
 		}
 		
 		if ($this->relationships[$alias]['type'] == 'one') {
@@ -500,6 +517,13 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
 
 		return $data;
+	}
+	
+	/**
+	* checks to see if a field is part of the current object or not
+	*/
+	public function isField($name) {
+		return isset($this->fields[$name]);
 	}
 
 	/**
@@ -582,8 +606,16 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	*/
 	public function __get($name) {
 		if (isset($this->data[$this->current_row][$name])) {
-			return $this->data[$this->current_row][$name];
+			$value = $this->data[$this->current_row][$name];
+			
+			// apply the formatter for the field
+			if ($this->isField($name) === true && !empty($this->fields[$name]['format'])) {
+				$value = Model_Format::format($this->fields[$name]['format'], $value, $this->fields[$name]['format_extra']);
+			}
+				
+			return $value;
 		} else if (isset($this->relationships[$name])) {
+			// it is an alias
 			return $this->get($name);
 		} else {
 			return NULL;
@@ -808,7 +840,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		foreach ($this->fields as $name => $field) {
 			if (count($field['validate'])) {
 				foreach ($field['validate'] as $validator => $message) {
-					$result = $this->{$validator}($name, $this->$name);
+					$result = call_user_func(array($this, $validator), $name, $this->data[$this->current_row][$name]);
 					if ($result === false) {
 						$result = (($message != null) ? $message : 'The validator \''.$validator.'\' failed on the \''.$name.'\' field');
 					}
@@ -837,6 +869,7 @@ class Model_Format {
 		'integer'	=> 'integer',
 		'timestamp'	=> 'integer',
 		'datetime'	=> '',
+		'custom'		=> 'custom',
 	);
 
 	/**
@@ -860,11 +893,11 @@ class Model_Format {
 	/**
 	* formats the value for the column
 	*/
-	public static function format($format, $value) {
+	public static function format($format, $value, $extra = array()) {
 		$function = self::$valid_formats[$format];
-
+		
 		if (!empty($function) && method_exists('Model_Format', $function)) {
-			$value = call_user_func(array('Model_Format', $function), $value);
+			$value = call_user_func(array('Model_Format', $function), $value, $extra);
 		}
 
 		return $value;
@@ -889,6 +922,13 @@ class Model_Format {
 	*/
 	public static function htmltext($value) {
 		return $value;
+	}
+	
+	/**
+	* calls a custom formatter
+	*/
+	public static function custom($value, $extra = array()) {
+		return call_user_func($extra, $value);
 	}
 }
 
