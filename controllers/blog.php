@@ -9,11 +9,14 @@ class Blog_Controller extends ApplicationController_Controller {
 		$blogs = new Blogpost_Model();
 		//$blogs->retrieve(1413);
 		echo "<br /><br />";
-		$blogs->find(array(
+		$return = $blogs->find(array(
  			'where'	=> array('id in ? && title = ? && user_id in (?, ?,?) && title startsWith ? && time between ? && ? && TIMESTAMPDIFF(HOUR, time, ?) && TIMESTAMPDIFF(HOUR,time,?)', array(3, 6), 'something', 1, array(3, 6), 4, 'some', time(), time()-10, time(), time()),
  			'order'	=> array('time DESC'),
  			'limit'	=> array(76, 100),
+ 			'autoExtract' => true
  		));
+ 		
+ 		var_dump($return);
 		//$blogs->createdBy;
 		/*
 $blogs->find('createdBy', array(

@@ -259,26 +259,42 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	* if the first parameter is a string then that is the alias for a relationship
 	* and the function will find within the alias
 	*/
-	public function find($options = array(), $options2 = array()) {
+	public function find($options = array(), $options2 = array(), $autoExtract = false) {
 		$alias = $this->_determineOptions($options, $options2);
 		
-		if (isset($this->relationships[$alias])) {
+		if (!empty($this->relationships[$alias])) {
 			return $this->get($alias, $options);
 		} else {
 			$this->clearData();
 		}
 		
+		if (isset($options['autoExtract']) && $options['autoExtract'] == true) {
+			$autoExtract = true;
+		}
+		
+		unset($options['autoExtract']);
+		
 		$this->_prepareOptions($options);
-
+		
 		$results = DB::find($this->getFieldNames(), $this->getTableName(), $options);
 		
 		if ($results !== false) {
 			// loop through the results and clone the existing object
+			$models = array();
 			while($row = DB::fetch($results)) {
-				$this->setProperties($row, true);
+				if ($autoExtract == true) {
+					$obj = clone $this;
+					$obj->setProperties($row, true);
+					$models[] = $obj;
+				} else {
+					$this->setProperties($row, true);
+				}
 			}
-
-			return $this;
+			if ($autoExtract == true) {
+				return $models;
+			} else {
+				return $this;
+			}
 		}
 
 		return false;
