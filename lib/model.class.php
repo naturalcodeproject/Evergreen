@@ -686,6 +686,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	*/
 	private function clearData() {
 		$this->data = array();
+		$this->errors = array();
 		$this->current_row = 0;
 	}
 
@@ -782,7 +783,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	}
 	
 	public function clearAllErrors() {
-	    unset($this->errors);
+	    $this->errors = array();
 	}
 	
 	public function clearErrors() {
