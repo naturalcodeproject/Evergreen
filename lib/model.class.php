@@ -574,7 +574,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		$fields = implode('|', $this->getFieldNames(false));
 		$table = $this->getTableName();
 
-		$replace_names = create_function('&$item', '$item = preg_replace("#(' . $fields . ')#i", "' . $table . '.$1", $item);');
+		$replace_names = create_function('&$item', '$item = preg_replace("#(' . $fields . ')\b#i", "' . $table . '.$1", $item);');
 
 		// loop through each option and append the table name to the front of the columns
 		// looping so that it doesn't replace keywords such as where, limit, order, etc

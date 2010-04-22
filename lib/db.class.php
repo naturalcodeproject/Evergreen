@@ -202,8 +202,14 @@ class DB {
 		global $count, $processedValues;
 		$count = 0;
 		$processedValues = $values;
-		$query = preg_replace_callback('/\s([^\s]+)\s[\(]?(\?)+[\)]?/is', create_function('$matches', 'global $count, $processedValues; $return = DB::_operatorCallback($matches, $processedValues, $count); $count++; return $return;'), $query);
+		$query = preg_replace_callback('/(([^\s,]+)[\s]+(?(?=[\(])\(([^\)]*)\)|([\?]+)))|(\?)/is', create_function('$matches', '
+			global $count, $processedValues;
+			$return = DB::_operatorCallback($matches, $processedValues, $count);
+			$count++;
+			return $return;
+		'), $query);
 		$values = $processedValues;
+		unset($count, $processedValues);
 		
 		return $query;
 	}
@@ -213,15 +219,31 @@ class DB {
 	*/
 	public static function _operatorCallback($found, &$values, &$key) {
 		$whole = $found[0];
-		$operator = $found[1];
+		$operator = $found[2];
 		
 		if (strtolower($operator) == 'in') {
-			if (isset($values[$key]) && is_array($values[$key])) {
-				$inValCount = count($values[$key]);
-				$whole = preg_replace('/[\(]?(\?)+[\)]?$/is', '('.implode(', ', array_pad(array('?'), $inValCount, '?')).')', $whole);
-				array_splice($values, $key, 1, $values[$key]);
-				$key += ($inValCount - 1);
-				unset($inValCount);
+			global $total, $current;
+			$total = substr_count($whole, "?");
+			$current = 0;
+			$whole = preg_replace_callback('/(\?)+?/is', create_function('$matches', '
+				global $count, $processedValues, $total, $current;
+				if (isset($processedValues[$count]) && is_array($processedValues[$count])) {
+					$inValCount = count($processedValues[$count]);
+					array_splice($processedValues, $count, 1, $processedValues[$count]);
+					$count += ($inValCount - 1);
+					$return = implode(",", array_pad(array("?"), $inValCount, "?"));
+				} else {
+					$return = $matches[0];
+				}
+				if ($total > 1 && $total != ($current+1)) {
+					$count++;
+				}
+				$current++;
+				return $return;
+			'), $whole);
+			unset($total, $current);
+			if (substr_count($whole, '?') > 1 && !preg_match('/[\(]+(.*)[\)]+/is', $whole)) {
+				$whole = preg_replace('(\?([^\s\)]+))', '($0)', $whole);
 			}
 		} else if ($operator == DB::STARTS_WITH) {
 			$whole = str_replace(DB::STARTS_WITH, self::$driver->startsWithOperator(), $whole);

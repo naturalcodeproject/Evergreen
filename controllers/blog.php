@@ -10,7 +10,7 @@ class Blog_Controller extends ApplicationController_Controller {
 		//$blogs->retrieve(1413);
 		echo "<br /><br />";
 		$blogs->find(array(
- 			'where'	=> array('id in ? && title = ? && user_id in (?) && title endsWith ?', array(3, 6), 'something', array(1,3,4), 'some'),
+ 			'where'	=> array('id in ? && title = ? && user_id in (?, ?,?) && title startsWith ? && time between ? && ? && TIMESTAMPDIFF(HOUR, time, ?) && TIMESTAMPDIFF(HOUR,time,?)', array(3, 6), 'something', 1, array(3, 6), 4, 'some', time(), time()-10, time(), time()),
  			'order'	=> array('time DESC'),
  			'limit'	=> array(76, 100),
  		));
