@@ -340,10 +340,14 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	
 			// execute the query
 			$id = intval(DB::insert($data, $this->getTableName()));
-	
+			
 			$primary = $this->_getPrimaryKeys();
 			if (count($primary) == 1) {
-				$this->data[$this->current_row][$primary[0]] = $id;
+				if ($id == 0 && !empty($this->data[$this->current_row][$primary[0]])) {
+					$id = $this->data[$this->current_row][$primary[0]];
+				} else {
+					$this->data[$this->current_row][$primary[0]] = $id;
+				}
 			} else {
 				$id = array();
 				foreach($primary as $item) {
