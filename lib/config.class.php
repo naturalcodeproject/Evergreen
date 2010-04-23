@@ -16,18 +16,35 @@
  * @package			evergreen
  * @subpackage		lib
  * @version			$Revision$
- * @modifiedby		$LastChangedBy$
+ * @modifiedby		$Author$
  * @lastmodified	$Date$
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
  
+/**
+ * Configuration Class
+ *
+ * Class that sets up all the default registration variables,
+ * handles and registers routes and processes the uri so that the framework
+ * knows what controllers and views need to be loaded.
+ *
+ * @package       evergreen
+ * @subpackage    lib
+ */
 final class Config {
-	// holder variable for routes
-	protected static $routes;
+	/**
+	 * Holder variable for routes
+	 * @var array
+	 * @access protected
+	 * @static
+	 */
+	protected static $routes = array();
 	
 	/**
-	* method used to setup the config class and the framework with defaults
-	*/
+	 * Method used to setup the config class and the framework with defaults.
+	 * @access static
+	 * @return boolean true
+	 */
 	public static function setup() {
 		// setup the System.version configuration setting
 		Reg::set('System.version', "0.3.0");
@@ -71,22 +88,35 @@ final class Config {
 	}
 	
 	/**
-	* legacy method used to register a global registry variable
-	*/
+	 * Legacy method used to register a global registry variable.
+	 * 
+	 * @access static
+	 * @param string $key The definition of the registration variable
+	 * @param mixed $value The value of the variable being registered
+	 * @return boolean true if successful and boolean false if not
+	 */
 	public static function register($key, $value = null) {
 		return Reg::set($key, $value);
 	}
 	
 	/**
-	* legacy method used to read a global registry variable
-	*/
+	 * Legacy method used to read a global registry variable.
+	 * 
+	 * @access static
+	 * @param string $key The registration variable that is being accessed
+	 * @return mixed
+	 */
 	public static function read($key) {
 		return Reg::get($key);
 	}
 	
 	/**
-	* legacy method used to remove a global registry variable
-	*/
+	 * Legacy method used to remove a global registry variable.
+	 * 
+	 * @access static
+	 * @param string $key The registration variable that is being accessed
+	 * @return boolean true if successful and boolean false if not
+	 */
 	public static function remove($key) {
 		return Reg::del($key);
 	}
