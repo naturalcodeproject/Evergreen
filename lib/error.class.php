@@ -1,4 +1,27 @@
 <?php
+/**
+ * Error Class
+ *
+ * This class is a helper for throwing errors and handles the ability to trigger errors
+ * that have been registered as well as having messages changed based on sprintf type
+ * functionality as well as routing to a page or loading a page in the framework without
+ * changing the url if a url is defined as part of the error.
+ *
+ *
+ * Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ *
+ * Licensed under The MIT License
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright		Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ * @package			evergreen
+ * @subpackage		lib
+ * @version			$Revision$
+ * @modifiedby		$LastChangedBy$
+ * @lastmodified	$Date$
+ * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
+ */
+
 final class Error {
 	static private $registeredErrors = array();
 	static private $triggered = false;

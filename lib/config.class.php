@@ -1,4 +1,26 @@
 <?php
+/**
+ * Configuration Class
+ *
+ * Class that sets up all the default registration variables,
+ * handles and registers routes and processes the uri so that the framework
+ * knows what controllers and views need to be loaded.
+ *
+ *
+ * Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ *
+ * Licensed under The MIT License
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright		Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ * @package			evergreen
+ * @subpackage		lib
+ * @version			$Revision$
+ * @modifiedby		$LastChangedBy$
+ * @lastmodified	$Date$
+ * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
+ */
+ 
 final class Config {
 	// holder variable for routes
 	protected static $routes;

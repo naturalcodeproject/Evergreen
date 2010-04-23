@@ -1,5 +1,25 @@
 <?php
-
+/**
+ * Model Class
+ *
+ * This is the class that all models extend and provides the functionality that
+ * makes a model work and coordinates the interaction with the DB class.
+ *
+ *
+ * Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ *
+ * Licensed under The MIT License
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright		Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ * @package			evergreen
+ * @subpackage		lib
+ * @version			$Revision$
+ * @modifiedby		$LastChangedBy$
+ * @lastmodified	$Date$
+ * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
+ */
+ 
 /**
 * model class
 * @todo Error Handling!

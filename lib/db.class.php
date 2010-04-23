@@ -1,5 +1,27 @@
 <?php
-
+/**
+ * DB Class
+ *
+ * This class handles the abstract database functionality for the models including
+ * the interaction with the driver and with PDO. This class also does alot with the
+ * queries that are passed to it to make the queries more abstract and make talking to
+ * the database easier.
+ *
+ *
+ * Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ *
+ * Licensed under The MIT License
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright		Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ * @package			evergreen
+ * @subpackage		lib
+ * @version			$Revision$
+ * @modifiedby		$LastChangedBy$
+ * @lastmodified	$Date$
+ * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
+ */
+ 
 /**
 * database class
 *

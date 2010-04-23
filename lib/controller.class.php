@@ -1,13 +1,25 @@
 <?php
-/*
-*	Copyright (C) 2006-2009 NaturalCodeProject
-*	All Rights Reserved
-*	
-*	@author Daniel Baldwin
-*	
-*	Description: Controller class for all user controllers.
-*
-*/
+/**
+ * Controller Class
+ *
+ * This class handles the loading of a view and things associated such as loading
+ * layouts, running filters, bouncebacks, handling override logic, handling view 404's,
+ * running the formhandler helper class, and running the designer fixes.
+ *
+ *
+ * Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ *
+ * Licensed under The MIT License
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright		Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ * @package			evergreen
+ * @subpackage		lib
+ * @version			$Revision$
+ * @modifiedby		$LastChangedBy$
+ * @lastmodified	$Date$
+ * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
+ */
 
 abstract class Controller {
 	private $viewToLoad = null;

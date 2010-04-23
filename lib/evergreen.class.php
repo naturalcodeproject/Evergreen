@@ -1,4 +1,26 @@
 <?php
+/**
+ * Evergreen Class
+ *
+ * This is the main load point for the framework. This class sets up the Autoloader,
+ * error handling, loads in the base configuration, loads in the base registered errors,
+ * causes the Config class to process the uri and actually loads the controller.
+ *
+ *
+ * Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ *
+ * Licensed under The MIT License
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright		Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ * @package			evergreen
+ * @subpackage		lib
+ * @version			$Revision$
+ * @modifiedby		$LastChangedBy$
+ * @lastmodified	$Date$
+ * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
+ */
+ 
 final class Evergreen {
 	/**
 	* constructor for the evergreen class that sets up all the necessary parts of the framework so it can run

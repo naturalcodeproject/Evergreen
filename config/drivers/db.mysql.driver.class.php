@@ -1,5 +1,26 @@
 <?php
-
+/**
+ * MySQL Driver Class
+ *
+ * This class is the driver class for the database and provides the interpritation
+ * of the developers interaction with the models to SQL that is supported by the
+ * MySQL database for the DB class.
+ *
+ *
+ * Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ *
+ * Licensed under The MIT License
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright		Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ * @package			evergreen
+ * @subpackage		drivers
+ * @version			$Revision$
+ * @modifiedby		$LastChangedBy$
+ * @lastmodified	$Date$
+ * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
+ */
+ 
 class DB_MySQL_Driver implements DBDriverInterface {
 	/**
 	* returns a select query

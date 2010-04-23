@@ -1,14 +1,24 @@
 <?php
-/*
-*	Copyright (C) 1999-2006 Contagious
-*	All Rights Reserved
-*	
-*	@author Daniel Baldwin
-*	
-*	Module: Common
-*	Script: formhandler.class.php
-*	Created: Wed Mar 21 10:35:37 MDT 2007
-*/
+/**
+ * Formhandler Class
+ *
+ * This class handles automatically populating a form using an array to make
+ * handling forms much easier for the developer.
+ *
+ *
+ * Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ *
+ * Licensed under The MIT License
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @copyright		Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ * @package			evergreen
+ * @subpackage		lib
+ * @version			$Revision$
+ * @modifiedby		$LastChangedBy$
+ * @lastmodified	$Date$
+ * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
+ */
 
 class Formhandler {
 	protected $caller;
