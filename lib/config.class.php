@@ -16,7 +16,7 @@
  * @package			evergreen
  * @subpackage		lib
  * @version			$Revision$
- * @modifiedby		$Author$
+ * @modifiedby		$LastChangedBy$
  * @lastmodified	$Date$
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
@@ -33,15 +33,17 @@
  */
 final class Config {
 	/**
-	 * Holder variable for routes
-	 * @var array
+	 * Holder variable for routes.
+	 * 
 	 * @access protected
 	 * @static
+	 * @var array
 	 */
 	protected static $routes = array();
 	
 	/**
 	 * Method used to setup the config class and the framework with defaults.
+	 * 
 	 * @access static
 	 * @return boolean true
 	 */
