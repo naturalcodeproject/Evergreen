@@ -124,8 +124,13 @@ final class Config {
 	}
 	
 	/**
-	* used to register a route
-	*/
+	 * Used to register a route.
+	 * 
+	 * @access static
+	 * @param string $definition The string that defines the url match for the route
+	 * @param array $action The array containing the redefined uri map values for the route
+	 * @param array $validation Array used to validate named properties found by the definition
+	 */
 	public static function registerRoute($definition, $action, $validation=array()) {
 		// add the current branch name to the route definition if it is not set and we are defining the route from a branch
 		if (!isset($action['branch']) && Reg::hasVal("Branch.name")) {
@@ -141,9 +146,12 @@ final class Config {
 	}
 	
 	/**
-	* processes the uri by figuring out what mode we are running in, mod_rewrite or querystring, and by setting up and checking if we are in a branch or a route
-	* it also merges the uri values with the uri map and sets up all the Param and Path variables for use in the framework
-	*/
+	 * Processes the uri by figuring out what mode we are running in, mod_rewrite or querystring, and by setting up and checking if we are in a branch or a route
+	 * it also merges the uri values with the uri map and sets up all the Param and Path variables for use in the framework.
+	 * 
+	 * @access static
+	 * @return boolean true if successful and boolean false if a route was matched
+	 */
 	public static function processURI() {
 		// make sure that the uri map exists and is an array with at least 2 keys
 		if (!is_array(Reg::get("URI.map")) || count(Reg::get("URI.map")) < 2) {
@@ -413,8 +421,12 @@ final class Config {
 	}
 	
 	/**
-	* return a uri item as a valid file name changing - or _ for a . and lowercasing
-	*/
+	 * Return a uri item as a valid file name changing - or _ for a . and lowercasing.
+	 * 
+	 * @access static
+	 * @param string $uriItem The uri string that needs to be converted to the file format
+	 * @return string
+	 */
 	public static function uriToFile($uriItem) {
 		if (Reg::get('URI.useDashes') == true && Reg::get('URI.forceDashes') == false) {
 			$regex = '/[_-]/';
@@ -427,8 +439,12 @@ final class Config {
 	}
 	
 	/**
-	* return a uri item as a valid method name changing - or _ for the next character in the name being uppercased
-	*/
+	 * Return a uri item as a valid method name changing - or _ for the next character in the name being uppercased.
+	 * 
+	 * @access static
+	 * @param string $uriItem The uri string that needs to be converted to the method format
+	 * @return string
+	 */
 	public static function uriToMethod($uriItem) {
 		if (Reg::get('URI.useDashes') == true && Reg::get('URI.forceDashes') == false) {
 			$regex = '/[_-]/';
@@ -446,8 +462,12 @@ final class Config {
 	}
 	
 	/**
-	* return a uri item as a valid class name changing - or _ for the next character in the name being uppercased
-	*/
+	 * Return a uri item as a valid class name changing - or _ for the next character in the name being uppercased.
+	 * 
+	 * @access static
+	 * @param string $uriItem The uri string that needs to be converted to the class format
+	 * @return string
+	 */
 	public static function uriToClass($uriItem) {
 		if (Reg::get('URI.useDashes') == true && Reg::get('URI.forceDashes') == false) {
 			$regex = '/[_-]/';
@@ -462,29 +482,45 @@ final class Config {
 	}
 	
 	/**
-	* return a method name as a valid file name by adding a . before all uppercased characters and lowercasing the string
-	*/
+	 * Return a method name as a valid file name by adding a . before all uppercased characters and lowercasing the string.
+	 * 
+	 * @access static
+	 * @param string $methodItem The method name that needs to be converted to the file format
+	 * @return string
+	 */
 	public static function methodToFile($methodItem) {
 		return strtolower(trim(preg_replace('/[A-Z]/', '.$0', $methodItem), '.'));
 	}
 	
 	/**
-	* return a method name as a valid file name by adding a . before all uppercased characters and lowercasing the string
-	*/
+	 * Return a method name as a valid file name by adding a . before all uppercased characters and lowercasing the string.
+	 * 
+	 * @access static
+	 * @param string $classItem The class name that needs to be converted to the file format
+	 * @return string
+	 */
 	public static function classToFile($classItem) {
 		return self::methodToFile($classItem);
 	}
 	
 	/**
-	* return true or false if the uri item that is passed in is a branch
-	*/
+	 * Return true or false if the uri item that is passed in is a branch.
+	 * 
+	 * @access static
+	 * @param string $branch_name A uri element that is being checked to see if it is a branch
+	 * @return boolean true if the $branch_name matches a branch directory and boolean false if not
+	 */
 	public static function isBranch($branch_name) {
 		return is_dir(Reg::get("Path.physical")."/branches/".self::uriToFile($branch_name));
 	}
 	
 	/**
-	* return the uri values after they have been checked for a branch and if there is a branch then load the branch configuration and setup the Branch.name variable
-	*/
+	 * Return the uri values after they have been checked for a branch and if there is a branch then load the branch configuration and setup the Branch.name variable.
+	 * 
+	 * @access static
+	 * @param array $url_vals The url
+	 * @return boolean true if the $branch_name matches a branch directory and boolean false if not
+	 */
 	public static function checkForBranch($url_vals) {
 		if (is_array($url_vals) && !empty($url_vals) && self::isBranch($url_vals[0]) && !file_exists(Reg::get("Path.physical")."/controllers/".self::uriToFile($url_vals[0]).".php")) {
 			Reg::set("Branch.name", self::uriToMethod($url_vals[0]));
@@ -497,8 +533,11 @@ final class Config {
 	}
 	
 	/**
-	* loads in the branch's config.php and errors.php files and then checks that the branch is set to active and has the required system versions and mode set
-	*/
+	 * Loads in the branch's config.php and errors.php files and then checks that the branch is set to active and has the required system versions and mode set.
+	 * 
+	 * @access static
+	 * @param string $branch_name The name of the branch
+	 */
 	public static function loadBranchConfig($branch_name) {
 		if (file_exists(Reg::get("Path.physical")."/branches/".self::uriToFile(self::classToFile($branch_name))."/config/config.php")) {
 			// Load the branch configuration
@@ -532,8 +571,12 @@ final class Config {
 	}
 	
 	/**
-	* check's the current uri for a route match and reprocesses the uri if there is a match
-	*/
+	 * Check's the current uri for a route match and reprocesses the uri if there is a match.
+	 * 
+	 * @access static
+	 * @param string $request_uri The current uri with the base uri excluded
+	 * @return boolean true if a route was found and boolean false if not
+	 */
 	private static function checkRoutes($request_uri) {
 		
 		if (is_array(self::$routes)) {
@@ -628,8 +671,12 @@ final class Config {
 	}
 	
 	/**
-	* takes a route's simple regex and turns it into real regex and returns the regex and the named positions
-	*/
+	 * Takes a route's simple regex and turns it into real regex and returns the regex and the named positions.
+	 * 
+	 * @access static
+	 * @param string $regex The route's definition
+	 * @return array
+	 */
 	private static function createRouteRegex($regex) {
 		$regex = explode('/', $regex);
 		$parsed = array();
@@ -657,18 +704,32 @@ final class Config {
 }
 
 /**
-* Reg class that holds all the registered variables both user registered and system registered so that they are available globaly
-*/
+ * Registration Class
+ *
+ * Registration class that holds all the registered variables both user registered
+ * and system registered so that they are available globaly.
+ *
+ * @package       evergreen
+ * @subpackage    lib
+ */
 final class Reg {
-	// holder for all of the variables
-	private static $variables;
-	
-	// array to indicate variables that are protected and cannot be re-set
-	private static $protectedVariables;
+	/**
+	 * Holder for all of the defined variables.
+	 * 
+	 * @access private
+	 * @static
+	 * @var array
+	 */
+	private static $variables = array();
 	
 	/**
-	* sets a variable with either an array or as the first argument being the key and the second being the value
-	*/
+	 * Sets a variable with either an array or as the first argument being the key and the second being the value.
+	 * 
+	 * @access static
+	 * @param string $key The definition of the registration variable
+	 * @param mixed $value The value of the variable being registered
+	 * @return boolean true
+	 */
 	public static function set($name, $value = null) {
 		// if an array isnt being passed in then create an array with the passed in args
 		if (!is_array($name)) {
@@ -701,8 +762,12 @@ final class Reg {
 	}
 	
 	/**
-	* gets a variable by the variable key and returns the value or returns null if the key doesnÕt exist
-	*/
+	 * Gets a variable by the variable key and returns the value or returns null if the key doesn't exist.
+	 * 
+	 * @access static
+	 * @param string $key The registration variable that is being accessed
+	 * @return mixed
+	 */
 	public static function get($key) {
 		$path = explode('.', $key);
 		$variablesHolder =& self::$variables;
@@ -720,8 +785,12 @@ final class Reg {
 	}
 	
 	/**
-	* returns true if a variable key is set and false if not
-	*/
+	 * Returns true if a variable key is set and false if not.
+	 * 
+	 * @access static
+	 * @param string $key The registration variable that is being accessed
+	 * @return boolean true if the variable exists and boolean false if not
+	 */
 	public static function has($key) {
 		$path = explode('.', $key);
 		$variablesHolder =& self::$variables;
@@ -739,8 +808,12 @@ final class Reg {
 	}
 	
 	/**
-	* returns true if a variable key has a value and false if not
-	*/
+	 * Returns true if a variable key has a value and false if not.
+	 * 
+	 * @access static
+	 * @param string $key The registration variable that is being accessed
+	 * @return boolean true if the variable has a value and boolean false if not
+	 */
 	public static function hasVal($key) {
 		$path = explode('.', $key);
 		$variablesHolder =& self::$variables;
@@ -758,8 +831,12 @@ final class Reg {
 	}
 	
 	/**
-	* deletes a variable by the key and returns true if deleted otherwise returns false
-	*/
+	 * Deletes a variable by the key and returns true if deleted otherwise returns false.
+	 * 
+	 * @access static
+	 * @param string $key The registration variable that is being accessed
+	 * @return boolean true if the variable was deleted and boolean false if it wasn't or doesn't exist
+	 */
 	public static function del($key) {
 		$path = explode('.', $key);
 		$variablesHolder =& self::$variables;
