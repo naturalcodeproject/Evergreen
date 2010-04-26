@@ -7,8 +7,21 @@ class Blog_Controller extends ApplicationController_Controller {
 
 	public function index () {
 		$blogs = new Blogpost_Model();
-		//$blogs->retrieve(1413);
-		echo "<br /><br />";
+		$blogs->retrieve(1413);
+		echo '<p>time: ' . $blogs->time . '</p>';
+		
+		$blogs->setProperties(array(
+			'title'	=> 'dfljfd',
+			'user_id'	=> '2344sf',
+			'time'	=> 3434,
+		), true);
+		
+		$blogs->time = '04/24/2010';	
+		echo $blogs->time;
+		echo '<pre>';
+		var_dump($blogs);
+		echo '</pre>';
+		/*echo "<br /><br />";
 		$return = $blogs->find(array(
  			'where'	=> array('id in ? && title = ? && user_id in (?, ?,?) && title startsWith ? && time between ? && ? && TIMESTAMPDIFF(HOUR, time, ?) && TIMESTAMPDIFF(HOUR,time,?)', array(3, 6), 'something', 1, array(3, 6), 4, 'some', time(), time()-10, time(), time()),
  			'order'	=> array('time DESC'),
@@ -16,7 +29,7 @@ class Blog_Controller extends ApplicationController_Controller {
  			'autoExtract' => true
  		));
  		
- 		var_dump($return);
+ 		var_dump($return);*/
 		//$blogs->createdBy;
 		/*
 $blogs->find('createdBy', array(

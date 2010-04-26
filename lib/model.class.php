@@ -22,7 +22,6 @@
  
 /**
 * model class
-* @todo Error Handling!
 */
 abstract class Model implements Iterator, Countable, arrayaccess {
 	/**
@@ -92,8 +91,8 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		$field_data = array(
 			'key'		=> false,
 			'validate'	=> array(),
-			'format'		=> Model_Format::getDefault(),
-			'format_extra'	=> array(),
+			'format'		=> array('onGet' => Model_Format::getDefault(), 'onSet' => Model_Format::getDefault()),
+			'format_extra'	=> array('onGet' => array(), 'onSet' => array()),
 		);
 
 		// check primary key
@@ -133,25 +132,78 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
 
 		// set the format
+		// @todo Turn this into functions. A lot of code is repeated and I don't like that. - Eric
 		if (!empty($options['format'])) {
 			if (!is_array($options['format'])) {
-				// user is using a provided formatter
+				// user is using a provided formatter for onGet
 				if (Model_Format::isValid($options['format'])) {
-					$field_data['format'] = $options['format'];
+					$field_data['format']['onGet'] = $options['format'];
 				} else {
 					$errors[] = 'Invalid field format: ' . $options['format'];
 				}
 			} else {
-				// user is providing a class and method for the formatter
-				if (sizeof($options['format']) != 2) {
-					$errors[] = "Invalid field format. Format needs to be in the form of array('class', 'method')";
-				} else {				
-					// make sure the class and method exists
-					if (!class_exists($options['format'][0]) || !method_exists($options['format'][0], $options['format'][1])) {
-						$errors[] = 'Invalid field format. Class/function does not exists: ' . $options['format'][0] . '::' . $options['format'][1];
-					} else {
-						$field_data['format'] = 'custom';
-						$field_data['format_extra'] = $options['format'];
+				// see if the user is setting onGet or onSet
+				if (isset($options['format']['onGet']) || isset($options['format']['onSet'])) {
+					// onGet
+					if (isset($options['format']['onGet'])) {
+						// user is using aprovided formatter for onGet
+						if (!is_array($options['format']['onGet'])) {
+							if (Model_Format::isValid($options['format']['onGet'])) {
+								$field_data['format']['onGet'] = $options['format']['onGet'];
+							} else {
+								$errors[] = 'Invalid field format: ' . $options['format']['onGet'];
+							}
+						} else {
+							if (sizeof($options['format']['onGet']) != 2) {
+								$errors[] = "Invalid field format. Format needs to be in the form of array('class', 'method')";
+							} else {				
+								// make sure the class and method exists
+								if (!class_exists($options['format']['onGet'][0]) || !method_exists($options['format']['onGet'][0], $options['format']['onGet'][1])) {
+									$errors[] = 'Invalid field format. Class/function does not exists: ' . $options['format']['onGet'][0] . '::' . $options['format']['onGet'][1];
+								} else {
+									$field_data['format']['onGet'] = 'custom';
+									
+									$field_data['format_extra']['onGet'] = $options['format']['onGet'];
+								}
+							}
+						}
+					}
+					
+					// onSet
+					if (isset($options['format']['onSet'])) {
+						// user is using aprovided formatter for onSet
+						if (!is_array($options['format']['onSet'])) {
+							if (Model_Format::isValid($options['format']['onSet'])) {
+								$field_data['format']['onSet'] = $options['format']['onSet'];
+							} else {
+								$errors[] = 'Invalid field format: ' . $options['format']['onSet'];
+							}
+						} else {
+							if (sizeof($options['format']['onSet']) != 2) {
+								$errors[] = "Invalid field format. Format needs to be in the form of array('class', 'method')";
+							} else {				
+								// make sure the class and method exists
+								if (!class_exists($options['format']['onSet'][0]) || !method_exists($options['format']['onSet'][0], $options['format']['onSet'][1])) {
+									$errors[] = 'Invalid field format. Class/function does not exists: ' . $options['format']['onSet'][0] . '::' . $options['format']['onSet'][1];
+								} else {
+									$field_data['format']['onSet'] = 'custom';
+									$field_data['format_extra']['onSet'] = $options['format']['onSet'];
+								}
+							}
+						}
+					}
+				} else {
+					// user is providing a class and method for the formatter for onGet
+					if (sizeof($options['format']) != 2) {
+						$errors[] = "Invalid field format. Format needs to be in the form of array('class', 'method')";
+					} else {				
+						// make sure the class and method exists
+						if (!class_exists($options['format'][0]) || !method_exists($options['format'][0], $options['format'][1])) {
+							$errors[] = 'Invalid field format. Class/function does not exists: ' . $options['format'][0] . '::' . $options['format'][1];
+						} else {
+							$field_data['format']['onGet'] = 'custom';
+							$field_data['format_extra']['onGet'] = $options['format'];
+						}
 					}
 				}
 			}
@@ -542,7 +594,11 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 
 		// loop through the fields and populate them
 		foreach($data as $key => $value) {
-			$this->{$key} = $value;
+			if ($this->isField($key) === true && !empty($this->fields[$key]['format']['onSet'])) {
+				$value = Model_Format::format($this->fields[$key]['format']['onSet'], $value, $this->fields[$key]['format_extra']['onSet']);
+			}
+			
+			$this->data[$this->current_row][$key] = $value;
 		}
 	}
 
@@ -554,8 +610,8 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 
 		foreach($this->data[$this->current_row] as $key => $value) {
 			// apply the formatter for the field
-			if ($this->isField($key) === true && !empty($this->fields[$key]['format'])) {
-				$value = Model_Format::format($this->fields[$key]['format'], $value, $this->fields[$key]['format_extra']);
+			if ($this->isField($key) === true && !empty($this->fields[$key]['format']['onGet'])) {
+				$value = Model_Format::format($this->fields[$key]['format']['onGet'], $value, $this->fields[$key]['format_extra']['onGet']);
 			}
 			
 			$data[$key] = $value;
@@ -643,6 +699,11 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	* sets a variable
 	*/
 	public function __set($name, $value) {
+		// apply the formatter for the field
+		if ($this->isField($name) === true && !empty($this->fields[$name]['format']['onSet'])) {
+			$value = Model_Format::format($this->fields[$name]['format']['onSet'], $value, $this->fields[$name]['format_extra']['onSet']);
+		}
+		
 		$this->data[$this->current_row][$name] = $value;
 	}
 
@@ -654,8 +715,8 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			$value = $this->data[$this->current_row][$name];
 			
 			// apply the formatter for the field
-			if ($this->isField($name) === true && !empty($this->fields[$name]['format'])) {
-				$value = Model_Format::format($this->fields[$name]['format'], $value, $this->fields[$name]['format_extra']);
+			if ($this->isField($name) === true && !empty($this->fields[$name]['format']['onGet'])) {
+				$value = Model_Format::format($this->fields[$name]['format']['onGet'], $value, $this->fields[$name]['format_extra']['onGet']);
 			}
 				
 			return $value;
@@ -913,7 +974,7 @@ class Model_Format {
 		'plaintext'	=> 'plaintext',
 		'htmltext'	=> 'htmltext',
 		'integer'	=> 'integer',
-		'timestamp'	=> 'integer',
+		'timestamp'	=> 'timestamp',
 		'datetime'	=> '',
 		'custom'		=> 'custom',
 	);
@@ -968,6 +1029,17 @@ class Model_Format {
 	*/
 	public static function htmltext($value) {
 		return $value;
+	}
+	
+	/**
+	* timestamp
+	*/
+	public static function timestamp($value) {
+		if (is_numeric($value)) {
+			return intval($value);
+		}
+		
+		return strtotime($value);
 	}
 	
 	/**

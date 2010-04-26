@@ -7,12 +7,15 @@ class Blogpost_Model extends Model {
 
         $this->addField('id', array(
         	'key',
-        	'format'	=> 'integer',
+        	'format'	=> array('onSet' => 'integer'),
         ));
 
         $this->addField('time', array(
         	'required',
-        	'format'	=> array('Blogpost_model', 'formatter'),
+        	'format'	=> array(
+        		'onGet' => array('Blogpost_model', 'formatter'),
+        		'onSet'	=> 'timestamp',
+        	),
         ));
 
         $this->addField('title'	, array(
@@ -28,7 +31,7 @@ class Blogpost_Model extends Model {
         	'validate' => array(
         		'isValidUser',
         	),
-        	'type' => 'integer',
+        	'format' => array('onSet' => 'integer'),
         ));
 
         $this->addField('body', array(
