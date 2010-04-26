@@ -22,20 +22,90 @@
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 
+/**
+ * Error Class
+ *
+ * This class is a helper for throwing errors and handles the ability to trigger errors
+ * that have been registered as well as having messages changed based on sprintf type
+ * functionality as well as routing to a page or loading a page in the framework without
+ * changing the url if a url is defined as part of the error.
+ *
+ * @package       evergreen
+ * @subpackage    lib
+ */
 final class Error {
+	/**
+	 * Holder variable for the registered errors.
+	 * 
+	 * @access private
+	 * @static
+	 * @var array
+	 */
 	static private $registeredErrors = array();
+	
+	/**
+	 * Indicator used to tell if an error has been triggered.
+	 * 
+	 * @access private
+	 * @static
+	 * @var boolean
+	 */
 	static private $triggered = false;
 	
-	## Used to track the current error ##
+	/**
+	 * Current triggered error's key.
+	 * 
+	 * @access private
+	 * @static
+	 * @var string
+	 */
 	static private $key;
+	
+	/**
+	 * Current triggered error's message.
+	 * 
+	 * @access private
+	 * @static
+	 * @var string
+	 */
 	static private $message;
+	
+	/**
+	 * Current triggered error's params.
+	 * 
+	 * @access private
+	 * @static
+	 * @var array
+	 */
 	static private $params;
+	
+	/**
+	 * Current triggered error's error object.
+	 * 
+	 * @access private
+	 * @static
+	 * @var object
+	 */
 	static private $errorObj;
-    
-    // params passed into trigger function, can be used in addition to
-    // registered error params
+	
+	/**
+	 * Params passed into trigger function, can be used in addition to registered error params.
+	 * 
+	 * @access private
+	 * @static
+	 * @var array
+	 */
     static private $triggerParams;
 	
+	/**
+	 * Used to register a predefined error.
+	 * 
+	 * @access public
+	 * @static
+	 * @final
+	 * @param string $key Key used to store and trigger the registered error
+	 * @param array $params The parameters used to make up the error such as message, url, and code
+	 */
 	final public static function register($key, $params) {
 		if (!is_array($params)) {
 			$params = array("message"=>$params);
@@ -44,6 +114,15 @@ final class Error {
 		self::$registeredErrors[$key] = $params;
 	}
 	
+	/**
+	 * Triggers a error either predefined or not.
+	 * 
+	 * @access public
+	 * @static
+	 * @final
+	 * @param string $message The error message or the key of the predefined error
+	 * @param array $params The params that make up the error or params that merge with the predefined error's params
+	 */
 	final public static function trigger($message, $params = array()) {
         self::$triggerParams = $params;
         
@@ -77,6 +156,15 @@ final class Error {
 		throw new Exception(self::$message);
 	}
 	
+	/**
+	 * Returns an array of all the sprintf parameters in a string.
+	 * 
+	 * @access private
+	 * @static
+	 * @final
+	 * @param string $string The string with sprintf style parameters
+	 * @return array
+	 */
 	final private static function parsePrintfParameters($string) { 
 	    $valid = '/^(?:%%|%(?:[0-9]+\$)?[+-]?(?:[ 0]|\'.)?-?[0-9]*(?:\.[0-9]+)?[bcdeufFosxX])/'; 
 	    $originalString = $string; 
@@ -97,6 +185,16 @@ final class Error {
 	    return $result; 
 	}
 	
+	/**
+	 * Returns a string with sprintf style parameters parsed into the string as well as parameters based on array keys in the format: %(key)s.
+	 * 
+	 * @access private
+	 * @static
+	 * @final
+	 * @param string The string that needs to be parsed
+	 * @param array The arguments that need to be parsed into the string
+	 * @return string
+	 */
 	final private static function dsprintf() {
 		$data = func_get_args();
 		$string = array_shift($data);
@@ -111,6 +209,19 @@ final class Error {
 		return vsprintf($string,array_pad($data, $countParams, 'NULL'));
 	}
 	
+	/**
+	 * Callback function for dsprintf's preg_replace. It takes the returned key and the data and returns the matching data for the key
+	 * and if it cant find anything it returns NULL
+	 * 
+	 * @access private
+	 * @static
+	 * @final
+	 * @param string $m1 The found key
+	 * @param string $m2 The sprintf type operator
+	 * @param array &$data The data that was passed to the dsprintf function
+	 * @param array &$used_keys The keys from $data that have already been found and used
+	 * @return string
+	 */
 	final private static function dsprintfMatch($m1,$m2,&$data,&$used_keys) {
 		if (isset($data[$m1])) {
 			$str = $data[$m1];
@@ -124,6 +235,14 @@ final class Error {
 		}
 	}
 	
+	/**
+	 * Actually processes the triggered error such as setting a header based on the code passed and running loadURL if a url was set.
+	 * 
+	 * @access public
+	 * @static
+	 * @final
+	 * @param object $errorObj Optional Error object passed when called in side of a catch statement
+	 */
 	final public static function processError($errorObj = null) {
 		self::clearAllBuffers();
 		if ($errorObj != null) {
@@ -189,10 +308,26 @@ final class Error {
 		}
 	}
 	
+	/**
+	 * Returns if an error has been triggered or not.
+	 * 
+	 * @access public
+	 * @static
+	 * @final
+	 * @return boolean true if an error has been triggered and boolean false if not
+	 */
 	final public static function triggered() {
 		return self::$triggered;
 	}
 	
+	/**
+	 * Returns the current error message and null if there is no message.
+	 * 
+	 * @access public
+	 * @static
+	 * @final
+	 * @return string
+	 */
 	final public static function getMessage() {
 		if (!empty(self::$message)) {
 			return self::$message;
@@ -203,14 +338,37 @@ final class Error {
 		}
 	}
 	
+	/**
+	 * Returns the error trace from the current error object.
+	 * 
+	 * @access public
+	 * @static
+	 * @final
+	 * @return array
+	 */
 	final public static function getTrace() {
 		return self::$errorObj->getTrace();
 	}
     
+	/**
+	 * Returns the triggered params from the currently triggered error.
+	 * 
+	 * @access public
+	 * @static
+	 * @final
+	 * @return array
+	 */
     final public static function getTriggerParams() {
         return self::$triggerParams;
     }
 	
+	/**
+	 * Loops through all current output buffers and clears them.
+	 * 
+	 * @access public
+	 * @static
+	 * @final
+	 */
 	final public static function clearAllBuffers() {
 		$buffer_count = ob_get_level();
 		for($i = 1; $i <= $buffer_count; $i++) {
@@ -218,6 +376,16 @@ final class Error {
 		}
 	}
 	
+	/**
+	 * Loads the url for the error. If the url points to a page inside the framework the function attempts to load it and handles any errors
+	 * or issues associated such as loading in a default error. If the url points to a page outside the framework then header location is set
+	 * and execution is stopped.
+	 * 
+	 * @access public
+	 * @static
+	 * @final
+	 * @param string|array $url The url that should be loaded can be the url or an array in the URI.map format
+	 */
 	final public static function loadURL($url) {
 		if (!empty($url)) {
 			if (!is_array($url) && preg_match("/^(http:|https:|ftp:|ftps:)/im", $url)) {
@@ -293,6 +461,17 @@ final class Error {
 		}
 	}
 	
+	/**
+	 * Handles the output and logging of errors.
+	 * 
+	 * @access public
+	 * @static
+	 * @param integer $errno The level of the error raised
+	 * @param string $errstr The error message
+	 * @param string $errfile The name of the file the error was raised in
+	 * @param integer $errline The line number the error was raised at
+	 * @param array $errcontext An array containing every variable that existed in the scope the error was triggered
+	 */
 	public static function logError($errno, $errstr, $errfile, $errline, $errcontext) {
 		$type = '';
    		$display = false;

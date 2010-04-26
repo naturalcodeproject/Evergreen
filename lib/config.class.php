@@ -44,7 +44,8 @@ final class Config {
 	/**
 	 * Method used to setup the config class and the framework with defaults.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @return boolean true
 	 */
 	public static function setup() {
@@ -92,7 +93,8 @@ final class Config {
 	/**
 	 * Legacy method used to register a global registry variable.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $key The definition of the registration variable
 	 * @param mixed $value The value of the variable being registered
 	 * @return boolean true if successful and boolean false if not
@@ -104,7 +106,8 @@ final class Config {
 	/**
 	 * Legacy method used to read a global registry variable.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $key The registration variable that is being accessed
 	 * @return mixed
 	 */
@@ -115,7 +118,8 @@ final class Config {
 	/**
 	 * Legacy method used to remove a global registry variable.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $key The registration variable that is being accessed
 	 * @return boolean true if successful and boolean false if not
 	 */
@@ -126,7 +130,8 @@ final class Config {
 	/**
 	 * Used to register a route.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $definition The string that defines the url match for the route
 	 * @param array $action The array containing the redefined uri map values for the route
 	 * @param array $validation Array used to validate named properties found by the definition
@@ -149,7 +154,8 @@ final class Config {
 	 * Processes the uri by figuring out what mode we are running in, mod_rewrite or querystring, and by setting up and checking if we are in a branch or a route
 	 * it also merges the uri values with the uri map and sets up all the Param and Path variables for use in the framework.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @return boolean true if successful and boolean false if a route was matched
 	 */
 	public static function processURI() {
@@ -423,7 +429,8 @@ final class Config {
 	/**
 	 * Return a uri item as a valid file name changing - or _ for a . and lowercasing.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $uriItem The uri string that needs to be converted to the file format
 	 * @return string
 	 */
@@ -441,7 +448,8 @@ final class Config {
 	/**
 	 * Return a uri item as a valid method name changing - or _ for the next character in the name being uppercased.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $uriItem The uri string that needs to be converted to the method format
 	 * @return string
 	 */
@@ -464,7 +472,8 @@ final class Config {
 	/**
 	 * Return a uri item as a valid class name changing - or _ for the next character in the name being uppercased.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $uriItem The uri string that needs to be converted to the class format
 	 * @return string
 	 */
@@ -484,7 +493,8 @@ final class Config {
 	/**
 	 * Return a method name as a valid file name by adding a . before all uppercased characters and lowercasing the string.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $methodItem The method name that needs to be converted to the file format
 	 * @return string
 	 */
@@ -495,7 +505,8 @@ final class Config {
 	/**
 	 * Return a method name as a valid file name by adding a . before all uppercased characters and lowercasing the string.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $classItem The class name that needs to be converted to the file format
 	 * @return string
 	 */
@@ -506,7 +517,8 @@ final class Config {
 	/**
 	 * Return true or false if the uri item that is passed in is a branch.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $branch_name A uri element that is being checked to see if it is a branch
 	 * @return boolean true if the $branch_name matches a branch directory and boolean false if not
 	 */
@@ -517,7 +529,8 @@ final class Config {
 	/**
 	 * Return the uri values after they have been checked for a branch and if there is a branch then load the branch configuration and setup the Branch.name variable.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param array $url_vals The url
 	 * @return boolean true if the $branch_name matches a branch directory and boolean false if not
 	 */
@@ -535,7 +548,8 @@ final class Config {
 	/**
 	 * Loads in the branch's config.php and errors.php files and then checks that the branch is set to active and has the required system versions and mode set.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $branch_name The name of the branch
 	 */
 	public static function loadBranchConfig($branch_name) {
@@ -573,7 +587,8 @@ final class Config {
 	/**
 	 * Check's the current uri for a route match and reprocesses the uri if there is a match.
 	 * 
-	 * @access static
+	 * @access private
+	 * @static
 	 * @param string $request_uri The current uri with the base uri excluded
 	 * @return boolean true if a route was found and boolean false if not
 	 */
@@ -673,7 +688,8 @@ final class Config {
 	/**
 	 * Takes a route's simple regex and turns it into real regex and returns the regex and the named positions.
 	 * 
-	 * @access static
+	 * @access private
+	 * @static
 	 * @param string $regex The route's definition
 	 * @return array
 	 */
@@ -725,7 +741,8 @@ final class Reg {
 	/**
 	 * Sets a variable with either an array or as the first argument being the key and the second being the value.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $key The definition of the registration variable
 	 * @param mixed $value The value of the variable being registered
 	 * @return boolean true
@@ -764,7 +781,8 @@ final class Reg {
 	/**
 	 * Gets a variable by the variable key and returns the value or returns null if the key doesn't exist.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $key The registration variable that is being accessed
 	 * @return mixed
 	 */
@@ -787,7 +805,8 @@ final class Reg {
 	/**
 	 * Returns true if a variable key is set and false if not.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $key The registration variable that is being accessed
 	 * @return boolean true if the variable exists and boolean false if not
 	 */
@@ -810,7 +829,8 @@ final class Reg {
 	/**
 	 * Returns true if a variable key has a value and false if not.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $key The registration variable that is being accessed
 	 * @return boolean true if the variable has a value and boolean false if not
 	 */
@@ -833,7 +853,8 @@ final class Reg {
 	/**
 	 * Deletes a variable by the key and returns true if deleted otherwise returns false.
 	 * 
-	 * @access static
+	 * @access public
+	 * @static
 	 * @param string $key The registration variable that is being accessed
 	 * @return boolean true if the variable was deleted and boolean false if it wasn't or doesn't exist
 	 */

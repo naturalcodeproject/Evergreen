@@ -20,18 +20,30 @@
  * @lastmodified	$Date$
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
- 
+
+/**
+ * Evergreen Class
+ *
+ * This is the main load point for the framework. This class sets up the Autoloader,
+ * error handling, loads in the base configuration, loads in the base registered errors,
+ * causes the Config class to process the uri and actually loads the controller.
+ *
+ * @package       evergreen
+ * @subpackage    lib
+ */
 final class Evergreen {
 	/**
-	* constructor for the evergreen class that sets up all the necessary parts of the framework so it can run
-	*/
-	function __construct() {
+	 * Constructor for the evergreen class that sets up all the necessary parts of the framework so it can run.
+	 * 
+	 * @access public
+	 */
+	public function __construct() {
 		$starttime = explode(' ', microtime());
 		$starttime = $starttime[1] + $starttime[0];
 		
 		try {
 			// register the Autoloaders class as an autoloader
-			spl_autoload_register(array('AutoLoaders', 'main'));
+			spl_autoload_register(array('AutoLoader', 'main'));
 			
 			// setup error handling
 			set_error_handler(array("Error", "logError"), ini_get("error_reporting"));
@@ -100,8 +112,12 @@ final class Evergreen {
 	}
 	
 	/**
-	* returns the converted bytes format for the page load info
-	*/
+	 * Returns the converted bytes format for the page load info.
+	 * 
+	 * @access public
+	 * @param integer $size Memory in bytes
+	 * @return string
+	 */
 	public function convertBytes($size)
 	{
 		$unit = array('b','kb','mb','gb','tb','pb');
@@ -109,10 +125,23 @@ final class Evergreen {
 	}
 }
 
-class AutoLoaders {
+/**
+ * Autoloader Class
+ *
+ * This is the class that automatically loads all classes in the framework. This class also parses the class name
+ * and with that knows where to load the file from based on the framework's predefined naming scheme.
+ *
+ * @package       evergreen
+ * @subpackage    lib
+ */
+class AutoLoader {
 	/**
-	* the main autoloader class that runs whenever a class is called
-	*/
+	 * The main autoloader class that runs whenever a class is called.
+	 * 
+	 * @access public
+	 * @static
+	 * @param string $class_name The name of the class that is to be loaded
+	 */
 	public static function main($class_name) {
 		// if class already exists then dont continue
 		if (class_exists($class_name, false)) {
@@ -241,9 +270,14 @@ class AutoLoaders {
 	}
 	
 	/**
-	* parses a class name and returns an array with the original name, target class name, type/driver, and branch
-	*/
-	static function parseClassName($className) {
+	 * Parses a class name and returns an array with the original name, target class name, type/driver, and branch.
+	 * 
+	 * @access private
+	 * @static
+	 * @param string $className The name of the class that needs to be parsed
+	 * @return array
+	 */
+	private static function parseClassName($className) {
 		$classArr = array( 'original'=>$className );
 		$classPieces = explode('_', $classArr['original']);
 		if (count($classPieces) > 1) {

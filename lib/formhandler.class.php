@@ -20,15 +20,58 @@
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 
+/**
+ * Formhandler Class
+ *
+ * This class handles automatically populating a form using an array to make
+ * handling forms much easier for the developer.
+ *
+ * @package       evergreen
+ * @subpackage    lib
+ */
 class Formhandler {
+	/**
+	 * Holder variable for the object that called the class so that the Formhandler can have access to variables from the caller so it can
+	 * populate the forms correctly.
+	 * 
+	 * @access protected
+	 * @var object
+	 */
 	protected $caller;
+	
+	/**
+	 * Variable that holds the errors returned from the validator.
+	 * 
+	 * @access private
+	 * @var array
+	 */
 	private $errors_arr = array();
+	
+	/**
+	 * Variable holding the found forms and form's data.
+	 * 
+	 * @access private
+	 * @var array
+	 */
 	private $forms_arr = array();
 	
-	function __construct (&$caller) {
+	/**
+	 * Constructor for the Formhandler class that assigns the passed in caller object to the local $caller variable.
+	 * 
+	 * @access public
+	 * @param object &$caller The reference to the object that called the Formhandler class
+	 */
+	public function __construct (&$caller) {
 		$this->caller = $caller;
 	}
 	
+	/**
+	 * Parses and returns the properties from the form, input, select, and textarea tags.
+	 * 
+	 * @access private
+	 * @param string $propertiesString The string of the properties found in the form, input, select, and textarea tags
+	 * @return array
+	 */
 	private function propertiesArray ($propertiesString) {
 		$propertiesArray = array();
 		$test = preg_split("/[\'\"] /i", trim($propertiesString)." ");
@@ -40,6 +83,13 @@ class Formhandler {
 		return $propertiesArray;
 	}
 	
+	/**
+	 * Returns a properties string from an array of properties.
+	 * 
+	 * @access private
+	 * @param array $propertiesArray The properties array
+	 * @return string
+	 */
 	private function propertiesString ($propertiesArray) {
 		$propertiesStringing = array();
 		foreach ($propertiesArray as $key => $item) {
@@ -48,11 +98,26 @@ class Formhandler {
 		return implode(" ", $propertiesStringing);
 	}
 	
+	/**
+	 * The method that actually runs the form fixes and returns the fixed forms.
+	 * 
+	 * @access public
+	 * @param string &$content The string of the content that needs to be parsed for forms
+	 * @return string
+	 */
 	public function decode (&$content) {
 		## Form Fix
 		$content = preg_replace_callback("/<form\s*(.*?)[^(->)]>(.*?)<\\/form>/is", array($this, 'formReplace'), $content);
 	}
 	
+	/**
+	 * Callback for the form preg_replace_callback that initiates to input, select, and textarea. It also initiates the properties parsing
+	 * for the form attributes and sets up the update and default data that is received from the caller.
+	 * 
+	 * @access private
+	 * @param array $args The found pieces from the form preg_replce_callback: the form attributes and the form insides
+	 * @return string
+	 */
 	private function formReplace($args) {
 		## Fix Slashes
 		$args = array_pad($args, 3, '');
@@ -116,6 +181,13 @@ class Formhandler {
 				{$insides}</form>";
 	}
 	
+	/**
+	 * Parses the individual form tags, e.g. inputs, selects, and textareas, and sets them up with their correct default or update data
+	 * 
+	 * @access private
+	 * @param array $args The found pieces from the input, select, and textarea preg_replace_callback
+	 * @return string
+	 */
 	private function formInsides($args) {
 		$args = array_pad($args, 4, '');
 		$type = strtolower(stripslashes($args[1]));
@@ -220,6 +292,13 @@ class Formhandler {
 		}
 	}
 	
+	/**
+	 * Parses the option tags from a select and sets the default and update data.
+	 * 
+	 * @access private
+	 * @param array $args The found pieces for the options from the preg_replace_callback for the select insides
+	 * @return string
+	 */
 	private function selectInsides ($args) {
 		## Fix Slashes
 		$args = array_pad((array)$args, 3, '');
@@ -252,7 +331,16 @@ class Formhandler {
 		return "<option ".$this->propertiesString($properties).">{$insides}</option>";
 	}
 	
-	function getFormNameValue($haystack, $find, $position=0) {
+	/**
+	 * Helps to find the value of a form item no matter the depth.
+	 * 
+	 * @access public
+	 * @param array $haystack The array to use to find the form item's value
+	 * @param string $find The key of the form item that needs to be found
+	 * @param integer $position Optional Position number used to help traverse the $haystack array
+	 * @return mixed
+	 */
+	public function getFormNameValue($haystack, $find, $position=0) {
 		if ((count($find)-1) == $position) {
 			return isset($haystack[$find[$position]]) ? $haystack[$find[$position]] : null;
 		}

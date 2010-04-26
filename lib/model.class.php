@@ -21,69 +21,103 @@
  */
  
 /**
-* model class
-*/
+ * Model Class
+ *
+ * This is the class that all models extend and provides the functionality that
+ * makes a model work and coordinates the interaction with the DB class.
+ *
+ * @package       evergreen
+ * @subpackage    lib
+ */
 abstract class Model implements Iterator, Countable, arrayaccess {
 	/**
-	* name of the database table
-	*/
+	 * Name of the database table.
+	 * 
+	 * @access protected
+	 * @var string
+	 */
 	protected $table_name = '';
-
+	
 	/**
-	* all of the fields for the model
-	*/
+	 * All of the fields for the model.
+	 * 
+	 * @access private
+	 * @var array
+	 */
 	private $fields = array();
-
+	
 	/**
-	* holds all of the relationship information for the model
-	*/
+	 * Holds all of the relationship information for the model.
+	 * 
+	 * @access private
+	 * @var array
+	 */
 	private $relationships = array();
-
+	
 	/**
-	* all errors generated from validation methods
-	*/
+	 * All errors generated from validation methods.
+	 * 
+	 * @access private
+	 * @var array
+	 */
 	private $errors = array();
-
+	
 	/**
-	* holds the data for the row
-	*/
+	 * Holds the data for the row.
+	 * 
+	 * @access private
+	 * @var array
+	 */
 	private $data = array();
-
+	
 	/**
-	* holds the identifier for the current data set
-	*/
+	 * Holds the identifier for the current data set.
+	 * 
+	 * @access private
+	 * @var integer
+	 */
 	private $current_row = 0;
-
+	
 	/**
-	* sets the table name for the model
-	*/
+	 * Sets the table name for the model.
+	 * 
+	 * @access public
+	 * @param string $name The name of the table for the model
+	 * @return boolean true
+	 */
 	public function setTableName($name) {
 		$this->table_name = $name;
 
 		return true;
 	}
-
+	
 	/**
-	* gets the table name for the model
-	*/
+	 * Gets the table name for the model.
+	 * 
+	 * @access public
+	 * @return string
+	 */
 	public function getTableName() {
 		return $this->table_name;
 	}
-
+	
 	/**
-	* adds a field to the model
-	*
-	* array(
-	*	'name'			=> name of field,
-	*	'key'		=> true|false, (default: false)
-	*	'validate'	=> array(
-	*		'function1'	=> 'message',
-	*		...),
-	*	'format'		=> see self::$valid_formats
-	* );
-	*
-	* @todo possibly make these their own objects
-	*/
+	 * Adds a field to the model.
+	 *
+	 * array(
+	 *	'name'			=> name of field,
+	 *	'key'		=> true|false, (default: false)
+	 *	'validate'	=> array(
+	 *		'function1'	=> 'message',
+	 *		...),
+	 *	'format'		=> see self::$valid_formats
+	 * );
+	 * 
+	 * @access protected
+	 * @param string $name The name of the field
+	 * @param array $options Optional The field options such as the validators and the format
+	 * @return boolean true if setup was successful and array of errors if it did not
+	 */
 	protected function addField($name, $options = array()) {
 		$errors = array();
 
@@ -218,17 +252,23 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			return true;
 		}
 	}
-
+	
 	/**
-	* gets the fields for a model
-	*/
+	 * Gets the fields for a model.
+	 * 
+	 * @access public
+	 * @return array
+	 */
 	public function getFields() {
 		return $this->fields;
 	}
-
+	
 	/**
-	* gets the field names
-	*/
+	 * Gets the field names.
+	 * 
+	 * @access public
+	 * @return array
+	 */
 	public function getFieldNames($table = true) {
 		$names = array_keys($this->fields);
 
@@ -238,16 +278,19 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 
 		return $names;
 	}
-
+	
 	/**
-	* adds an one-to-one relationship
-	*
-	* array(
-	*	'local'		=> 'column in local model',
-	*	'foreign'	=> 'column in foreign table',
-	*	'alias'		=> 'alias for the foriegn table',
-	* );
-	*/
+	 * Adds an one-to-one relationship.
+	 *
+	 * array(
+	 *	'local'		=> 'column in local model',
+	 *	'foreign'	=> 'column in foreign table',
+	 *	'alias'		=> 'alias for the foreign table',
+	 * );
+	 * 
+	 * @access protected
+	 * @return boolean true if setup correctly and boolean false if setup failed
+	 */
 	protected function hasOne($class_name, array $options) {
 		if (!isset($options['local']) || !isset($options['foreign']) || !isset($options['alias']) || isset($this->fields[$options['alias']])) {
 			return false;
@@ -261,16 +304,19 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		
 		return true;
 	}
-
+	
 	/**
-	* adds an one-to-many relationship
-	*
-	* array(
-	*	'local'		=> 'column in local model',
-	*	'foreign'	=> 'column in foreign table',
-	*	'alias'		=> 'alias for the foriegn table',
-	* );
-	*/
+	 * Adds an one-to-many relationship.
+	 *
+	 * array(
+	 *	'local'		=> 'column in local model',
+	 *	'foreign'	=> 'column in foreign table',
+	 *	'alias'		=> 'alias for the foreign table',
+	 * );
+	 * 
+	 * @access protected
+	 * @return boolean true if setup correctly and boolean false if setup failed
+	 */
 	protected function hasMany($class_name, array $options) {
 		if (!isset($options['local']) || !isset($options['foreign']) || !isset($options['alias']) || !isset($this->fields[$options['alias']])) {
 			return false;
@@ -284,12 +330,13 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		
 		return true;
 	}
-
+	
 	/**
-	* retrieve one row using the primary key
-	*
-	* @return false if there are no primary keys
-	*/
+	 * Retrieve one row using the primary key.
+	 * 
+	 * @access public
+	 * @return boolean true if results found and setup correctly and boolean false if no results were found
+	 */
 	public function retrieve($id) {
 		$this->clearData();
 		
@@ -324,13 +371,19 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		// the row wasn't retrieved. Return false.
 		return false;
 	}
-
-	/*
-	* finds multiple rows AKA a SELECT query
-	*
-	* if the first parameter is a string then that is the alias for a relationship
-	* and the function will find within the alias
-	*/
+	
+	/**
+	 * Finds multiple rows AKA a SELECT query.
+	 *
+	 * If the first parameter is a string then that is the alias for a relationship
+	 * and the function will find within the alias.
+	 * 
+	 * @access public
+	 * @param array $options Used to set the alias of a relationship find or used for the where of a quick find
+	 * @param array $options2 Optional Used to set the options for a relationship find or used to set the values on a quick find
+	 * @param boolean $autoExtract Optional Defaults to false but when set to true will return an array with each row of data as a separate object
+	 * @return object a reference to the current or relationship object with all the data filled in and an array of objects if $autoExtract is set to true
+	 */
 	public function find($options = array(), $options2 = array(), $autoExtract = false) {
 		$alias = $this->_determineOptions($options, $options2);
 		
@@ -371,11 +424,15 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 
 		return false;
 	}
-
+	
 	/**
-	* UPDATE or INSERT a row into the DB
-	* calls create() or update()
-	*/
+	 * UPDATE or INSERT a row into the DB
+	 * calls create() or update()
+	 * 
+	 * @access public
+	 * @final
+	 * @return mixed
+	 */
 	public final function save() {
 		$primary = $this->_getPrimaryKeys();
 		
@@ -389,10 +446,14 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			return $this->create();
 		}
 	}
-
+	
 	/**
-	* INSERTs a row into the DB
-	*/
+	 * INSERTs a row into the DB
+	 * 
+	 * @access public
+	 * @final
+	 * @return mixed
+	 */
 	public final function create() {
 		$this->clearErrors();
 		if (method_exists($this, 'preCreate') && is_callable(array($this, 'preCreate'))) {
@@ -435,10 +496,14 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
 		return false;
 	}
-
+	
 	/**
-	* UPDATEs a row in the DB
-	*/
+	 * UPDATEs a row in the DB
+	 * 
+	 * @access public
+	 * @final
+	 * @return boolean false if there were errors and boolean true if the update was successful
+	 */
 	public final function update() {
 		$this->clearErrors();
 		if (method_exists($this, 'preUpdate') && is_callable(array($this, 'preUpdate'))) {
@@ -468,10 +533,16 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
 		return false;
 	}
-
+	
 	/**
-	* DELETEs a row from the DB
-	*/
+	 * DELETEs a row from the DB
+	 * 
+	 * @access public
+	 * @final
+	 * @param array $options Optional Used to set the relationship alias to do the delete on or the options to do a mass delete or the where for a quick delete
+	 * @param array $options2 Optional Used to set the options for the relationship delete or used to set the values or a quick delete
+	 * @return boolean false if there were errors and boolean true if the delete was successful
+	 */
 	public final function delete($options = array(), $options2 = array()) {
 		if (empty($options)) {
 			$this->clearErrors();
@@ -520,10 +591,15 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
 		return false;
 	}
-
+	
 	/**
-	* gets the relationship data
-	*/
+	 * Gets the relationship data.
+	 * 
+	 * @access public
+	 * @param string $alias The relationship alias
+	 * @param array $options Optional Used to set the options for the relationship find
+	 * @return mixed
+	 */
 	public function get($alias, $options = array()) {
 		if (!isset($this->relationships[$alias])) {
 			return false;
@@ -544,17 +620,22 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			$options['limit'] = 1;
 		}
 		
-		$relObj->find($options);
+		$return = $relObj->find($options);
 		
-		if (count($relObj)) {
-			return $relObj;
+		if (count($return)) {
+			return $return;
 		}
 		return false;
 	}
 	
 	/**
-	* processes a relationship delete
-	*/
+	 * Processes a relationship delete.
+	 * 
+	 * @access private
+	 * @param string $alias The relationship alias
+	 * @param array $options Optional Used to set the options for the relationship delete
+	 * @return boolean true if the delete was successful and boolean false if not
+	 */
 	private function _relationshipDelete($alias, $options = array()) {
 		if (!isset($this->relationships[$alias])) {
 			return false;
@@ -581,11 +662,14 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		
 		return false;
 	}
-
-
+	
 	/**
-	* populates a model from an array
-	*/
+	 * Populates a model from an array.
+	 * 
+	 * @access public
+	 * @param array $data An array of data with the fields as the keys to populate the model with
+	 * @param boolean $new Optional When set to true the function creates a new data row in the model for iteration rather than replacing the current row's data
+	 */
 	public function setProperties($data = array(), $new = false) {
 		// increment the internal counter if forced but don't do it if no data exists
 		if ($new === true && sizeof($this->data) != 0) {
