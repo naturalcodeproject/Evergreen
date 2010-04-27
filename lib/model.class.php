@@ -126,7 +126,6 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			'key'		=> false,
 			'validate'	=> array(),
 			'format'		=> array('onGet' => Model_Format::getDefault(), 'onSet' => Model_Format::getDefault()),
-			'format_extra'	=> array('onGet' => array(), 'onSet' => array()),
 		);
 
 		// check primary key
@@ -171,7 +170,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			if (!is_array($options['format'])) {
 				// user is using a provided formatter for onGet
 				if (Model_Format::isValid($options['format'])) {
-					$field_data['format']['onGet'] = $options['format'];
+					$field_data['format']['onGet'] = array('Model_Format', Model_Format::getFunction($options['format']));
 				} else {
 					$errors[] = 'Invalid field format: ' . $options['format'];
 				}
@@ -180,10 +179,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 				if (isset($options['format']['onGet']) || isset($options['format']['onSet'])) {
 					// onGet
 					if (isset($options['format']['onGet'])) {
-						// user is using aprovided formatter for onGet
+						// user is using a provided formatter for onGet
 						if (!is_array($options['format']['onGet'])) {
 							if (Model_Format::isValid($options['format']['onGet'])) {
-								$field_data['format']['onGet'] = $options['format']['onGet'];
+								$field_data['format']['onGet'] = array('Model_Format', Model_Format::getFunction($options['format']['onGet']));
 							} else {
 								$errors[] = 'Invalid field format: ' . $options['format']['onGet'];
 							}
@@ -195,9 +194,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 								if (!class_exists($options['format']['onGet'][0]) || !method_exists($options['format']['onGet'][0], $options['format']['onGet'][1])) {
 									$errors[] = 'Invalid field format. Class/function does not exists: ' . $options['format']['onGet'][0] . '::' . $options['format']['onGet'][1];
 								} else {
-									$field_data['format']['onGet'] = 'custom';
-									
-									$field_data['format_extra']['onGet'] = $options['format']['onGet'];
+									$field_data['format']['onGet'] = $options['format']['onGet'];
 								}
 							}
 						}
@@ -208,7 +205,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 						// user is using aprovided formatter for onSet
 						if (!is_array($options['format']['onSet'])) {
 							if (Model_Format::isValid($options['format']['onSet'])) {
-								$field_data['format']['onSet'] = $options['format']['onSet'];
+								$field_data['format']['onSet'] = array('Model_Format', Model_Format::getFunction($options['format']['onSet']));
 							} else {
 								$errors[] = 'Invalid field format: ' . $options['format']['onSet'];
 							}
@@ -220,8 +217,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 								if (!class_exists($options['format']['onSet'][0]) || !method_exists($options['format']['onSet'][0], $options['format']['onSet'][1])) {
 									$errors[] = 'Invalid field format. Class/function does not exists: ' . $options['format']['onSet'][0] . '::' . $options['format']['onSet'][1];
 								} else {
-									$field_data['format']['onSet'] = 'custom';
-									$field_data['format_extra']['onSet'] = $options['format']['onSet'];
+									$field_data['format']['onSet'] = $options['format']['onSet'];
 								}
 							}
 						}
@@ -235,8 +231,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 						if (!class_exists($options['format'][0]) || !method_exists($options['format'][0], $options['format'][1])) {
 							$errors[] = 'Invalid field format. Class/function does not exists: ' . $options['format'][0] . '::' . $options['format'][1];
 						} else {
-							$field_data['format']['onGet'] = 'custom';
-							$field_data['format_extra']['onGet'] = $options['format'];
+							$field_data['format']['onGet'] = $options['format'];
 						}
 					}
 				}
@@ -685,7 +680,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		// loop through the fields and populate them
 		foreach($data as $key => $value) {
 			if ($this->isField($key) === true && !empty($this->fields[$key]['format']['onSet'])) {
-				$value = Model_Format::format($this->fields[$key]['format']['onSet'], $value, $this->fields[$key]['format_extra']['onSet']);
+				$value = Model_Format::format($this->fields[$key]['format']['onSet'], $value);
 			}
 			
 			$this->data[$this->current_row][$key] = $value;
@@ -704,7 +699,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		foreach($this->data[$this->current_row] as $key => $value) {
 			// apply the formatter for the field
 			if ($this->isField($key) === true && !empty($this->fields[$key]['format']['onGet'])) {
-				$value = Model_Format::format($this->fields[$key]['format']['onGet'], $value, $this->fields[$key]['format_extra']['onGet']);
+				$value = Model_Format::format($this->fields[$key]['format']['onGet'], $value);
 			}
 			
 			$data[$key] = $value;
@@ -815,7 +810,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	public function __set($name, $value) {
 		// apply the formatter for the field
 		if ($this->isField($name) === true && !empty($this->fields[$name]['format']['onSet'])) {
-			$value = Model_Format::format($this->fields[$name]['format']['onSet'], $value, $this->fields[$name]['format_extra']['onSet']);
+			$value = Model_Format::format($this->fields[$name]['format']['onSet'], $value);
 		}
 		
 		$this->data[$this->current_row][$name] = $value;
@@ -834,7 +829,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			
 			// apply the formatter for the field
 			if ($this->isField($name) === true && !empty($this->fields[$name]['format']['onGet'])) {
-				$value = Model_Format::format($this->fields[$name]['format']['onGet'], $value, $this->fields[$name]['format_extra']['onGet']);
+				$value = Model_Format::format($this->fields[$name]['format']['onGet'], $value);
 			}
 				
 			return $value;
@@ -1208,7 +1203,6 @@ class Model_Format {
 		'integer'	=> 'integer',
 		'timestamp'	=> 'timestamp',
 		'datetime'	=> '',
-		'custom'	=> 'custom',
 	);
 	
 	/**
@@ -1228,6 +1222,22 @@ class Model_Format {
 	}
 	
 	/**
+	* gets the function for a format
+	* 
+	* @access public
+	* @static
+	* @param string $format The format to get the function for
+	* @return string the function to use for the specific formatter. Returns boolean
+	*/
+	public static function getFunction($format) {
+		if (isset(self::$valid_formats[$format])) {
+			return self::$valid_formats[$format];
+		}
+		
+		return false;
+	}
+	
+	/**
 	 * Gets the default valid format.
 	 * 
 	 * @access public
@@ -1235,7 +1245,8 @@ class Model_Format {
 	 * @return string
 	 */
 	public static function getDefault() {
-		return key(self::$valid_formats);
+		reset(self::$valid_formats);
+		return current(self::$valid_formats);
 	}
 	
 	/**
@@ -1245,14 +1256,11 @@ class Model_Format {
 	 * @static
 	 * @param string $format The format to run
 	 * @param mixed $value The value to run the format on
-	 * @param array $extra Optional Arguments for the user defined format
 	 * @return mixed
 	 */
-	public static function format($format, $value, $extra = array()) {
-		$function = self::$valid_formats[$format];
-		
-		if (!empty($function) && method_exists('Model_Format', $function)) {
-			$value = call_user_func(array('Model_Format', $function), $value, $extra);
+	public static function format($function, $value) {
+		if (!empty($function) && method_exists($function[0], $function[1])) {
+			$value = call_user_func($function, $value);
 		}
 
 		return $value;
@@ -1308,19 +1316,6 @@ class Model_Format {
 		}
 		
 		return strtotime($value);
-	}
-	
-	/**
-	 * Calls a custom formatter.
-	 * 
-	 * @access public
-	 * @static
-	 * @param mixed $value The value to run the format on
-	 * @param array $extra Optional Arguments for the user defined format
-	 * @return mixed
-	 */
-	public static function custom($value, $extra = array()) {
-		return call_user_func($extra, $value);
 	}
 }
 
