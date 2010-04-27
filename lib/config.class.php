@@ -410,7 +410,7 @@ final class Config {
 			}
 			
 			// set the actual variables
-			Reg::set("Path.".$key, Reg::get("URI.base").'/'.trim(implode('/', array_slice($uriWorking, 0, $position)), '/'));
+			Reg::set("Path.".$key, Reg::get("URI.base").'/'.trim(implode('/', array_merge((array)Reg::get('Branch.name'), array_slice($uriWorking, 0, $position))), '/'));
 			$count++;
 		}
 		
