@@ -21,6 +21,17 @@
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 
+/**
+ * Controller Class
+ *
+ * This class handles the loading of a view and things associated such as loading
+ * layouts, running filters, bouncebacks, handling override logic, handling view 404's,
+ * running the formhandler helper class, and running the designer fixes.
+ *
+ * @package       evergreen
+ * @subpackage    lib
+ * @abstract
+ */
 abstract class Controller {
 	private $viewToLoad = null;
 	private $formhandler = null;
@@ -37,7 +48,7 @@ abstract class Controller {
 	protected $notAView = array();
 	
 	final private function _controllerSetup() {
-		## Construct Code ##
+		// Construct Code
 		$this->params = Reg::get("URI.working");
 		if (!strlen($this->params['view'])) {
 			$this->params['view'] = Reg::get("URI.map.view");
@@ -55,21 +66,21 @@ abstract class Controller {
 	}
 	
 	final public function _showView() {
-		## Run the controller's Setup
+		// Run the controller's Setup
 		$this->_controllerSetup();
-		## Set up the actual page
+		// Set up the actual page
 		$this->_loadView();
 		
-		## First Designer Fix
+		// First Designer Fix
 		$this->_designerFix($this->fullPageContent);
 		
-		## Form Fix
+		// Form Fix
 		$this->formhandler->decode($this->fullPageContent);
 		
-		## Second Designer Fix
+		// Second Designer Fix
 		//$this->_designerFix($fullPage);
 		
-		## Output Page
+		// Output Page
 		$this->_runFilters('Page.output.before');
 		echo $this->fullPageContent;
 		$this->_runFilters('Page.output.after');

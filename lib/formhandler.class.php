@@ -106,7 +106,7 @@ class Formhandler {
 	 * @return string
 	 */
 	public function decode (&$content) {
-		## Form Fix
+		// Form Fix
 		$content = preg_replace_callback("/<form\s*(.*?)[^(->)]>(.*?)<\\/form>/is", array($this, 'formReplace'), $content);
 	}
 	
@@ -119,12 +119,12 @@ class Formhandler {
 	 * @return string
 	 */
 	private function formReplace($args) {
-		## Fix Slashes
+		// Fix Slashes
 		$args = array_pad($args, 3, '');
 		$attr = stripslashes($args[1]);
 		$insides = stripslashes($args[2]);
 		
-		## Set up Properties
+		// Set up Properties
 		$randomName = false;
 		$properties = $this->propertiesArray($attr);
 		if (empty($properties['name'])) {
@@ -167,12 +167,12 @@ class Formhandler {
 		
 		if (!empty($properties['name'])) $this->forms_arr[$properties['name']]['attributes'] = $properties;
 		
-		## Set Up Elements
+		// Set Up Elements
 		$this->current_form = $properties['name'];
 		$insides = preg_replace_callback("/<(input)\s*(.*?)>/is", array($this, 'formInsides'), $insides);
 		$insides = preg_replace_callback("/<(textarea|select)\s*(.*?)>(.*?)<\\/([(textarea|select)]*?)>/is", array($this, 'formInsides'), $insides);
 		
-		## Replace Form
+		// Replace Form
 		unset($this->current_form);
 		if ($randomName == true) {
 			unset($properties['name']);
@@ -194,14 +194,14 @@ class Formhandler {
 		$attr = stripslashes($args[2]);
 		$insides = stripslashes($args[3]);
 		
-		## Properties Set Up
+		// Properties Set Up
 		$properties = $this->propertiesArray($attr);
 		
 		if (empty($properties['name'])) {
 			$properties['name'] = '';
 		}
 		
-		## Parse Name ##
+		// Parse Name
 		$this->parsed_name = explode("[", str_replace("]", "", str_replace("\"", "", str_replace("'", "", str_replace("[]", "", $properties['name'])))));
 		if (!is_array($this->parsed_name)) {
 			$this->parsed_name = array($properties['name']);
@@ -300,12 +300,12 @@ class Formhandler {
 	 * @return string
 	 */
 	private function selectInsides ($args) {
-		## Fix Slashes
+		// Fix Slashes
 		$args = array_pad((array)$args, 3, '');
 		$attr = stripslashes($args[1]);
 		$insides = stripslashes($args[2]);
 		
-		## Set up Properties
+		// Set up Properties
 		$properties = $this->propertiesArray($attr);
 		
 		$properties = array_merge(array('value' => ''), $properties);

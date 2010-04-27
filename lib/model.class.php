@@ -685,10 +685,13 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			$this->data[$this->current_row][$key] = $value;
 		}
 	}
-
+	
 	/**
-	* returns the model properties as an array
-	*/
+	 * Returns the model properties as an array.
+	 * 
+	 * @access public
+	 * @return array
+	 */
 	public function getProperties() {
 		$data = array();
 
@@ -705,15 +708,23 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	}
 	
 	/**
-	* checks to see if a field is part of the current object or not
-	*/
+	 * Checks to see if a field is part of the current object or not.
+	 * 
+	 * @access public
+	 * @param string $name The field name that is to be checked
+	 * @return boolean true if field exists and boolean false if not
+	 */
 	public function isField($name) {
 		return isset($this->fields[$name]);
 	}
-
+	
 	/**
-	* gets the primary key for a table
-	*/
+	 * Gets the primary keys for a table.
+	 * 
+	 * @access private
+	 * @param string $name The field name that is to be checked
+	 * @return array if there are keys and boolean false if there are none
+	 */
 	private function _getPrimaryKeys() {
 		$return = array();
 		foreach($this->fields as $name => $options) {
@@ -726,8 +737,13 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	}
 	
 	/**
-	* takes the options that are being passed to a function and based on what is being passed determines what the options are and if there is an alias being passed
-	*/
+	 * Takes the options that are being passed to a function and based on what is being passed determines what the options are and if there is an alias being passed.
+	 * 
+	 * @access private
+	 * @param mixed &$options The options that need to be parsed or the alias of a relationship or a where string in the where short hand
+	 * @param array $options2 Optional The options for a relationship find/delete or the values for find short hand
+	 * @return string if there is an alias defined and boolean true or boolean false if no alias is defined
+	 */
 	private function _determineOptions(&$options, $options2 = array()) {
 		if (is_string($options)) {
 			if (isset($this->relationships[$options]) && is_array($options2)) {
@@ -746,10 +762,13 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		
 		return false;
 	}
-
+	
 	/**
-	* prepares the options by appending the table name to the front of the columns
-	*/
+	 * Prepares the options by appending the table name to the front of the columns.
+	 * 
+	 * @access private
+	 * @param array &$options The options to be prepared to be passed to the DB class
+	 */
 	private function _prepareOptions(&$options) {
 		$fields = implode('|', $this->getFieldNames(false));
 		$table = $this->getTableName();
@@ -771,17 +790,22 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
 		unset($replace_names);
 	}
-
+	
 	/**
-	* returns the total rows
-	*/
+	 * Returns the total rows populated in the current object.
+	 * 
+	 * @access public
+	 * @return integer
+	 */
 	public function count() {
 		return count($this->data);
 	}
-
+	
 	/**
-	* sets a variable
-	*/
+	 * Magic method for setting a field's value.
+	 * 
+	 * @access public
+	 */
 	public function __set($name, $value) {
 		// apply the formatter for the field
 		if ($this->isField($name) === true && !empty($this->fields[$name]['format']['onSet'])) {
@@ -790,10 +814,14 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		
 		$this->data[$this->current_row][$name] = $value;
 	}
-
+	
 	/**
-	* gets a variable
-	*/
+	 * Magic method for getting a field's value or relationship's data.
+	 * 
+	 * @access public
+	 * @param string $name The name of the field to get
+	 * @return mixed
+	 */
 	public function __get($name) {
 		if (isset($this->data[$this->current_row][$name])) {
 			$value = $this->data[$this->current_row][$name];
@@ -811,24 +839,33 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			return NULL;
 		}
 	}
-
+	
 	/**
-	* sees if a variable is set
-	*/
+	 * Magic method to check if a field exists.
+	 * 
+	 * @access public
+	 * @param string $name The name of the field to check
+	 * @return boolean true if the field exists and boolean false if not
+	 */
 	public function __isset($name) {
 		return isset($this->data[$this->current_row][$name]);
 	}
-
+	
 	/**
-	* unsets a variable
-	*/
+	 * Magic method to unset a field.
+	 * 
+	 * @access public
+	 * @param string $name The name of the field to unset
+	 */
 	public function __unset($name) {
 		unset($this->data[$this->current_row][$name]);
 	}
-
+	
 	/**
-	* prepares the object to be cloned
-	*/
+	 * Magic method that prepares the current object for cloning.
+	 * 
+	 * @access public
+	 */
 	public function __clone() {
 		$currentData = (isset($this->data[$this->current_row])) ? $this->data[$this->current_row] : array();
 		$currentErrors = (isset($this->errors[$this->current_row])) ? $this->errors[$this->current_row] : array();
@@ -838,8 +875,12 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	}
 	
 	/**
-	* turns one row into its own object
-	*/
+	 * Turns one result set in the current object into its own object.
+	 * 
+	 * @access public
+	 * @param integer $key The key or position of the result set to extract, assumes the current result set if empty
+	 * @return object if the desired result set is found and boolean false if not
+	 */
 	public function extract($key = null) {
 		if ($key == null) {
 			$key = $this->current_row;
@@ -853,10 +894,13 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 
 		return false;
 	}
-
+	
 	/**
-	* turns every row into its own object
-	*/
+	 * Turns every result set in the current object into it's own object.
+	 * 
+	 * @access public
+	 * @return array
+	 */
 	public function extractAll() {
 		$return = array();
 		for($i = 0, $total = count($this->data); $i < $total; $i++) {
@@ -865,97 +909,129 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		
 		return $return;
 	}
-
+	
 	/**
-	* clears the data in the object
-	*/
+	 * Clears out all the result sets and errors in the current object and resets the current row count to 0.
+	 * 
+	 * @access private
+	 */
 	private function clearData() {
 		$this->data = array();
 		$this->errors = array();
 		$this->current_row = 0;
 	}
-
+	
 	/**
-	* iterator methods
-	*
-	* resets the array
-	*/
+	 * Iterator method.
+	 * Resets the current row pointer.
+	 * 
+	 * @access public
+	 */
 	public function rewind() {
 		$this->current_row = 0;
 	}
-
+	
 	/**
-	* iterator methods
-	*
-	* Gets the current row which is the object. The current row has already been incremented.
-	*/
+	 * Iterator method.
+	 * Gets the current row which is the object. The current row has already been incremented.
+	 * 
+	 * @access public
+	 * @return object
+	 */
 	public function current() {
 		return $this;
 	}
-
+	
 	/**
-	* iterator methods
-	*
-	* gets the key for the current row
-	*/
+	 * Iterator method.
+	 * Returns the current pointer's value.
+	 * 
+	 * @access public
+	 * @return integer
+	 */
 	public function key() {
 		return $this->current_row;
 	}
-
+	
 	/**
-	* iterator methods
-	*
-	* moves to the next row
-	*/
+	 * Iterator method.
+	 * Advances the current pointer's value by 1.
+	 * 
+	 * @access public
+	 */
 	public function next() {
 		$this->current_row += 1;
 	}
-
+	
 	/**
-	* iterator methods
-	*
-	* sees if the next row is valid
-	*/
+	 * Iterator method.
+	 * Checks if the row the current pointer is targeting is a valid row in the result set.
+	 * 
+	 * @access public
+	 * @return boolean true if the current row is a valid row and boolean false if not
+	 */
 	public function valid() {
 		return isset($this->data[$this->current_row]);
 	}
 	
 	/**
-	* arrayaccess method
-	*
-	* sees if the offset actually exists
-	*/
+	 * Arrayaccess method.
+	 * Checks if the passed in offset exists.
+	 * 
+	 * @access public
+	 * @param integer $offset The zero based numeric key of the result set to check
+	 * @return boolean true if the result set at the asked for offset exists and boolean false if not
+	 */
 	public function offsetExists($offset) {
 		return isset($this->data[$offset]);
 	}
 	
 	/**
-	* arrayaccess method
-	*
-	* gets the row depending on the offset
-	*/
+	 * Arrayaccess method.
+	 * Returns an object with the result set data defined by the passed in offset.
+	 * 
+	 * @access public
+	 * @param integer $offset The zero based numeric key of the result set to get
+	 * @return object
+	 */
 	public function offsetGet($offset) {
 		return $this->extract($offset);
 	}
 	
 	/**
-	* arrayaccess method
-	*
-	* let's you set the value of the array but we don't need that and don't want to allow people to do that
-	*/
+	 * Arrayaccess method.
+	 * Let's you set the value of the array but we don't need that and don't want to allow people to do that.
+	 * 
+	 * @access public
+	 * @param integer $offset The zero based numeric key of the result set to set
+	 * @param mixed $value The value of the defined offset
+	 * @return boolean false
+	 */
 	public function offsetSet($offset, $value) {
 		return false;
 	}
 	
 	/**
-	* arrayaccess method
-	*
-	* unsets a row
-	*/
+	 * Arrayaccess method.
+	 * Unsets a result set row based on the passed in offset.
+	 * 
+	 * @access public
+	 * @param integer $offset The zero based numeric key of the result set to unset
+	 */
 	public function offsetUnset($offset) {
 		unset($this->data[$offset]);
 	}
 	
+	/**
+	 * Creates, sets up, and stores an error object for a field error.
+	 * 
+	 * @access public
+	 * @param string $field The name of the field that had the error occur
+	 * @param string $msg The error message
+	 * @param string $validator The name of the validator that failed
+	 * @param integer $type The type of failure
+	 * @param integer $code Optional Error code that accompanied the error
+	 */
 	public function addError($field=null, $msg='', $validator='', $type=ModelFieldError::TYPE_INVALID_FIELD, $code=null) {
 	    $modelError = new ModelFieldError();
 	    $modelError->type = $type;
@@ -967,26 +1043,62 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	    $this->errors[$this->current_row][] = $modelError;
 	}
 	
+	/**
+	 * Method used to clear all currently set errors for all result sets.
+	 * 
+	 * @access public
+	 */
 	public function clearAllErrors() {
 	    $this->errors = array();
 	}
 	
+	/**
+	 * Method used to clear all errors for the current result set.
+	 * 
+	 * @access public
+	 */
 	public function clearErrors() {
 	    unset($this->errors[$this->current_row]);
 	}
 	
+	/**
+	 * Method used to bulk set errors for the current result set.
+	 * 
+	 * @access public
+	 * @param array $errors An array of errors to be set
+	 */
 	public function setErrors($errors) {
 	    $this->errors[$this->current_row] = (array)$errors;
 	}
 	
+	/**
+	 * Checks if the current result set has errors and returns the count.
+	 * 
+	 * @access public
+	 * @return integer
+	 */
 	public function hasErrors() {
 	    return (count(((isset($this->errors[$this->current_row])) ? $this->errors[$this->current_row] : array())) > 0);
 	}
 	
+	/**
+	 * Returns an array of all the error objects for the current result set.
+	 * 
+	 * @access public
+	 * @return array if there are errors and boolean false if not
+	 */
 	public function getErrors() {
 	    return ((isset($this->errors[$this->current_row])) ? $this->errors[$this->current_row] : false);
 	}
 	
+	/**
+	 * Returns an array of all the error messages for the current result set.
+	 * If a field is defined will return all the error messages for the defined field for the current result set.
+	 * 
+	 * @access public
+	 * @param string $field Optional Field to get the errors for
+	 * @return array
+	 */
 	public function getErrorMessages($field=false) {
 	    $messages = array();
 	    if (isset($this->errors[$this->current_row])) {
@@ -999,6 +1111,14 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	    return $messages;
 	}
 	
+	/**
+	 * Returns the error message for the defined field and validator.
+	 * 
+	 * @access public
+	 * @param string $field Field to get the errors for
+	 * @param string $validator The validator to ge the errors for
+	 * @return string if an error is found and null if not
+	 */
 	public function getErrorMessage($field, $validator) {
 	    if (isset($this->errors[$this->current_row])) {
 			foreach ($this->errors[$this->current_row] as $error) {
@@ -1011,6 +1131,11 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	    return null;
 	}
 	
+	/**
+	 * Validates that all the required fields for the model have a value and sets up and error if not.
+	 * 
+	 * @access private
+	 */
 	private function checkRequiredFields() {
 		foreach ($this->fields as $name => $field) {
 			if (isset($field['required']) && empty($this->{$name})) {
@@ -1019,6 +1144,11 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
 	}
 	
+	/**
+	 * Validates that all the primary key fields for the model have a value and sets up and error if not.
+	 * 
+	 * @access private
+	 */
 	private function checkKeys() {
 		foreach ($this->fields as $name => $field) {
 			if ($field['key'] && empty($this->{$name})) {
@@ -1027,6 +1157,11 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
 	}
 	
+	/**
+	 * Runs all the defined custom validators on a field and sets up an error if they return a string or false.
+	 * 
+	 * @access private
+	 */
 	private function checkValidators() {
 		foreach ($this->fields as $name => $field) {
 			if (count($field['validate'])) {
@@ -1045,14 +1180,21 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 }
 
 /**
-* formats the field types for the model
-*/
+ * Model Format Class
+ *
+ * Formats the field types for the model.
+ *
+ * @package       evergreen
+ * @subpackage    lib
+ */
 class Model_Format {
 	/**
-	* all of the valid data format
-	*
-	* @todo add a bunch of these
-	*/
+	 * All of the valid pre-defined data formats.
+	 * 
+	 * @access private
+	 * @static
+	 * @var array
+	 */
 	private static $valid_formats = array(
 		'none'		=> '',
 		'plaintext'	=> 'plaintext',
@@ -1060,12 +1202,17 @@ class Model_Format {
 		'integer'	=> 'integer',
 		'timestamp'	=> 'timestamp',
 		'datetime'	=> '',
-		'custom'		=> 'custom',
+		'custom'	=> 'custom',
 	);
-
+	
 	/**
-	* checks to see if it is a valid format
-	*/
+	 * Checks to see if the passed in format is a valid format.
+	 * 
+	 * @access public
+	 * @static
+	 * @param string $format The format to check
+	 * @return boolean true if the format is valid and boolean false if not
+	 */
 	public static function isValid($format) {
 		if (array_key_exists($format, self::$valid_formats)) {
 			return true;
@@ -1073,17 +1220,28 @@ class Model_Format {
 
 		return false;
 	}
-
+	
 	/**
-	* gets the default valid format
-	*/
+	 * Gets the default valid format.
+	 * 
+	 * @access public
+	 * @static
+	 * @return string
+	 */
 	public static function getDefault() {
 		return key(self::$valid_formats);
 	}
-
+	
 	/**
-	* formats the value for the column
-	*/
+	 * Formats the value for the column and returns the result.
+	 * 
+	 * @access public
+	 * @static
+	 * @param string $format The format to run
+	 * @param mixed $value The value to run the format on
+	 * @param array $extra Optional Arguments for the user defined format
+	 * @return mixed
+	 */
 	public static function format($format, $value, $extra = array()) {
 		$function = self::$valid_formats[$format];
 		
@@ -1093,31 +1251,51 @@ class Model_Format {
 
 		return $value;
 	}
-
+	
 	/**
-	* integer format
-	*/
+	 * Integer format.
+	 * 
+	 * @access public
+	 * @static
+	 * @param mixed $value The value to run the format on
+	 * @return integer
+	 */
 	public static function integer($value) {
 		return intval($value);
 	}
 
 	/**
-	* plain text format
-	*/
+	 * Plain text format.
+	 * 
+	 * @access public
+	 * @static
+	 * @param mixed $value The value to run the format on
+	 * @return string
+	 */
 	public static function plaintext($value) {
 		return stripslashes(htmlspecialchars($value));
 	}
-
+	
 	/**
-	* html text format
-	*/
+	 * HTML text format.
+	 * 
+	 * @access public
+	 * @static
+	 * @param mixed $value The value to run the format on
+	 * @return string
+	 */
 	public static function htmltext($value) {
 		return $value;
 	}
 	
 	/**
-	* timestamp
-	*/
+	 * Timestamp format.
+	 * 
+	 * @access public
+	 * @static
+	 * @param mixed $value The value to run the format on
+	 * @return integer
+	 */
 	public static function timestamp($value) {
 		if (is_numeric($value)) {
 			return intval($value);
@@ -1127,26 +1305,81 @@ class Model_Format {
 	}
 	
 	/**
-	* calls a custom formatter
-	*/
+	 * Calls a custom formatter.
+	 * 
+	 * @access public
+	 * @static
+	 * @param mixed $value The value to run the format on
+	 * @param array $extra Optional Arguments for the user defined format
+	 * @return mixed
+	 */
 	public static function custom($value, $extra = array()) {
 		return call_user_func($extra, $value);
 	}
 }
 
+/**
+ * Model Field Error Class
+ *
+ * The class that holds all the information about an error for a field.
+ *
+ * @package       evergreen
+ * @subpackage    lib
+ */
 class ModelFieldError {
+	/**
+	 * The error type as defined by the type constants.
+	 * 
+	 * @access public
+	 * @var integer
+	 */
     public $type;
+    
+    /**
+	 * The field the error occurred on.
+	 * 
+	 * @access public
+	 * @var string
+	 */
     public $field;
+    
+    /**
+	 * The error message.
+	 * 
+	 * @access public
+	 * @var string
+	 */
     public $msg;
+    
+    /**
+	 * The error code if any.
+	 * 
+	 * @access public
+	 * @var integer
+	 */
     public $code;
+    
+    /**
+	 * The name of the validator that failed.
+	 * 
+	 * @access public
+	 * @var string
+	 */
     public $validator;
 
-    // Errors must be handled by user code
+    /**
+	 * Error type constants.
+	 */
     const TYPE_INVALID_FIELD = 0;
 	const TYPE_KEY_MISSING = 1;
     const TYPE_REQUIRED_FIELD_MISSING = 2;
     const TYPE_CUSTOM_VALIDATOR_FAILED = 3;
-
+    
+	/**
+	 * Class constructor.
+	 * 
+	 * @access public
+	 */
     public function __construct() {
         $this->type = -1;
         $this->field = null;

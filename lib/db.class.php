@@ -23,13 +23,19 @@
  */
  
 /**
-* database class
-*
-* handles database connections and queries
-*/
+ * DB Class
+ *
+ * This class handles the abstract database functionality for the models including
+ * the interaction with the driver and with PDO. This class also does alot with the
+ * queries that are passed to it to make the queries more abstract and make talking to
+ * the database easier.
+ *
+ * @package       evergreen
+ * @subpackage    lib
+ */
 class DB {
 	/**
-	* operator constants
+	* Operator constants
 	*/
 	const EQUALS 				= '=';
     const NOT_EQUALS			= '!=';
@@ -44,8 +50,12 @@ class DB {
     const OR_THIS				= '||';
 
 	/**
-	* holds the PDO connection
-	*/
+	 * Holds the PDO connection object.
+	 * 
+	 * @access private
+	 * @static
+	 * @var object
+	 */
 	private static $pdo;
 
 	/**
@@ -54,13 +64,20 @@ class DB {
 	private static $driver;
 
 	/**
-	* holds the queries that have been executed. Useful when debugging.
-	*/
+	 * Holds the queries that have been executed. Useful when debugging.
+	 * 
+	 * @access public
+	 * @static
+	 * @var array
+	 */
 	public static $queries = array();
 
 	/**
-	* setups the DB class
-	*/
+	 * Sets up the driver and the PDO connection.
+	 * 
+	 * @access public
+	 * @static
+	 */
 	public static function setup() {
 		// connect to the DB
 		self::$pdo = new PDO('mysql:host=' . Reg::get('Database.host') . ';dbname=' .  Reg::get('Database.database'), Reg::get('Database.username'), Reg::get('Database.password'));
@@ -72,8 +89,12 @@ class DB {
 	}
 
 	/**
-	* Select data. Helper function
-	*/
+	 * Helper function to select data from a table.
+	 * 
+	 * @access public
+	 * @static
+	 * @return array
+	 */
 	public static function find($fields, $table, $options = array()) {
 		// get the query from the driver
 		$query = self::$driver->select(implode(',', $fields), $table, $options);
@@ -331,6 +352,7 @@ class DB {
 /**
 * interface for DB drivers
 */
+
 interface DBDriverInterface {
 	public function select($fields, $table, $options);
 	public function insert($fields, $table);
