@@ -57,10 +57,14 @@ class DB {
 	 * @var object
 	 */
 	private static $pdo;
-
+	
 	/**
-	* holds the db driver
-	*/
+	 * Holds the DB driver object.
+	 * 
+	 * @access private
+	 * @static
+	 * @var object
+	 */
 	private static $driver;
 
 	/**
@@ -93,6 +97,9 @@ class DB {
 	 * 
 	 * @access public
 	 * @static
+	 * @param array $fields An array of the fields registered in the model
+	 * @param string $table The name of the target table
+	 * @param array $options Optional The options that define the find
 	 * @return array
 	 */
 	public static function find($fields, $table, $options = array()) {
@@ -110,10 +117,16 @@ class DB {
 		
 		return $results;
 	}
-
+	
 	/**
-	* Insert a row. Helper function.
-	*/
+	 * Helper function to insert a row into the table.
+	 * 
+	 * @access public
+	 * @static
+	 * @param array $values The array with the values that need to be inserted with the field names as keys
+	 * @param string $table The name of the target table
+	 * @return integer
+	 */
 	public static function insert($values, $table) {
 		$query = self::$driver->insert(array_keys($values), $table);
 		
@@ -121,10 +134,17 @@ class DB {
 
 		return self::$pdo->lastInsertId();
 	}
-
+	
 	/**
-	* Update a row. Helper function
-	*/
+	 * Helper function to update a row in a table.
+	 * 
+	 * @access public
+	 * @static
+	 * @param array $keys An array populated with the defined model's keys
+	 * @param array $values The array with the row's values with the field names as keys
+	 * @param string $table The name of the target table
+	 * @return array
+	 */
 	public static function update($keys, $values, $table) {
 		$data = $values;
 		$keyValues = array();
@@ -139,10 +159,16 @@ class DB {
 		
 		return self::execute($query, array_merge(array_values($data), $keyValues));
 	}
-
+	
 	/**
-	* Deletes a row. Helper function.
-	*/
+	 * Helper function to delete a row in a table.
+	 * 
+	 * @access public
+	 * @static
+	 * @param string $table The name of the target table
+	 * @param array $options The options for the delete e.g. where, limit
+	 * @return array
+	 */
 	public static function delete($table, $options) {
 		$query = self::$driver->delete($table, $options);
 		
@@ -150,20 +176,31 @@ class DB {
 	}
 	
 	/**
-	* Truncate a table. Helper function.
-	*/
+	 * Helper function to truncate a table.
+	 * 
+	 * @access public
+	 * @static
+	 * @param string $table The name of the target table
+	 * @return array
+	 */
 	public static function truncate($table) {
 		$query = self::$driver->truncate($table);
 		
 		return self::execute($query);
 	}
-
+	
 	/**
-	* executes a SQL query and returns the result set
-	*
-	* values for the query can either be an array as the second argument or
-	* multiple arguments in the method
-	*/
+	 * Executes a SQL query and returns the result set.
+	 *
+	 * Values for the query can either be an array as the second argument or
+	 * multiple arguments in the method.
+	 * 
+	 * @access public
+	 * @static
+	 * @param string|array $query The query to be run or an array with the query and the values in it
+	 * @param array $values Optional The values of the query
+	 * @return array
+	 */
 	public static function query($query, $values = array()) {
 		if (!is_array($values)) {
 			$values = func_get_args();
@@ -174,13 +211,20 @@ class DB {
 
 		return self::fetchAll($result);
 	}
-
+	
 	/**
-	* executes a SQL query and returns the result set as an object
-	*
-	* this creates a new object for each row. Don't know if the obj is a model or not
-	* so can't use the way that stores the data.
-	*/
+	 * Executes a SQL query and returns the result set as an object.
+	 *
+	 * This creates a new object for each row. Don't know if the obj is a model or not
+	 * so can't use the way that stores the data.
+	 * 
+	 * @access public
+	 * @static
+	 * @param string $query The query to be run
+	 * @param array $values Optional The values of the query
+	 * @param string $obj_name Optional The name of the class to populate the found data with
+	 * @return array
+	 */
 	public static function queryObject($query, $values = array(), $obj_name = 'stdClass') {
 		$result = self::execute($query, $values);
 
@@ -191,13 +235,19 @@ class DB {
 
 		return $objects;
 	}
-
+	
 	/**
-	* executes a SQL query
-	*
-	* values for the query can either be an array as the second argument or
-	* multiple arguments in the method
-	*/
+	 * Executes a SQL query.
+	 *
+	 * Values for the query can either be an array as the second argument or
+	 * multiple arguments in the method.
+	 * 
+	 * @access public
+	 * @static
+	 * @param string $query The query to be run
+	 * @param array $values Optional The values of the query
+	 * @return mixed
+	 */
 	public static function execute($query, $values = array()) {
 		
 		if (!is_array($values)) {
@@ -236,8 +286,14 @@ class DB {
 	}
 	
 	/**
-	* return the query with the oporators fixed
-	*/
+	 * Return the query with the operators fixed.
+	 * 
+	 * @access public
+	 * @static
+	 * @param string $query The query to be run
+	 * @param array &$values The values of the query
+	 * @return string
+	 */
 	public static function fixOperators($query, &$values) {
 		$query = str_replace(DB::AND_THIS, self::$driver->andOperator(), $query);
 		$query = str_replace(DB::OR_THIS, self::$driver->orOperator(), $query);
@@ -258,8 +314,15 @@ class DB {
 	}
 	
 	/**
-	* callback for each operator and value pair matched in the query
-	*/
+	 * Callback for each operator and value pair matched in the query.
+	 * 
+	 * @access public
+	 * @static
+	 * @param array $found The array of matches
+	 * @param array &$values The values of the query
+	 * @param integer &$key The current operator found position
+	 * @return string
+	 */
 	public static function _operatorCallback($found, &$values, &$key) {
 		$whole = $found[0];
 		$operator = $found[2];
@@ -318,41 +381,65 @@ class DB {
 		unset($operator);
 		return $whole;
 	}
-
+	
 	/**
-	* returns a row from a query that has been executed
-	*/
+	 * Returns a row from a query that has been executed.
+	 * 
+	 * @access public
+	 * @static
+	 * @param mixed $statement The result from the PDO execute
+	 * @return array
+	 */
 	public static function fetch($statement) {
 		return $statement->fetch();
 	}
-
+	
 	/**
-	* returns all of the rows from a query that has been executed
-	*/
+	 * Returns all of the rows from a query that has been executed.
+	 * 
+	 * @access public
+	 * @static
+	 * @param mixed $statement The result from the PDO execute
+	 * @return array
+	 */
 	public static function fetchAll($statement) {
 		return $statement->fetchAll();
 	}
-
+	
 	/**
-	* returns a row from a query that has been executed as an object
-	*/
+	 * Returns a row from a query that has been executed as an object.
+	 * 
+	 * @access public
+	 * @static
+	 * @param mixed $statement The result from the PDO execute
+	 * @param string $class_name The name of the result to fill with the results
+	 * @return object
+	 */
 	public static function fetchObject($statement, $class_name = 'stdClass') {
 		return $statement->fetchObject($class_name);
 	}
 	
 	/**
-	* returns a count of all the queries executed on a page
-	*/
+	 * Returns a count of all the queries executed on a page.
+	 * 
+	 * @access public
+	 * @static
+	 * @return integer
+	 */
 	public static function queryCount() {
 		return count(self::$queries);
 	}
 }
 
-
 /**
-* interface for DB drivers
-*/
-
+ * DB Driver Interface Class
+ *
+ * This is the interface class for the driver used to make sure that the drivers have
+ * all of the required fields defined.
+ *
+ * @package       evergreen
+ * @subpackage    lib
+ */
 interface DBDriverInterface {
 	public function select($fields, $table, $options);
 	public function insert($fields, $table);

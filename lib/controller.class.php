@@ -33,20 +33,100 @@
  * @abstract
  */
 abstract class Controller {
+	/**
+	 * The current view that needs to be loaded.
+	 * 
+	 * @access private
+	 * @var string
+	 */
 	private $viewToLoad = null;
+	
+	/**
+	 * Holder for the called Formhandler class.
+	 * 
+	 * @access private
+	 * @var object
+	 */
 	private $formhandler = null;
+	
+	/**
+	 * The layout to be loaded.
+	 * 
+	 * @access private
+	 * @var string
+	 */
 	private $layout = null;
+	
+	/**
+	 * Holder for URI.working so it can be processed by the class.
+	 * 
+	 * @access private
+	 * @var array
+	 */
 	private $params = array();
+	
+	/**
+	 * Holder for the registered filters.
+	 * 
+	 * @access private
+	 * @var array
+	 */
 	private $filters = array();
+	
+	/**
+	 * Indicates whether the view that is supposed to be loaded has been over ridden.
+	 * 
+	 * @access private
+	 * @var boolean
+	 */
 	private $overriddenView = false;
+	
+	/**
+	 * Holder variable indicating which view to load in place of the one that would have regularly be loaded.
+	 * 
+	 * @access private
+	 * @var array
+	 */
 	private	$overriddenViewToLoad = array();
+	
+	/**
+	 * Holds the set bouceback data.
+	 * 
+	 * @access private
+	 * @var array
+	 */
 	private $bounceback = null;
 	
+	/**
+	 * The generated content of the view.
+	 * 
+	 * @access private
+	 * @var string
+	 */
 	private $viewContent = null;
+	
+	/**
+	 * The generated content of the view and the layout combined.
+	 * 
+	 * @access private
+	 * @var string
+	 */
 	private $fullPageContent = null;
 	
+	/**
+	 * Indicates certain function names that are to be ignored as views.
+	 * 
+	 * @access protected
+	 * @var array
+	 */
 	protected $notAView = array();
 	
+	/**
+	 * Sets up the controller and figures out the view that needs to be loaded.
+	 * 
+	 * @access private
+	 * @final
+	 */
 	final private function _controllerSetup() {
 		// Construct Code
 		$this->params = Reg::get("URI.working");
@@ -59,12 +139,24 @@ abstract class Controller {
 		$this->formhandler = new Formhandler($this);
 	}
 	
+	/**
+	 * Closes out the processing of the controller.
+	 * 
+	 * @access private
+	 * @final
+	 */
 	final private function _controllerDestruct() {
 		unset($this->viewContent);
 		unset($this->fullPageContent);
 		unset($this->formhandler);
 	}
 	
+	/**
+	 * Runs the controller, processes and output's the view.
+	 * 
+	 * @access public
+	 * @final
+	 */
 	final public function _showView() {
 		// Run the controller's Setup
 		$this->_controllerSetup();
@@ -87,6 +179,12 @@ abstract class Controller {
 		$this->_controllerDestruct();
 	}
 	
+	/**
+	 * Check's that the view being loaded exists, processes the bounceback, runs the view and the layout.
+	 * 
+	 * @access private
+	 * @final
+	 */
 	final private function _loadView() {
 		ob_start();
 		$error = false;
@@ -122,6 +220,16 @@ abstract class Controller {
 		$this->_runFilters('Page.after');
 	}
 	
+	/**
+	 * Loads in a view file and allows the default view file that is being loaded to be overridden.
+	 * 
+	 * @access protected
+	 * @final
+	 * @param array|string $args Can be either the name of the view to load or an array with name and controller defined
+	 * @param string $controller The name of the controller to load the view from, if left blank assumes the current controller
+	 * @param boolean $override Indicates whether to override the current view's default with the requested one
+	 * @return boolean true if the view was loaded and boolean false if not
+	 */
 	final protected function _getView($args, $controller="", $override = false) {
 		if (!is_array($args)) {
 			$args = array(
@@ -158,6 +266,16 @@ abstract class Controller {
 		return false;
 	}
 	
+	/**
+	 * Checks if a view exists by file, method, or both.
+	 * 
+	 * @access protected
+	 * @final
+	 * @param array|string $args Can be either the name of the view or an array with name and controller defined
+	 * @param string $controller The name of the controller where the view is located, if left blank assumes the current controller
+	 * @param mixed $checkmethod Indicates whether to check if the method exists, file exists, or both
+	 * @return boolean true if the view exists and boolean false if not
+	 */
 	final protected function _viewExists($args, $controller="", $checkmethod = false) {
 		if (!is_array($args)) {
 			$args = array(
@@ -200,6 +318,15 @@ abstract class Controller {
 		}
 	}
 	
+	/**
+	 * Sets the layout to load. This will only set if the layout exists.
+	 * 
+	 * @access protected
+	 * @final
+	 * @param string $name The name of the layout to load
+	 * @param string $branch Optional The branch to load the layout from assumes the current if none is defined
+	 * @return boolean true if the layout was set and boolean false if not
+	 */
 	final protected function _setLayout($name, $branch = '') {
 		$layout = array('name' => $name, 'branch' => $branch);
 		if (($layout['branch'] == Reg::get('System.rootIdentifier')) || (!Reg::hasVal("Branch.name") && empty($layout['branch']))) {
@@ -227,11 +354,25 @@ abstract class Controller {
 		return false;
 	}
 	
+	/**
+	 * Unsets the currently set layout.
+	 * 
+	 * @access protected
+	 * @final
+	 * @return boolean true
+	 */
 	final protected function _removeLayout() {
 		$this->layout = null;
 		return true;
 	}
 	
+	/**
+	 * Loads the layout.
+	 * 
+	 * @access private
+	 * @final
+	 * @return boolean true if the layout was loaded and boolean false if not
+	 */
 	final private function _renderLayout() {
 		$layout = array_merge(array('name'=>'', 'branch'=>''), (array)$this->layout);
 		if (empty($layout['name'])) {
@@ -260,7 +401,16 @@ abstract class Controller {
 		return false;
 	}
 	
-	final protected function _addFilterAll($filter, $schedule) {
+	/**
+	 * Add's a filter for all the views in the controller.
+	 * 
+	 * @access protected
+	 * @final
+	 * @param string $filter The name of the function to use as the filter
+	 * @param string $schedule Optional The schedule when to run the filter
+	 * @return boolean true
+	 */
+	final protected function _addFilterAll($filter, $schedule = 'Page.before') {
 		if (!isset($this->filters[$schedule])) {
 			$this->filters[$schedule] = array();
 		}
@@ -271,7 +421,17 @@ abstract class Controller {
 		return true;
 	} 
 	
-	final protected function _addFilterOn($filter, $methods, $schedule) {
+	/**
+	 * Add's a filter on specific views in the controller.
+	 * 
+	 * @access protected
+	 * @final
+	 * @param string $filter The name of the function to use as the filter
+	 * @param string|array $methods The name of the method or methods to set the filter on
+	 * @param string $schedule Optional The schedule when to run the filter
+	 * @return boolean true if successfully set and boolean false if not
+	 */
+	final protected function _addFilterOn($filter, $methods, $schedule = 'Page.before') {
 		$methods = (array)$methods;
 		if (!isset($this->filters[$schedule])) {
 			$this->filters[$schedule] = array();
@@ -300,7 +460,17 @@ abstract class Controller {
 		return true;
 	}
 	
-	final protected function _addFilterExcept($filter, $methods, $schedule) {
+	/**
+	 * Adds a filter on all views except the ones defined.
+	 * 
+	 * @access protected
+	 * @final
+	 * @param string $filter The name of the function to use as the filter
+	 * @param string|array $methods The name of the method or methods to be exempt from the filter
+	 * @param string $schedule Optional The schedule when to run the filter
+	 * @return boolean true if successfully set and boolean false if not
+	 */
+	final protected function _addFilterExcept($filter, $methods, $schedule = 'Page.before') {
 		$methods = (array)$methods;
 		if (!isset($this->filters[$schedule])) {
 			$this->filters[$schedule] = array();
@@ -327,8 +497,18 @@ abstract class Controller {
 		}
 		return true;
 	}
-
-	final protected function _removeFilterOn($filter, $methods, $schedule) {
+	
+	/**
+	 * Removes a specific filter on the defined methods.
+	 * 
+	 * @access protected
+	 * @final
+	 * @param string $filter The name of the filter function to remove
+	 * @param string|array $methods The name of the method or methods to remove the filter from
+	 * @param string $schedule Optional The filter's schedule
+	 * @return boolean true if successfully removed and boolean false if not
+	 */
+	final protected function _removeFilterOn($filter, $methods, $schedule = 'Page.before') {
 		$methods = (array)$methods;
 		if (!isset($this->filters[$schedule][$filter])) {
 			return true;
@@ -355,13 +535,30 @@ abstract class Controller {
 		return false;
 	}
 	
-	final protected function _removeFilter($filter, $schedule) {
+	/**
+	 * Removes a filter at a specific schedule.
+	 * 
+	 * @access protected
+	 * @final
+	 * @param string $filter The name of the filter function to remove
+	 * @param string $schedule Optional The filter's schedule
+	 * @return boolean true
+	 */
+	final protected function _removeFilter($filter, $schedule = 'Page.before') {
 		if (isset($this->filters[$schedule][$filter])) {
 			unset($this->filters[$schedule][$filter]);
 		}
 		return true;
 	}
 	
+	/**
+	 * Runs all filters for a specific schedule.
+	 * 
+	 * @access private
+	 * @final
+	 * @param string $schedule Optional The schedule of filters to run
+	 * @return boolean true if there are filters for the specified schedule and boolean false if not
+	 */
 	final private function _runFilters($schedule) {
 		if (isset($this->filters[$schedule])) {
 			foreach($this->filters[$schedule] as $filter => $attributes) {
@@ -380,6 +577,17 @@ abstract class Controller {
 		return false;
 	}
 	
+	/**
+	 * Sets a bounceback for a controller which catches any 404's caught in the controller and allows the check method to
+	 * indicate if its a real view or not by returning true or false and if true is returned the the bounce method is loaded
+	 * as the view.
+	 * 
+	 * @access protected
+	 * @final
+	 * @param string $check The method to use to check if a view is valid
+	 * @param string $bounce The method to load if the check returns true
+	 * @return boolean true
+	 */
 	final protected function _setBounceBack($check, $bounce) {
 		$this->bounceback = array(
 			'check' => $check,
@@ -388,11 +596,25 @@ abstract class Controller {
 		return true;
 	}
 	
+	/**
+	 * Remove a set bounceback.
+	 * 
+	 * @access protected
+	 * @final
+	 * @return boolean true
+	 */
 	final protected function _removeBounceBack() {
 		$this->bounceback = null;
 		return true;
 	}
 	
+	/**
+	 * Run's the set bounceback.
+	 * 
+	 * @access private
+	 * @final
+	 * @return boolean true if the check returns true and boolean false if not
+	 */
 	final private function _runBounceBack() {
 		if (((isset($this->bounceback['check']) && method_exists($this, $this->bounceback['check'])) && (isset($this->bounceback['bounce']) && method_exists($this, $this->bounceback['bounce']))) && !$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) {
 			$keys = array_keys(Reg::get('URI.working'));
@@ -417,23 +639,59 @@ abstract class Controller {
 		return false;
 	}
 	
+	/**
+	 * Returns the generated view content.
+	 * 
+	 * @access protected
+	 * @final
+	 * @return string
+	 */
 	final protected function &_getViewContent() {
 		return $this->viewContent;
 	}
 	
+	/**
+	 * Sets the view content.
+	 * 
+	 * @access protected
+	 * @final
+	 * @param string &$content The view content
+	 */
 	final protected function _setViewContent(&$content) {
 		$this->viewContent = $content;
 	}
 	
+	/**
+	 * Get the full page generated content.
+	 * 
+	 * @access protected
+	 * @final
+	 * @return string
+	 */
 	final protected function &_getFullPageContent() {
 		return $this->fullPageContent;
 	}
 	
+	/**
+	 * Sets the full page content.
+	 * 
+	 * @access protected
+	 * @final
+	 * @param string &$content The full page content
+	 */
 	final protected function _setFullPageContent(&$content) {
 		$this->fullPageContent = $content;
 	}
 	
-	public function _designerFixCallback($link) {
+	/**
+	 * Callback function for the designer fix preg_replace_callback
+	 * 
+	 * @access private
+	 * @final
+	 * @param array $link An array of the found items from the regular expression
+	 * @return string
+	 */
+	final private function _designerFixCallback($link) {
 		
 		$link_arr = explode("/", $link[2]);
 		$up_link_count = count(array_keys(array_slice($link_arr, 1), ".."));
@@ -510,7 +768,14 @@ abstract class Controller {
 		return $link[1].((!empty($return)) ? $return : $link[2]);
 	}
 	
-	public function _designerFix (&$content) {
+	/**
+	 * Runs the fix for the designer tags
+	 * 
+	 * @access public
+	 * @final
+	 * @param string &$content The content to run the fix on
+	 */
+	final public function _designerFix (&$content) {
 		$content = preg_replace_callback("/(=\"|=\'|=)([\[\]][^(\"|\'|[:space:]|>)]+)/", array($this, "_designerFixCallback"), $content);
 	}
 
