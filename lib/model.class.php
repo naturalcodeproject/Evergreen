@@ -384,7 +384,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 * @param boolean $autoExtract Optional Defaults to false but when set to true will return an array with each row of data as a separate object
 	 * @return object a reference to the current or relationship object with all the data filled in and an array of objects if $autoExtract is set to true
 	 */
-	public function find($options = array(), $options2 = array(), $autoExtract = false) {
+	public function find($options = array(), $options2 = array(), $autoExtract = null) {
 		$alias = $this->_determineOptions($options, $options2);
 		
 		if (!empty($this->relationships[$alias])) {
@@ -395,6 +395,12 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		
 		if (isset($options['autoExtract']) && $options['autoExtract'] == true) {
 			$autoExtract = true;
+		} else if (isset($options['autoExtract']) && $options['autoExtract'] == false) {
+			$autoExtract = false;
+		} else if (!isset($options['autoExtract']) && $autoExtract == null && Reg::get('Database.autoExtract') == true) {
+			$autoExtract = true;
+		} else {
+			$autoExtract = false;
 		}
 		
 		unset($options['autoExtract']);

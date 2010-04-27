@@ -85,6 +85,7 @@ final class Config {
 		Reg::set('Error.logErrors', true);
 		Reg::set('Error.generalErrorMessage', "An error occurred. Please contact the administrator.");
 		Reg::set('Database.viewQueries', false);
+		Reg::set('Database.autoExtract', false);
 		
 		// return true for good measure
 		return true;
