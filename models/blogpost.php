@@ -13,7 +13,7 @@ class Blogpost_Model extends Model {
         $this->addField('time', array(
         	'required',
         	'format'	=> array(
-        		'onGet' => array('Blogpost_model', 'formatter'),
+        		'onGet' => 'formatter',
         		'onSet'	=> 'timestamp',
         	),
         ));
@@ -31,7 +31,7 @@ class Blogpost_Model extends Model {
         	'validate' => array(
         		'isValidUser',
         	),
-        	'format' => array('onSet' => 'integer'),
+        	'format' => array('onSet' => array('ModelFieldFormat', 'integer')),
         ));
 
         $this->addField('body', array(

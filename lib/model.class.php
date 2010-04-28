@@ -104,14 +104,18 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	/**
 	 * Adds a field to the model.
 	 *
+	 * <code>
+	 * <?php
 	 * array(
-	 *	'name'			=> name of field,
+	 *	'name'		=> name of field,
 	 *	'key'		=> true|false, (default: false)
 	 *	'validate'	=> array(
 	 *		'function1'	=> 'message',
 	 *		...),
 	 *	'format'		=> see self::$valid_formats
 	 * );
+	 * ?>
+	 * </code>
 	 * 
 	 * @access protected
 	 * @param string $name The name of the field
@@ -125,7 +129,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		$field_data = array(
 			'key'		=> false,
 			'validate'	=> array(),
-			'format'		=> array('onGet' => Model_Format::getDefault(), 'onSet' => Model_Format::getDefault()),
+			'format'		=> array('onGet' => '', 'onSet' => ''),
 		);
 
 		// check primary key
@@ -168,58 +172,37 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		// @todo Turn this into functions. A lot of code is repeated and I don't like that. - Eric
 		if (!empty($options['format'])) {
 			if (!is_array($options['format'])) {
-				// user is using a provided formatter for onGet
-				if (Model_Format::isValid($options['format'])) {
-					$field_data['format']['onGet'] = array('Model_Format', Model_Format::getFunction($options['format']));
+				$format = $this->_checkFormatter($options['format']);
+				
+				if (is_string($format)) {
+					$errors[] = $format;
 				} else {
-					$errors[] = 'Invalid field format: ' . $options['format'];
+					$field_data['format']['onGet'] = $format;
 				}
 			} else {
 				// see if the user is setting onGet or onSet
 				if (isset($options['format']['onGet']) || isset($options['format']['onSet'])) {
 					// onGet
 					if (isset($options['format']['onGet'])) {
-						// user is using a provided formatter for onGet
-						if (!is_array($options['format']['onGet'])) {
-							if (Model_Format::isValid($options['format']['onGet'])) {
-								$field_data['format']['onGet'] = array('Model_Format', Model_Format::getFunction($options['format']['onGet']));
-							} else {
-								$errors[] = 'Invalid field format: ' . $options['format']['onGet'];
-							}
+						$format = $this->_checkFormatter($options['format']['onGet']);
+
+						// if a string was returned then there was an error
+						if (is_string($format)) {
+							$errors[] = $format;
 						} else {
-							if (sizeof($options['format']['onGet']) != 2) {
-								$errors[] = "Invalid field format. Format needs to be in the form of array('class', 'method')";
-							} else {				
-								// make sure the class and method exists
-								if (!class_exists($options['format']['onGet'][0]) || !method_exists($options['format']['onGet'][0], $options['format']['onGet'][1])) {
-									$errors[] = 'Invalid field format. Class/function does not exists: ' . $options['format']['onGet'][0] . '::' . $options['format']['onGet'][1];
-								} else {
-									$field_data['format']['onGet'] = $options['format']['onGet'];
-								}
-							}
+							$field_data['format']['onGet'] = $format;
 						}
 					}
 					
 					// onSet
 					if (isset($options['format']['onSet'])) {
-						// user is using aprovided formatter for onSet
-						if (!is_array($options['format']['onSet'])) {
-							if (Model_Format::isValid($options['format']['onSet'])) {
-								$field_data['format']['onSet'] = array('Model_Format', Model_Format::getFunction($options['format']['onSet']));
-							} else {
-								$errors[] = 'Invalid field format: ' . $options['format']['onSet'];
-							}
+						$format = $this->_checkFormatter($options['format']['onSet']);
+
+						// if a string was returned then there was an error
+						if (is_string($format)) {
+							$errors[] = $format;
 						} else {
-							if (sizeof($options['format']['onSet']) != 2) {
-								$errors[] = "Invalid field format. Format needs to be in the form of array('class', 'method')";
-							} else {				
-								// make sure the class and method exists
-								if (!class_exists($options['format']['onSet'][0]) || !method_exists($options['format']['onSet'][0], $options['format']['onSet'][1])) {
-									$errors[] = 'Invalid field format. Class/function does not exists: ' . $options['format']['onSet'][0] . '::' . $options['format']['onSet'][1];
-								} else {
-									$field_data['format']['onSet'] = $options['format']['onSet'];
-								}
-							}
+							$field_data['format']['onSet'] = $format;
 						}
 					}
 				} else {
@@ -245,6 +228,41 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			$this->fields[$name] = $field_data;
 
 			return true;
+		}
+	}
+	
+	/**
+	* checks to see if a format is valid
+	*
+	* @access private
+	* @param mixed Either a string or array of the format that is being checked
+	* @return mixed an array of the class and model of the formatter or a string of the error
+	*/
+	private function _checkFormatter($format) {
+		// user is using a provided formatter
+		if (!is_array($format)) {
+			if (method_exists('ModelFieldFormat', $format)) {
+				// it is one of the provided formatters
+				return array('ModelFieldFormat', $format);
+			} else if (method_exists(get_class($this), $format)) {
+				// the method is within the current class
+				return array(get_class($this), $format);
+			} else {
+				// formatter doesn't exist
+				return 'Invalid field format: ' . $format;
+			}
+		} else {
+			// if the array doesn't have two indexes then it is in the wrong format
+			if (sizeof($format) != 2) {
+				return "Invalid field format. Format needs to be in the form of array('class', 'method')";
+			} else {				
+				// make sure the class and method exists
+				if (!class_exists($format[0]) || !method_exists($format[0], $format[1])) {
+					return 'Invalid field format. Class/function does not exists: ' . $format[0] . '::' . $format[1];
+				} else {
+					 return $format;
+				}
+			}
 		}
 	}
 	
@@ -277,11 +295,15 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	/**
 	 * Adds an one-to-one relationship.
 	 *
+	 * <code>
+	 * <?php
 	 * array(
 	 *	'local'		=> 'column in local model',
 	 *	'foreign'	=> 'column in foreign table',
 	 *	'alias'		=> 'alias for the foreign table',
 	 * );
+	 * ?>
+	 * </code>
 	 * 
 	 * @access protected
 	 * @return boolean true if setup correctly and boolean false if setup failed
@@ -303,11 +325,15 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	/**
 	 * Adds an one-to-many relationship.
 	 *
+	 * <code>
+	 * <?php
 	 * array(
 	 *	'local'		=> 'column in local model',
 	 *	'foreign'	=> 'column in foreign table',
 	 *	'alias'		=> 'alias for the foreign table',
 	 * );
+	 * ?>
+	 * </code>
 	 * 
 	 * @access protected
 	 * @return boolean true if setup correctly and boolean false if setup failed
@@ -427,8 +453,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	}
 	
 	/**
-	 * UPDATE or INSERT a row into the DB
-	 * calls create() or update()
+	 * UPDATE or INSERT a row into the DB. calls create() or update()
 	 * 
 	 * @access public
 	 * @final
@@ -680,7 +705,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		// loop through the fields and populate them
 		foreach($data as $key => $value) {
 			if ($this->isField($key) === true && !empty($this->fields[$key]['format']['onSet'])) {
-				$value = Model_Format::format($this->fields[$key]['format']['onSet'], $value);
+				$value = ModelFieldFormat::format($this->fields[$key]['format']['onSet'], $value);
 			}
 			
 			$this->data[$this->current_row][$key] = $value;
@@ -699,7 +724,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		foreach($this->data[$this->current_row] as $key => $value) {
 			// apply the formatter for the field
 			if ($this->isField($key) === true && !empty($this->fields[$key]['format']['onGet'])) {
-				$value = Model_Format::format($this->fields[$key]['format']['onGet'], $value);
+				$value = ModelFieldFormat::format($this->fields[$key]['format']['onGet'], $value);
 			}
 			
 			$data[$key] = $value;
@@ -810,7 +835,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	public function __set($name, $value) {
 		// apply the formatter for the field
 		if ($this->isField($name) === true && !empty($this->fields[$name]['format']['onSet'])) {
-			$value = Model_Format::format($this->fields[$name]['format']['onSet'], $value);
+			$value = ModelFieldFormat::format($this->fields[$name]['format']['onSet'], $value);
 		}
 		
 		$this->data[$this->current_row][$name] = $value;
@@ -829,7 +854,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			
 			// apply the formatter for the field
 			if ($this->isField($name) === true && !empty($this->fields[$name]['format']['onGet'])) {
-				$value = Model_Format::format($this->fields[$name]['format']['onGet'], $value);
+				$value = ModelFieldFormat::format($this->fields[$name]['format']['onGet'], $value);
 			}
 				
 			return $value;
@@ -1188,67 +1213,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
  * @package       evergreen
  * @subpackage    lib
  */
-class Model_Format {
-	/**
-	 * All of the valid pre-defined data formats.
-	 * 
-	 * @access private
-	 * @static
-	 * @var array
-	 */
-	private static $valid_formats = array(
-		'none'		=> '',
-		'plaintext'	=> 'plaintext',
-		'htmltext'	=> 'htmltext',
-		'integer'	=> 'integer',
-		'timestamp'	=> 'timestamp',
-		'datetime'	=> '',
-	);
-	
-	/**
-	 * Checks to see if the passed in format is a valid format.
-	 * 
-	 * @access public
-	 * @static
-	 * @param string $format The format to check
-	 * @return boolean true if the format is valid and boolean false if not
-	 */
-	public static function isValid($format) {
-		if (array_key_exists($format, self::$valid_formats)) {
-			return true;
-		}
-
-		return false;
-	}
-	
-	/**
-	* gets the function for a format
-	* 
-	* @access public
-	* @static
-	* @param string $format The format to get the function for
-	* @return string the function to use for the specific formatter. Returns boolean
-	*/
-	public static function getFunction($format) {
-		if (isset(self::$valid_formats[$format])) {
-			return self::$valid_formats[$format];
-		}
-		
-		return false;
-	}
-	
-	/**
-	 * Gets the default valid format.
-	 * 
-	 * @access public
-	 * @static
-	 * @return string
-	 */
-	public static function getDefault() {
-		reset(self::$valid_formats);
-		return current(self::$valid_formats);
-	}
-	
+class ModelFieldFormat {
 	/**
 	 * Formats the value for the column and returns the result.
 	 * 
