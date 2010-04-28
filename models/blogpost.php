@@ -19,7 +19,7 @@ class Blogpost_Model extends Model {
         ));
 
         $this->addField('title'	, array(
-        	'required',
+        	'required' => true,
         	'validate' => array(
         		'maxlength',
         		'minlength' => 'Custom error message',
@@ -35,6 +35,7 @@ class Blogpost_Model extends Model {
         ));
 
         $this->addField('body', array(
+        	'required'	=> false,
         	'validate' => 'test',
         	'format' => 'htmltext',
         ));

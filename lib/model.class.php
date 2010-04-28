@@ -138,8 +138,8 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
 
 		// check if required
-		if (in_array('required', $options) || array_key_exists('required', $options)) {
-			$field_data['required'] = (!empty($options['required'])) ? $options['required'] : '';
+		if (in_array('required', $options) || (array_key_exists('required', $options) && $options['required'] != false)) {
+			$field_data['required'] = (!empty($options['required']) && $options['required'] != true) ? $options['required'] : '';
 		}
 
 		// validate the validate methods
@@ -1164,7 +1164,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 */
 	private function checkRequiredFields() {
 		foreach ($this->fields as $name => $field) {
-			if (isset($field['required']) && empty($this->{$name})) {
+			if (isset($field['required']) && empty($this->data[$this->current_row][$name])) {
 				$this->addError($name, (!empty($field['required']) ? $field['required'] : 'The validator \'required\' failed on the \''.$name.'\' field'), 'required', ModelFieldError::TYPE_REQUIRED_FIELD_MISSING);
 			}
 		}
@@ -1177,7 +1177,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 */
 	private function checkKeys() {
 		foreach ($this->fields as $name => $field) {
-			if ($field['key'] && empty($this->{$name})) {
+			if ($field['key'] && empty($this->data[$this->current_row][$name])) {
 				$this->addError($name, (!empty($field['key']) ? $field['key'] : 'The validator \'key\' failed on the \''.$name.'\' field'), 'key', ModelFieldError::TYPE_KEY_MISSING);
 			}
 		}
@@ -1192,7 +1192,8 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		foreach ($this->fields as $name => $field) {
 			if (count($field['validate'])) {
 				foreach ($field['validate'] as $validator => $message) {
-					$result = call_user_func(array($this, $validator), $name, $this->data[$this->current_row][$name]);
+					$value = (isset($this->data[$this->current_row][$name])) ? $this->data[$this->current_row][$name] : '';
+					$result = call_user_func(array($this, $validator), $name, $value);
 					if ($result === false) {
 						$result = (($message != null) ? $message : 'The validator \''.$validator.'\' failed on the \''.$name.'\' field');
 					}
