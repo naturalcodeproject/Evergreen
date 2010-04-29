@@ -169,7 +169,6 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
 
 		// set the format
-		// @todo Turn this into functions. A lot of code is repeated and I don't like that. - Eric
 		if (!empty($options['format'])) {
 			if (!is_array($options['format'])) {
 				$format = $this->_checkFormatter($options['format']);
