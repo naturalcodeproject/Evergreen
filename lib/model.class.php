@@ -127,14 +127,13 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 
 		// set defaults for the field
 		$field_data = array(
-			'key'		=> false,
 			'validate'	=> array(),
 			'format'		=> array('onGet' => '', 'onSet' => ''),
 		);
 
 		// check primary key
-		if (in_array('key', $options) || isset($field_data['key']) && $field_data['key'] == true) {
-			$field_data['key'] = true;
+		if (in_array('key', $options) || (array_key_exists('key', $options) && $options['key'] != false)) {
+			$field_data['key'] = (!empty($options['key']) && $options['key'] != true) ? $options['key'] : '';
 		}
 
 		// check if required
@@ -546,10 +545,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 					$data[$name] = $this->data[$this->current_row][$name];
 				}
 			}
-	
+			
 			// execute the query
 			DB::update($this->_getPrimaryKeys(), $data, $this->getTableName());
-			
+
 			if (method_exists($this, 'postUpdate') && is_callable(array($this, 'postUpdate'))) {
 				$this->postUpdate();
 			}
@@ -753,7 +752,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	private function _getPrimaryKeys() {
 		$return = array();
 		foreach($this->fields as $name => $options) {
-			if ($options['key'] === true) {
+			if (isset($options['key'])) {
 				$return[] = $name;
 			}
 		}
@@ -1176,7 +1175,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 */
 	private function checkKeys() {
 		foreach ($this->fields as $name => $field) {
-			if ($field['key'] && empty($this->data[$this->current_row][$name])) {
+			if (isset($field['key']) && empty($this->data[$this->current_row][$name])) {
 				$this->addError($name, (!empty($field['key']) ? $field['key'] : 'The validator \'key\' failed on the \''.$name.'\' field'), 'key', ModelFieldError::TYPE_KEY_MISSING);
 			}
 		}
@@ -1337,7 +1336,7 @@ class ModelFieldError {
 	 * Error type constants.
 	 */
     const TYPE_INVALID_FIELD = 0;
-	const TYPE_KEY_MISSING = 1;
+    const TYPE_KEY_MISSING = 1;
     const TYPE_REQUIRED_FIELD_MISSING = 2;
     const TYPE_CUSTOM_VALIDATOR_FAILED = 3;
     
