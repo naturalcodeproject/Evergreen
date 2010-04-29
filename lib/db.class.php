@@ -172,6 +172,12 @@ class DB {
 	public static function delete($table, $options) {
 		$query = self::$driver->delete($table, $options);
 		
+		// get the values out of the where
+		$values = array();
+		if (isset($options['where']) && is_array($options['where'])) {
+			$values = array_slice($options['where'], 1);
+		}
+		
 		return self::execute($query, (array)$values);
 	}
 	
