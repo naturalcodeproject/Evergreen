@@ -382,7 +382,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 
 		// if the results isn't false and the array is bigger than 0 then populate the object
 		if ($results !== false && sizeof($results) > 0) {
-			$this->setProperties($results);
+			$this->setProperties($results, false, true);
 
 			return true;
 		}
@@ -434,10 +434,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			while($row = DB::fetch($results)) {
 				if ($autoExtract == true) {
 					$obj = clone $this;
-					$obj->setProperties($row, true);
+					$obj->setProperties($row, true, false);
 					$models[] = $obj;
 				} else {
-					$this->setProperties($row, true);
+					$this->setProperties($row, true, false);
 				}
 			}
 			if ($autoExtract == true) {
@@ -694,7 +694,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 * @param array $data An array of data with the fields as the keys to populate the model with
 	 * @param boolean $new Optional When set to true the function creates a new data row in the model for iteration rather than replacing the current row's data
 	 */
-	public function setProperties($data = array(), $new = false) {
+	public function setProperties($data = array(), $new = false, $filters = true) {
 		// increment the internal counter if forced but don't do it if no data exists
 		if ($new === true && sizeof($this->data) != 0) {
 			$this->current_row += 1;
@@ -702,7 +702,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 
 		// loop through the fields and populate them
 		foreach($data as $key => $value) {
-			if ($this->isField($key) === true && !empty($this->fields[$key]['format']['onSet'])) {
+			if ($filters === true && $this->isField($key) === true && !empty($this->fields[$key]['format']['onSet'])) {
 				$value = ModelFieldFormat::format($this->fields[$key]['format']['onSet'], $value);
 			}
 			
