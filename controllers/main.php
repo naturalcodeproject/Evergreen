@@ -12,6 +12,12 @@ class Main_Controller extends ApplicationController_Controller {
 	
 	public function index () {
 		$this->home_selected = "selected";
+		if ($this->_viewExists('index', 'main', 'developer', true)) {
+			echo 'The view exists';
+		}
+		
+		echo hash('sha256', (string)array('something', 'more'));
+		//$this->_getView('index', 'main', 'MAIN');
 		//$helper = new Test_Helper();
 		//$model = new Users_Model();
 		//$model->query('select *');

@@ -285,9 +285,9 @@ final class Config {
 					}
 					$uri_params[$key] = $item;
 				} else if (!empty($url_vals[$count])) {
-					if (is_array($item) && count($item) > 1 && function_exists($item[1])) {
+					if (is_array($item) && count($item) > 1 && (is_array($item[1]) || function_exists($item[1]))) {
 						// if there is validation defined for a uri map key then test the value
-						if ($item[1]($url_vals[$count]) == true) {
+						if ((!is_array($item[1]) && function_exists($item[1]) && $item[1]($url_vals[$count]) == true) || (is_array($item[1]) && count($item[1]) > 1 && is_callable($item[1]) && call_user_func($item[1], $url_vals[$count]) == true)) {
 							// uri value passed map key validation so set value to key
 							$uri_params[$key] = $url_vals[$count];
 							$count++;
@@ -332,9 +332,9 @@ final class Config {
 						$uri_params[$key] = $item;
 					}
 				} else if (!empty($uri_vals[$uriKey][$count])) {
-					if (is_array($item) && count($item) > 1 && function_exists($item[1])) {
+					if (is_array($item) && count($item) > 1 && (is_array($item[1]) || function_exists($item[1]))) {
 						// if there is validation defined for a uri map key then test the value
-						if ($item[1]($uri_vals[$uriKey][$count]) == true) {
+						if ((!is_array($item[1]) && function_exists($item[1]) && $item[1]($uri_vals[$uriKey][$count]) == true) || (is_array($item[1]) && count($item[1]) > 1 && is_callable($item[1]) && call_user_func($item[1], $uri_vals[$uriKey][$count]) == true)) {
 							// uri value passed map key validation so set value to key
 							$uri_params[$key] = $uri_vals[$uriKey][$count];
 							$count++;
@@ -428,7 +428,7 @@ final class Config {
 	}
 	
 	/**
-	 * Return a uri item as a valid file name changing - or _ for a . and lowercasing.
+	 * Return a uri item as a valid file name, changing - or _ for a . and lowercasing.
 	 * 
 	 * @access public
 	 * @static
@@ -447,7 +447,7 @@ final class Config {
 	}
 	
 	/**
-	 * Return a uri item as a valid method name changing - or _ for the next character in the name being uppercased.
+	 * Return a uri item as a valid method name, changing - or _ for the next character in the name being uppercased.
 	 * 
 	 * @access public
 	 * @static
@@ -463,6 +463,8 @@ final class Config {
 			$regex = '/[_]/';
 		}
 		
+		$uriItem = preg_replace('/[A-Z]/', ' $0', $uriItem);
+		
 		$uriItem = explode(' ', ucwords(preg_replace($regex, ' ', $uriItem)));
 		if (count($uriItem) > 0) {
 			$uriItem[0] = strtolower($uriItem[0]);
@@ -471,7 +473,7 @@ final class Config {
 	}
 	
 	/**
-	 * Return a uri item as a valid class name changing - or _ for the next character in the name being uppercased.
+	 * Return a uri item as a valid class name, changing - or _ for the next character in the name being uppercased.
 	 * 
 	 * @access public
 	 * @static
@@ -513,6 +515,36 @@ final class Config {
 	 */
 	public static function classToFile($classItem) {
 		return self::methodToFile($classItem);
+	}
+	
+	/**
+	 * Return a file item as a valid method name, changing . for the next character in the name being uppercased with the first character in the name being lowercase.
+	 * 
+	 * @access public
+	 * @static
+	 * @param string $fileItem The file name that needs to be converted to the method format
+	 * @return string
+	 */
+	public static function fileToMethod($fileItem) {
+		$fileItem = preg_replace('/[A-Z]/', ' $0', $fileItem);
+		$fileItem = explode(' ', ucwords(preg_replace('/\./', ' ', $fileItem)));
+		if (count($fileItem) > 0) {
+			$fileItem[0] = strtolower($fileItem[0]);
+		}
+		return implode('', $fileItem);
+	}
+	
+	/**
+	 * Return a file item as a valid class name, changing . for the next character in the name being uppercased with the first character in the name being uppercase.
+	 * 
+	 * @access public
+	 * @static
+	 * @param string $fileItem The file name that needs to be converted to the class format
+	 * @return string
+	 */
+	public static function fileToClass($fileItem) {
+		$fileItem = explode(' ', ucwords(preg_replace('/\./', ' ', $fileItem)));
+		return implode('', $fileItem);
 	}
 	
 	/**

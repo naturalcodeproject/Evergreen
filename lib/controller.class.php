@@ -227,16 +227,32 @@ abstract class Controller {
 	 * @final
 	 * @param array|string $args Can be either the name of the view to load or an array with name and controller defined
 	 * @param string $controller The name of the controller to load the view from, if left blank assumes the current controller
+	 * @param string $branch The name of the branch to load the view from, if left blank assumes the current branch
 	 * @param boolean $override Indicates whether to override the current view's default with the requested one
 	 * @return boolean true if the view was loaded and boolean false if not
 	 */
-	final protected function _getView($args, $controller="", $override = false) {
-		if (!is_array($args)) {
-			$args = array(
-				'name' => $args,
-				'controller' => $controller,
-				'override' => $override
+	final protected function _getView() {
+		$args = func_get_args();
+		if (count($args) < 1 || count($args) > 4) {
+			return false;
+		}
+		if (count($args) == 1 && is_array($args[0])) {
+			$args = $args[0];
+		} else {
+			$override = false;
+			if (is_bool($args[count($args)-1]) === true) {
+				$override = array_pop($args);
+			}
+			$args = array_combine(
+				array_merge(array_slice(array(
+					'name',
+					'controller',
+					'branch'
+				), 0, count($args)),
+				(array)'override'),
+				array_merge($args, (array)$override)
 			);
+			unset($override);
 		}
 		if (empty($args['name'])) {
 			return false;
@@ -244,25 +260,29 @@ abstract class Controller {
 		if (empty($args['controller'])) {
 			$args['controller'] = $this->params['controller'];
 		}
+		if (empty($args['branch']) && Reg::hasVal('Branch.name')) {
+			$args['branch'] = Reg::get('Branch.name');
+		}
+		if (!empty($args['branch']) && $args['branch'] == Reg::get('System.rootIdentifier')) {
+			unset($args['branch']);
+		}
+		if (!isset($args['override'])) {
+			$args['override'] = false;
+		}
+		
 		if ($this->overriddenView == false && $args['override'] == true) {
 			$this->overriddenView = $args['override'];
 			unset($args['override']);
 			$this->overriddenViewToLoad = $args;
 			return true;
 		}
-		if (!Reg::hasVal("Branch.name")) {
-			$path = Reg::get("Path.physical")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
-			if (((file_exists($path) && (include($path)) == true))) {
-				return true;
-			}
-			unset($path);
-		} else {
-			$path = Reg::get("Path.physical")."/branches/".Config::uriToFile(Config::classToFile(Reg::get("Branch.name")))."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
-			if (((file_exists($path) && (include($path)) == true))) {
-				return true;
-			}
-			unset($path);
+		$path = Reg::get("Path.physical").((!empty($args['branch'])) ? "/branches/".Config::uriToFile(Config::classToFile($args['branch'])) : "")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
+
+		if (((file_exists($path) && (include($path)) == true))) {
+			return true;
 		}
+		unset($path);
+		
 		return false;
 	}
 	
@@ -277,12 +297,27 @@ abstract class Controller {
 	 * @return boolean true if the view exists and boolean false if not
 	 */
 	final protected function _viewExists($args, $controller="", $checkmethod = false) {
-		if (!is_array($args)) {
-			$args = array(
-				'name' => $args,
-				'controller' => $controller,
-				'override' => $override
+		$args = func_get_args();
+		if (count($args) < 1 || count($args) > 4) {
+			return false;
+		}
+		if (count($args) == 1 && is_array($args[0])) {
+			$args = $args[0];
+		} else {
+			$checkmethod = false;
+			if (is_bool($args[count($args)-1]) === true || $args[count($args)-1] == 'both') {
+				$checkmethod = array_pop($args);
+			}
+			$args = array_combine(
+				array_merge(array_slice(array(
+					'name',
+					'controller',
+					'branch'
+				), 0, count($args)),
+				(array)'checkmethod'),
+				array_merge($args, (array)$checkmethod)
 			);
+			unset($checkmethod);
 		}
 		if (empty($args['name'])) {
 			return false;
@@ -290,18 +325,41 @@ abstract class Controller {
 		if (empty($args['controller'])) {
 			$args['controller'] = $this->params['controller'];
 		}
+		if (empty($args['branch']) && Reg::hasVal('Branch.name')) {
+			$args['branch'] = Reg::get('Branch.name');
+		}
+		if (!empty($args['branch']) && $args['branch'] == Reg::get('System.rootIdentifier')) {
+			unset($args['branch']);
+		}
+		if (!isset($args['checkmethod'])) {
+			$args['checkmethod'] = false;
+		}
 		if (($args['name'][0] != '_' && (!isset($this->bounceback['check']) || $this->bounceback['check'] != $args['controller']) && !in_array($args['controller'], $this->notAView))) {
 			if ($args['checkmethod'] === true) {
-				if (is_callable(array($this, $args['name'])) && method_exists($this, $args['name'])) {
+				$load['name'] = Config::uriToClass(Config::fileToClass($args['controller']));
+				if (!empty($args['branch'])) {
+					$load['branch'] = Config::uriToClass(Config::fileToClass($args['branch']));
+				}
+				$load['type'] = 'Controller';
+				$load = implode('_', $load);
+				
+				if (is_callable(array($load, Config::uriToMethod(Config::fileToMethod($args['name'])))) && method_exists($load, Config::uriToMethod(Config::fileToMethod($args['name'])))) {
 					return true;
 				} else {
 					return false;
 				}
 			} else {
-				$path = Reg::get("Path.physical").((Reg::hasVal("Branch.name")) ? "/branches/".Config::uriToFile(Config::classToFile(Reg::get("Branch.name"))) : "")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
+				$path = Reg::get("Path.physical").(($args['branch']) ? "/branches/".Config::uriToFile(Config::classToFile($args['branch'])) : "")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
 				if (file_exists($path)) {
 					if ($args['checkmethod'] == 'both') {
-						if (method_exists($this, $args['name'])) {
+						$load['name'] = Config::uriToClass(Config::fileToClass($args['controller']));
+						if (!empty($args['branch'])) {
+							$load['branch'] = Config::uriToClass(Config::fileToClass($args['branch']));
+						}
+						$load['type'] = 'Controller';
+						$load = implode('_', $load);
+						
+						if (is_callable(array($load, Config::uriToMethod(Config::fileToMethod($args['name'])))) && method_exists($load, Config::uriToMethod(Config::fileToMethod($args['name'])))) {
 							return true;
 						} else {
 							return false;
@@ -411,10 +469,15 @@ abstract class Controller {
 	 * @return boolean true
 	 */
 	final protected function _addFilterAll($filter, $schedule = 'Page.before') {
+		$filterKey = $tis->_createFilterKey($filter);
+		if (!is_array($filter)) {
+			$filter = array(get_class($this), $filter);
+		}
 		if (!isset($this->filters[$schedule])) {
 			$this->filters[$schedule] = array();
 		}
-		$this->filters[$schedule][$filter] = array(
+		$this->filters[$schedule][$filterKey] = array(
+			'filter' => $filter,
 			'type' => 'except',
 			'methods' => array()
 		);
@@ -433,25 +496,30 @@ abstract class Controller {
 	 */
 	final protected function _addFilterOn($filter, $methods, $schedule = 'Page.before') {
 		$methods = (array)$methods;
+		$filterKey = $tis->_createFilterKey($filter);
+		if (!is_array($filter)) {
+			$filter = array(get_class($this), $filter);
+		}
 		if (!isset($this->filters[$schedule])) {
 			$this->filters[$schedule] = array();
 		}
-		if (!isset($this->filters[$schedule][$filter])) {
-			$this->filters[$schedule][$filter] = array(
+		if (!isset($this->filters[$schedule][$filterKey])) {
+			$this->filters[$schedule][$filterKey] = array(
+				'filter' => $filter,
 				'type' => 'only',
 				'methods' => array()
 			);
 		}
-		if ($this->filters[$schedule][$filter]['type'] == 'except') {
-			foreach($this->filters[$schedule][$filter]['methods'] as $key => $method) {
+		if ($this->filters[$schedule][$filterKey]['type'] == 'except') {
+			foreach($this->filters[$schedule][$filterKey]['methods'] as $key => $method) {
 				if (in_array($method, $methods)) {
-					unset($this->filters[$schedule][$filter]['methods'][$key]);
+					unset($this->filters[$schedule][$filterKey]['methods'][$key]);
 				}
 			}
-		} else if ($this->filters[$schedule][$filter]['type'] == 'only') {
+		} else if ($this->filters[$schedule][$filterKey]['type'] == 'only') {
 			foreach($methods as $key => $method) {
-				if (!in_array($method, $this->filters[$schedule][$filter]['methods'])) {
-					$this->filters[$schedule][$filter]['methods'][] = $method;
+				if (!in_array($method, $this->filters[$schedule][$filterKey]['methods'])) {
+					$this->filters[$schedule][$filterKey]['methods'][] = $method;
 				}
 			}
 		} else {
@@ -472,23 +540,29 @@ abstract class Controller {
 	 */
 	final protected function _addFilterExcept($filter, $methods, $schedule = 'Page.before') {
 		$methods = (array)$methods;
+		$filterKey = $tis->_createFilterKey($filter);
+		if (!is_array($filter)) {
+			$filter = array(get_class($this), $filter);
+		}
 		if (!isset($this->filters[$schedule])) {
 			$this->filters[$schedule] = array();
 		}
-		if (!isset($this->filters[$schedule][$filter])) {
-			$this->filters[$schedule][$filter] = array(
+		if (!isset($this->filters[$schedule][$filterKey])) {
+			$this->filters[$schedule][$filterKey] = array(
+				'filter' => $filter,
 				'type' => 'except',
 				'methods' => array()
 			);
 		}
-		if ($this->filters[$schedule][$filter]['type'] == 'except') {
+		if ($this->filters[$schedule][$filterKey]['type'] == 'except') {
 			foreach($methods as $key => $method) {
-				if (!in_array($method, $this->filters[$schedule][$filter]['methods'])) {
-					$this->filters[$schedule][$filter]['methods'][] = $method;
+				if (!in_array($method, $this->filters[$schedule][$filterKey]['methods'])) {
+					$this->filters[$schedule][$filterKey]['methods'][] = $method;
 				}
 			}
-		} else if ($this->filters[$schedule][$filter]['type'] == 'only') {
-			$this->filters[$schedule][$filter] = array(
+		} else if ($this->filters[$schedule][$filterKey]['type'] == 'only') {
+			$this->filters[$schedule][$filterKey] = array(
+				'filter' => $filter,
 				'type' => 'except',
 				'methods' => $methods
 			);
@@ -510,24 +584,25 @@ abstract class Controller {
 	 */
 	final protected function _removeFilterOn($filter, $methods, $schedule = 'Page.before') {
 		$methods = (array)$methods;
-		if (!isset($this->filters[$schedule][$filter])) {
+		$filterKey = $tis->_createFilterKey($filter);
+		if (!isset($this->filters[$schedule][$filterKey])) {
 			return true;
 		}
-		if ($this->filters[$schedule][$filter]['type'] == 'except') {
+		if ($this->filters[$schedule][$filterKey]['type'] == 'except') {
 			foreach($methods as $key => $method) {
-				if (!in_array($method, $this->filters[$schedule][$filter]['methods'])) {
-					$this->filters[$schedule][$filter]['methods'][] = $method;
+				if (!in_array($method, $this->filters[$schedule][$filterKey]['methods'])) {
+					$this->filters[$schedule][$filterKey]['methods'][] = $method;
 				}
 			}
 			return true;
-		} else if ($this->filters[$schedule][$filter]['type'] == 'only') {
-			foreach($this->filters[$schedule][$filter]['methods'] as $key => $method) {
+		} else if ($this->filters[$schedule][$filterKey]['type'] == 'only') {
+			foreach($this->filters[$schedule][$filterKey]['methods'] as $key => $method) {
 				if (in_array($method, $methods)) {
-					unset($this->filters[$schedule][$filter]['methods'][$key]);
+					unset($this->filters[$schedule][$filterKey]['methods'][$key]);
 				}
 			}
 			
-			if (count($this->filters[$schedule][$filter]['methods']) == 0) {
+			if (count($this->filters[$schedule][$filterKey]['methods']) == 0) {
 				$this->_removeFilter($filter);
 			}
 			return true;
@@ -545,8 +620,9 @@ abstract class Controller {
 	 * @return boolean true
 	 */
 	final protected function _removeFilter($filter, $schedule = 'Page.before') {
-		if (isset($this->filters[$schedule][$filter])) {
-			unset($this->filters[$schedule][$filter]);
+		$filterKey = $tis->_createFilterKey($filter);
+		if (isset($this->filters[$schedule][$filterKey])) {
+			unset($this->filters[$schedule][$filterKey]);
 		}
 		return true;
 	}
@@ -561,14 +637,14 @@ abstract class Controller {
 	 */
 	final private function _runFilters($schedule) {
 		if (isset($this->filters[$schedule])) {
-			foreach($this->filters[$schedule] as $filter => $attributes) {
+			foreach($this->filters[$schedule] as $attributes) {
 				if ($attributes['type'] == 'except') {
 					if (!in_array($this->viewToLoad, $attributes['methods'])) {
-						call_user_func(array($this, $filter));
+						call_user_func($attributes['filter']);
 					}
 				} else if ($attributes['type'] == 'only') {
 					if (in_array($this->viewToLoad, $attributes['methods'])) {
-						call_user_func(array($this, $filter));
+						call_user_func($attributes['filter']);
 					}
 				}
 			}
@@ -578,17 +654,39 @@ abstract class Controller {
 	}
 	
 	/**
+	 * Creates a key from the provided filter that can be used to store filters.
+	 * 
+	 * @access private
+	 * @final
+	 * @param mixed $filter The filter to create the key from
+	 * @return string
+	 */
+	final private function _createFilterKey($filter) {
+		if (is_array($filter)) {
+			if (is_object($filter[0])) {
+				$filter[0] = get_class($filter[0]);
+			}
+			return hash('sha256', implode($filter));
+		} else {
+			return hash('sha256', (string)$filter);
+		}
+	}
+	
+	/**
 	 * Sets a bounceback for a controller which catches any 404's caught in the controller and allows the check method to
 	 * indicate if its a real view or not by returning true or false and if true is returned the the bounce method is loaded
 	 * as the view.
 	 * 
 	 * @access protected
 	 * @final
-	 * @param string $check The method to use to check if a view is valid
+	 * @param string|array $check The method to use to check if a view is valid
 	 * @param string $bounce The method to load if the check returns true
 	 * @return boolean true
 	 */
 	final protected function _setBounceBack($check, $bounce) {
+		if (!is_array($check)) {
+			$check = array(get_class($this), $check);
+		}
 		$this->bounceback = array(
 			'check' => $check,
 			'bounce' => $bounce
@@ -616,7 +714,7 @@ abstract class Controller {
 	 * @return boolean true if the check returns true and boolean false if not
 	 */
 	final private function _runBounceBack() {
-		if (((isset($this->bounceback['check']) && method_exists($this, $this->bounceback['check'])) && (isset($this->bounceback['bounce']) && method_exists($this, $this->bounceback['bounce']))) && !$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) {
+		if (((isset($this->bounceback['check']) && method_exists($this->bounceback['check'])) && (isset($this->bounceback['bounce']) && method_exists($this->bounceback['bounce']))) && !$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) {
 			$keys = array_keys(Reg::get('URI.working'));
 			$values = array_values(Reg::get('URI.working'));
 			$controllerPos = array_search('controller', $keys);
@@ -631,7 +729,7 @@ abstract class Controller {
 				return false;
 			}
 			
-			if (is_callable(array($this, $this->bounceback['check'])) && call_user_func(array($this, $this->bounceback['check'])) === false) {
+			if (is_callable($this->bounceback['check']) && call_user_func($this->bounceback['check']) === false) {
 				return false;
 			}
 			return true;

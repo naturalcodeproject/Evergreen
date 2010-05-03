@@ -11,6 +11,7 @@
 	
 	Reg::set(array("URI.map" => array(
 		//"lang"			=> array("en", create_function('$element', 'return preg_match("/(en|sp)/i", $element);')),
+		"lang"			=> array("en", array('Validation_Helper', 'checkLanguage')),
 		"controller"	=> "main",
 		"view"			=> "index",
 		"action"		=> null,

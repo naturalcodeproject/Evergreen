@@ -251,6 +251,9 @@ $blogpost->find(array(
 		echo '<pre>';
 		var_dump(DB::$queries);
 		echo '</pre>';
+		
+		$model = new BlogPosts_Model();
+		
 	}
 
 	public function populate() {
