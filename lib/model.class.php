@@ -209,7 +209,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 						$errors[] = "Invalid field format. Format needs to be in the form of array('class', 'method')";
 					} else {				
 						// make sure the class and method exists
-						if (!class_exists($options['format'][0]) || !method_exists($options['format'][0], $options['format'][1])) {
+						if (!is_object($options['format'][0]) && (!class_exists($options['format'][0]) || !method_exists($options['format'][0], $options['format'][1]))) {
 							$errors[] = 'Invalid field format. Class/function does not exists: ' . $options['format'][0] . '::' . $options['format'][1];
 						} else {
 							$field_data['format']['onGet'] = $options['format'];
@@ -255,7 +255,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 				return "Invalid field format. Format needs to be in the form of array('class', 'method')";
 			} else {				
 				// make sure the class and method exists
-				if (!class_exists($format[0]) || !method_exists($format[0], $format[1])) {
+				if (!is_object($format[0]) && (!class_exists($format[0]) || !method_exists($format[0], $format[1]))) {
 					return 'Invalid field format. Class/function does not exists: ' . $format[0] . '::' . $format[1];
 				} else {
 					 return $format;
