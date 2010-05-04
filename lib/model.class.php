@@ -307,7 +307,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 * @return boolean true if setup correctly and boolean false if setup failed
 	 */
 	protected function hasOne($class_name, array $options) {
-		if (!isset($options['local']) || !isset($options['foreign']) || !isset($options['alias']) || isset($this->fields[$options['alias']])) {
+		if (!isset($options['local']) || !isset($options['foreign']) || !isset($options['alias']) || isset($this->fields[$options['alias']]) || !isset($this->fields[$options['local']])) {
 			return false;
 		}
 		
@@ -337,7 +337,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 * @return boolean true if setup correctly and boolean false if setup failed
 	 */
 	protected function hasMany($class_name, array $options) {
-		if (!isset($options['local']) || !isset($options['foreign']) || !isset($options['alias']) || !isset($this->fields[$options['alias']])) {
+		if (!isset($options['local']) || !isset($options['foreign']) || !isset($options['alias']) || isset($this->fields[$options['alias']]) || !isset($this->fields[$options['local']])) {
 			return false;
 		}
 		
@@ -382,7 +382,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 
 		// if the results isn't false and the array is bigger than 0 then populate the object
 		if ($results !== false && sizeof($results) > 0) {
-			$this->setProperties($results, false, true);
+			$this->setProperties($results, false, false);
 
 			return true;
 		}
