@@ -4,13 +4,19 @@ class Main_Controller extends ApplicationController_Controller {
 		parent::__construct();
 		$this->_setLayout('index');
 		//$this->_setBounceBack('testBounce', 'another_default');
+		$this->_addFilterOn('_testFilter', 'index');
 	}
 	
 	public function testBounce() {
 		return true;
 	}
 	
+	public function _testFilter() {
+		$this->setSomething = 'foo bar';
+	}
+	
 	public function index () {
+		var_dump($this->setSomething);
 		$this->home_selected = "selected";
 		if ($this->_viewExists('index', 'main', 'developer', true)) {
 			echo 'The view exists';

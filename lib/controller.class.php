@@ -469,7 +469,7 @@ abstract class Controller {
 	 * @return boolean true
 	 */
 	final protected function _addFilterAll($filter, $schedule = 'Page.before') {
-		$filterKey = $tis->_createFilterKey($filter);
+		$filterKey = $this->_createFilterKey($filter);
 		if (!is_array($filter)) {
 			$filter = array(get_class($this), $filter);
 		}
@@ -496,7 +496,7 @@ abstract class Controller {
 	 */
 	final protected function _addFilterOn($filter, $methods, $schedule = 'Page.before') {
 		$methods = (array)$methods;
-		$filterKey = $tis->_createFilterKey($filter);
+		$filterKey = $this->_createFilterKey($filter);
 		if (!is_array($filter)) {
 			$filter = array(get_class($this), $filter);
 		}
@@ -540,7 +540,7 @@ abstract class Controller {
 	 */
 	final protected function _addFilterExcept($filter, $methods, $schedule = 'Page.before') {
 		$methods = (array)$methods;
-		$filterKey = $tis->_createFilterKey($filter);
+		$filterKey = $this->_createFilterKey($filter);
 		if (!is_array($filter)) {
 			$filter = array(get_class($this), $filter);
 		}
@@ -584,7 +584,7 @@ abstract class Controller {
 	 */
 	final protected function _removeFilterOn($filter, $methods, $schedule = 'Page.before') {
 		$methods = (array)$methods;
-		$filterKey = $tis->_createFilterKey($filter);
+		$filterKey = $this->_createFilterKey($filter);
 		if (!isset($this->filters[$schedule][$filterKey])) {
 			return true;
 		}
@@ -620,7 +620,7 @@ abstract class Controller {
 	 * @return boolean true
 	 */
 	final protected function _removeFilter($filter, $schedule = 'Page.before') {
-		$filterKey = $tis->_createFilterKey($filter);
+		$filterKey = $this->_createFilterKey($filter);
 		if (isset($this->filters[$schedule][$filterKey])) {
 			unset($this->filters[$schedule][$filterKey]);
 		}
@@ -640,11 +640,19 @@ abstract class Controller {
 			foreach($this->filters[$schedule] as $attributes) {
 				if ($attributes['type'] == 'except') {
 					if (!in_array($this->viewToLoad, $attributes['methods'])) {
-						call_user_func($attributes['filter']);
+						if ($attributes['filter'][0] == get_class($this)) {
+							call_user_func(array($this, $attributes['filter'][1]));
+						} else {
+							call_user_func($attributes['filter']);
+						}
 					}
 				} else if ($attributes['type'] == 'only') {
 					if (in_array($this->viewToLoad, $attributes['methods'])) {
-						call_user_func($attributes['filter']);
+						if ($attributes['filter'][0] == get_class($this)) {
+							call_user_func(array($this, $attributes['filter'][1]));
+						} else {
+							call_user_func($attributes['filter']);
+						}
 					}
 				}
 			}
