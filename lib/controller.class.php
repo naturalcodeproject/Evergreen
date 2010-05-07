@@ -194,7 +194,7 @@ abstract class Controller {
 			ob_start();
 				$this->_runFilters('View.content.before');
 				if (is_callable(array($this, $this->viewToLoad)) && call_user_func(array($this, $this->viewToLoad)) === false) {
-					Error::trigger("VIEW_NOT_FOUND");
+					throw new EvergreenException("VIEW_NOT_FOUND");
 				}
 				if ($this->overriddenView) {
 					$this->_getView($this->overriddenViewToLoad);
@@ -206,7 +206,7 @@ abstract class Controller {
 			$this->_runFilters('View.after');
 		} else {
 			$error = true;
-			Error::trigger("VIEW_NOT_FOUND");
+			throw new EvergreenException("VIEW_NOT_FOUND");
 		}
 		
 		$this->_runFilters('Layout.before');

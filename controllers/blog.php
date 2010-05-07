@@ -249,10 +249,10 @@ $blogpost->find(array(
 
 		echo '<h2>Queries</h2>';
 		echo '<pre>';
-		var_dump(DB::$queries);
+		var_dump(DB::getQueries());
 		echo '</pre>';
 		
-		$model = new BlogPosts_Model();
+		//$model = new BlogPosts_Model();
 		
 	}
 

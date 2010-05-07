@@ -70,11 +70,20 @@ class DB {
 	/**
 	 * Holds the queries that have been executed. Useful when debugging.
 	 * 
-	 * @access public
+	 * @access private
 	 * @static
 	 * @var array
 	 */
-	public static $queries = array();
+	private static $queries = array();
+	
+	/**
+	 * Holds a count of the executed queries.
+	 * 
+	 * @access private
+	 * @static
+	 * @var array
+	 */
+	private static $queryCount = 0;
 
 	/**
 	 * Sets up the driver and the PDO connection.
@@ -84,7 +93,7 @@ class DB {
 	 */
 	public static function setup() {
 		// connect to the DB
-		self::$pdo = new PDO('mysql:host=' . Reg::get('Database.host') . ';dbname=' .  Reg::get('Database.database'), Reg::get('Database.username'), Reg::get('Database.password'));
+		self::$pdo = new PDO(strtolower(Reg::get("Database.driver")).':host=' . Reg::get('Database.host') . ';dbname=' .  Reg::get('Database.database'), Reg::get('Database.username'), Reg::get('Database.password'));
 
 		// load the driver
         $specific_driver = Reg::get("Database.driver");
@@ -271,17 +280,22 @@ class DB {
 		if ($statement->execute($values) === false) {
 			// handle the error
 			$error = $statement->errorInfo();
-			Error::trigger('MODEL_DB_FAILURE', array(
+			throw new EvergreenException('MODEL_DB_FAILURE', array(
 				'trace' => $error,
 				'errorMessage' => end($error),
 				'errorId' => (isset($error[1]) ? $error[1] : 0),
 				'query' => $query,
 				'queryValues' => $values
 			));
-		} else {	
-			// store the query
-			self::$queries[] = array($query, $values);
-	
+		} else {
+			// store a count of the queries
+			self::$queryCount += 1;
+			
+			if (Reg::get('Database.storeQueries') == true) {
+				// store the query
+				self::$queries[] = array($query, $values);
+			}
+			
 			// set the default fetch mode for the query
 			$statement->setFetchMode(PDO::FETCH_ASSOC);
 	
@@ -432,8 +446,19 @@ class DB {
 	 * @static
 	 * @return integer
 	 */
-	public static function queryCount() {
-		return count(self::$queries);
+	public static function getQueryCount() {
+		return self::$queryCount;
+	}
+	
+	/**
+	 * Returns an array of all the executed queries.
+	 * 
+	 * @access public
+	 * @static
+	 * @return array
+	 */
+	public static function getQueries() {
+		return self::$queries;
 	}
 }
 

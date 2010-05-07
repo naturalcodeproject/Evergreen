@@ -9,7 +9,7 @@ if (Config::read("System.mode") != "development") {
 
 <?php 
 
-$params = Error::getTriggerParams();
+$params = Error::getParams();
 
 $dbMsg = $params['errorMessage'];
 $dbQuery = $params['query'];

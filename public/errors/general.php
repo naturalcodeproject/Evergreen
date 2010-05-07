@@ -4,7 +4,6 @@ if (Config::read("System.mode") != "development") {
 	exit;
 }
 
-
 echo "Caught exception: ".Error::getMessage();
 echo "<br /><PRE>";
 print_r(Error::getTrace());

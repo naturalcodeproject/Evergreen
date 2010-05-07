@@ -41,6 +41,8 @@ final class Config {
 	 */
 	protected static $routes = array();
 	
+	protected static $errors = array();
+	
 	/**
 	 * Method used to setup the config class and the framework with defaults.
 	 * 
@@ -85,6 +87,7 @@ final class Config {
 		Reg::set('Error.logErrors', true);
 		Reg::set('Error.generalErrorMessage', "An error occurred. Please contact the administrator.");
 		Reg::set('Database.viewQueries', false);
+		Reg::set('Database.storeQueries', false);
 		Reg::set('Database.autoExtract', false);
 		
 		// return true for good measure
@@ -151,6 +154,21 @@ final class Config {
 		);
 	}
 	
+	final public static function registerError($key, $params) {
+		if (!is_array($params)) {
+			$params = array("message"=>$params);
+		}
+		
+		self::$errors[$key] = $params;
+	}
+	
+	final public static function getError($key) {
+		if (isset(self::$errors[$key])) {
+			return self::$errors[$key];
+		}
+		return false;
+	}
+	
 	/**
 	 * Processes the uri by figuring out what mode we are running in, mod_rewrite or querystring, and by setting up and checking if we are in a branch or a route
 	 * it also merges the uri values with the uri map and sets up all the Param and Path variables for use in the framework.
@@ -162,12 +180,12 @@ final class Config {
 	public static function processURI() {
 		// make sure that the uri map exists and is an array with at least 2 keys
 		if (!is_array(Reg::get("URI.map")) || count(Reg::get("URI.map")) < 2) {
-			Error::trigger("NO_URI_MAP");
+			throw new EvergreenException("NO_URI_MAP");
 		}
 		
 		// make sure that the view and controller keys exist in the uri map
 		if (!array_key_exists('controller', Reg::get("URI.map")) || !array_key_exists('view', Reg::get("URI.map"))) {
-			Error::trigger("URI_MAP_INVALID_KEYS");
+			throw new EvergreenException("URI_MAP_INVALID_KEYS");
 		}
 		
 		// check that there is not already a value in URI.working
@@ -186,7 +204,7 @@ final class Config {
 			} else {
 				// set up URI.working with the url based off of querystring
 				if (!is_string(Reg::get("URI.prependIdentifier")) || !strlen(Reg::get("URI.prependIdentifier"))) {
-					Error::trigger("NO_PREPEND_IDENTIFIER");
+					throw new EvergreenException("NO_PREPEND_IDENTIFIER");
 				}
 				
 				$queryParts = explode("&", $_SERVER['QUERY_STRING']);
@@ -598,22 +616,22 @@ final class Config {
 		
 		if (Reg::get("Branch.active") !== null && Reg::get("Branch.active") == false) {
 			// The branch is not active so don't load it
-			Error::trigger("BRANCH_INACTIVE");
+			throw new EvergreenException("BRANCH_INACTIVE");
 		}
 		
 		if (Reg::get("Branch.requiredSystemMode") !== null && Reg::get("Branch.requiredSystemMode") != Reg::get("System.mode")) {
 			// The system does not have the required mode so don't load the branch
-			Error::trigger("BRANCH_REQUIRED_SYSTEM_MODE");
+			throw new EvergreenException("BRANCH_REQUIRED_SYSTEM_MODE");
 		}
 		
 		if (Reg::get("Branch.minimumSystemVersion") !== null && !version_compare(Reg::get("System.version"), Reg::get("Branch.minimumSystemVersion"), ">=")) {
 			// The system version is lower than the branch's required minimum so don't load the branch
-			Error::trigger("BRANCH_MINIMUM_SYSTEM_VERSION");
+			throw new EvergreenException("BRANCH_MINIMUM_SYSTEM_VERSION");
 		}
 		
 		if (Reg::get("Branch.maximumSystemVersion") !== null && !version_compare(Reg::get("System.version"), Reg::get("Branch.maximumSystemVersion"), "<=")) {
 			// The system version is higher than the branch's required maximum so don't load the branch
-			Error::trigger("BRANCH_MAXIMUM_SYSTEM_VERSION");
+			throw new EvergreenException("BRANCH_MAXIMUM_SYSTEM_VERSION");
 		}
 	}
 	
@@ -749,6 +767,102 @@ final class Config {
 		}
 		
 		return array('regex' => '#^' . implode('', $parsed) . '[\/]*$#', "definedPositions" => $positions);
+	}
+	
+	/**
+	 * Handles the output and logging of errors.
+	 * 
+	 * @access public
+	 * @static
+	 * @param integer $errno The level of the error raised
+	 * @param string $errstr The error message
+	 * @param string $errfile The name of the file the error was raised in
+	 * @param integer $errline The line number the error was raised at
+	 * @param array $errcontext An array containing every variable that existed in the scope the error was triggered
+	 */
+	public static function logError($errno, $errstr, $errfile, $errline, $errcontext) {
+		$type = '';
+   		$display = false;
+   		$notify = false;
+   		$halt_script = true;
+        
+        if (Reg::get('Error.viewErrors') == true) {
+            $display = true;
+        }
+        
+        if (Reg::get('Error.logErrors') == true) {
+            $notify = true;
+        }
+   		
+		switch($errno) {
+   			case E_USER_NOTICE:
+   				$notify = true;
+   			case E_NOTICE:
+   				$halt_script = false;        
+       			$type = "Notice";
+       			break;
+   			case E_USER_WARNING:
+   			case E_COMPILE_WARNING:
+   			case E_CORE_WARNING:
+   			case E_WARNING:
+      			$halt_script = false;       
+       			$type = "Warning";
+       			break;
+   			case E_USER_ERROR:
+       		case E_COMPILE_ERROR:
+   			case E_CORE_ERROR:
+   			case E_ERROR:
+       			$type = "Fatal Error";
+       			$display = true;
+       			$notify = true;
+       			break;
+   			case E_PARSE:
+       			$type = "Parse Error";
+       			$display = true;
+       			$notify = true;
+       			break;
+   			default:
+      			$type = "Unknown Error";
+      			$display = true;
+      			$notify = true;
+       			break;
+		}
+        
+        $error_msg = '['.date('d-M-Y H:i:s').'] ';
+        $error_msg .= "$type: ";
+        $error_msg .= "\"$errstr\" occurred in $errfile on line $errline\n";
+        
+        if($display) echo '<PRE>' . $error_msg . '</PRE>';
+
+		if($notify) {
+            $logDir = Reg::get("Error.logDirectory");
+            if (empty($logDir)) {
+                error_log($error_msg, $errno);
+            } else {
+                $log_file = Reg::get("Path.physical")."/".$logDir."/";
+                
+                $year = date('Y');
+                $month = date('m');
+                $day = date('d');
+                
+                $log_file .= $year;
+                mkdir($log_file);
+                $log_file .= "/$month";
+                mkdir($log_file);
+                $log_file .= "/$day";
+                mkdir($log_file);
+                
+                $log_file .= "/error.log";
+                
+                if(empty($log_file)) {
+                    error_log($error_msg, 0);
+                } else {
+                    error_log($error_msg, 3, $log_file);
+                }
+            }
+   		}
+   
+   		if($halt_script) exit -1;
 	}
 }
 
