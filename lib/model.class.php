@@ -406,12 +406,6 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	public function find($options = array(), $options2 = array(), $autoExtract = null) {
 		$alias = $this->_determineOptions($options, $options2);
 		
-		if (!empty($this->relationships[$alias])) {
-			return $this->get($alias, $options);
-		} else {
-			$this->clearData();
-		}
-		
 		if (isset($options['autoExtract']) && $options['autoExtract'] == true) {
 			$autoExtract = true;
 		} else if (isset($options['autoExtract']) && $options['autoExtract'] == false) {
@@ -420,6 +414,14 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			$autoExtract = true;
 		} else {
 			$autoExtract = false;
+		}
+		
+		if (!empty($this->relationships[$alias])) {
+			return $this->get($alias, $options);
+		} else {
+			if ($autoExtract == false) {
+				$this->clearData();
+			}
 		}
 		
 		unset($options['autoExtract']);
