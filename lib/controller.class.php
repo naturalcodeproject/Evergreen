@@ -692,13 +692,20 @@ abstract class Controller {
 	 * @return boolean true
 	 */
 	final protected function _setBounceBack($check, $bounce) {
+		
 		if (!is_array($check)) {
-			$check = array(get_class($this), $check);
+			$check = array($this, $check);
 		}
+		
+		if (!is_array($bounce)) {
+			$bounce = array($this, $bounce);
+		}
+		
 		$this->bounceback = array(
 			'check' => $check,
 			'bounce' => $bounce
 		);
+		
 		return true;
 	}
 	
@@ -722,14 +729,14 @@ abstract class Controller {
 	 * @return boolean true if the check returns true and boolean false if not
 	 */
 	final private function _runBounceBack() {
-		if (((isset($this->bounceback['check']) && method_exists($this->bounceback['check'])) && (isset($this->bounceback['bounce']) && method_exists($this->bounceback['bounce']))) && !$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) {
+		if (((isset($this->bounceback['check']) && method_exists($this->bounceback['check'][0], $this->bounceback['check'][1])) && (isset($this->bounceback['bounce']) && method_exists($this->bounceback['bounce'][0], $this->bounceback['bounce'][1]))) && !$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) {
 			$keys = array_keys(Reg::get('URI.working'));
 			$values = array_values(Reg::get('URI.working'));
 			$controllerPos = array_search('controller', $keys);
 			if ($controllerPos === false) {
 				$controllerPos = 0;
 			}
-			$this->params = array_combine($keys, array_slice(array_merge(array_slice($values, 0, ($controllerPos+1)), array($this->bounceback['bounce']), array_slice($values, $controllerPos+1)), 0, count($keys)));
+			$this->params = array_combine($keys, array_slice(array_merge(array_slice($values, 0, ($controllerPos+1)), array($this->bounceback['bounce'][1]), array_slice($values, $controllerPos+1)), 0, count($keys)));
 			Reg::set('Param', $this->params);
 			$this->viewToLoad = Config::uriToMethod($this->params['view']);
 			

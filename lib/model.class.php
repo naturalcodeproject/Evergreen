@@ -803,9 +803,14 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 
 		// loop through each option and append the table name to the front of the columns
 		// looping so that it doesn't replace keywords such as where, limit, order, etc
-		foreach($options as &$item) {
+		foreach($options as $key => &$item) {
 			if (is_array($item)) {
-				array_walk_recursive($item, $replace_names);
+				if ($key != 'where') {
+					array_walk_recursive($item, $replace_names);
+				}
+				else {
+					$replace_names($item[0]);
+				}
 			} else {
 				$replace_names($item);
 			}
