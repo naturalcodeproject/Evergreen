@@ -367,9 +367,11 @@ class DB {
 				$current++;
 				return $return;
 			'), $whole);
+			
 			unset($total, $current);
-			if (substr_count($whole, '?') > 1 && !preg_match('/[\(]+(.*)[\)]+/is', $whole)) {
-				$whole = preg_replace('(\?([^\s\)]+))', '($0)', $whole);
+			
+			if (substr_count($whole, '?') >= 1 && !preg_match('/[\(]+(.*)[\)]+/is', $whole)) {
+				$whole = preg_replace('(\?([^\s\)]*))', '($0)', $whole);
 			}
 		} else if ($operator == DB::STARTS_WITH) {
 			$whole = str_replace(DB::STARTS_WITH, self::$driver->startsWithOperator(), $whole);
