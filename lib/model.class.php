@@ -913,7 +913,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 * @return object if the desired result set is found and boolean false if not
 	 */
 	public function extract($key = null) {
-		if ($key == null) {
+		if ($key === null) {
 			$key = $this->current_row;
 		}
 		
