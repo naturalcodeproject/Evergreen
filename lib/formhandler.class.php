@@ -213,6 +213,7 @@ class Formhandler {
 			}
 
 			switch ($properties['type']) {
+				case 'reset':
 				case 'button':
 				case 'submit':
 					// do nothing
