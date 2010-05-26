@@ -52,7 +52,7 @@ final class Config {
 	 */
 	public static function setup() {
 		// setup the System.version configuration setting
-		Reg::set('System.version', "0.3.0");
+		Reg::set('System.version', "1.0b1");
 		
 		// setup the root identifier
 		Reg::set('System.rootIdentifier', "MAIN");
