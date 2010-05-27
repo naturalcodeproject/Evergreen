@@ -646,12 +646,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			$options['limit'] = 1;
 		}
 		
-		$return = $relObj->find($options);
-		
-		if (count($return)) {
-			return $return;
-		}
-		return false;
+		return $relObj->find($options);
 	}
 	
 	/**
