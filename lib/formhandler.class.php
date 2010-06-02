@@ -161,8 +161,6 @@ class Formhandler {
 					$this->forms_arr[$properties['name']]['default'] = $properties['default'];
 				}
 			}
-			
-			unset($properties['update'], $properties['default']);
 		}
 		
 		if (!empty($properties['name'])) $this->forms_arr[$properties['name']]['attributes'] = $properties;
@@ -177,6 +175,9 @@ class Formhandler {
 		if ($randomName == true) {
 			unset($properties['name']);
 		}
+		
+		unset($properties['update'], $properties['default']);
+		
 		return "<form ".$this->propertiesString($properties).">
 				{$insides}</form>";
 	}
@@ -213,7 +214,6 @@ class Formhandler {
 			}
 
 			switch ($properties['type']) {
-				case 'reset':
 				case 'button':
 				case 'submit':
 					// do nothing
