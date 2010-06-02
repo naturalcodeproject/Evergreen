@@ -7,6 +7,10 @@ class Main_Controller extends ApplicationController_Controller {
 		$this->_addFilterOn('_testFilter', 'index');
 	}
 	
+	public function login() {
+		echo "Type: ".Reg::get('Param.action');
+	}
+	
 	public function testBounce() {
 		return true;
 	}

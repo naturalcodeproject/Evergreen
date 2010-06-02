@@ -233,19 +233,19 @@ final class Config {
 		
 		// explode the cleaned URI.working so that those elements can become the new values for the URI.map
 		if (!empty($path_info)) {
-			$url_vals = explode('/', $path_info );
+			$uri_vals = explode('/', $path_info );
 		} else {
-			$url_vals = array();
+			$uri_vals = array();
 		}
 		
 		// check for a leading slash in the uri and do a redirect to get rid of it so the url stays clean
-		if (count($url_vals) > 0 && empty($url_vals[count($url_vals)-1])) {
-			unset($url_vals[count($url_vals)-1]);
+		if (count($uri_vals) > 0 && empty($uri_vals[count($uri_vals)-1])) {
+			unset($uri_vals[count($uri_vals)-1]);
 			if (!is_array(Reg::get("Route.current")) && !Error::triggered()) {
 				if (empty($_POST) && empty($_FILES) && !headers_sent()) {
-					// only do the redirect if this isnt a route, an error hasnÕt been triggered, headers havent been sent, and nothing is being posted or uploaded
+					// only do the redirect if this isnt a route, an error hasnï¿½t been triggered, headers havent been sent, and nothing is being posted or uploaded
 					header("HTTP/1.1 301 Moved Permanently");
-					header("Location: ".Reg::get("URI.base").Reg::get("URI.prepend")."/".implode("/", $url_vals) . ((!empty($_SERVER['QUERY_STRING'])) ? ((!Reg::get("URI.useModRewrite")) ? "&" . $_SERVER['QUERY_STRING'] : "?" . $_SERVER['QUERY_STRING']) : ""));
+					header("Location: ".Reg::get("URI.base").Reg::get("URI.prepend")."/".implode("/", $uri_vals) . ((!empty($_SERVER['QUERY_STRING'])) ? ((!Reg::get("URI.useModRewrite")) ? "&" . $_SERVER['QUERY_STRING'] : "?" . $_SERVER['QUERY_STRING']) : ""));
 					header("Connection: close");
 					exit;
 				}
@@ -253,127 +253,64 @@ final class Config {
 		}
 		
 		// check if there is a branch in the uri and if there is then load in it's configuration and reprocess the uri
-		$url_vals = self::checkForBranch($url_vals);
+		$uri_vals = self::checkForBranch($uri_vals);
 		
 		// check if the current uri matches a defined route, if so reprocess the uri
-		if (self::checkRoutes("/".implode("/", $url_vals))) {
+		if (self::checkRoutes("/".implode("/", $uri_vals))) {
 			return false;
 		}
 		
 		// assign the uri map to another variable for ease of use
 		$uriMap = Reg::get("URI.map");
-		
-		// check if there is something in the uri
-		if (!empty($url_vals)) {
-			// loop through all the uri values and find one that matches a controller
-			foreach($url_vals as $key => $value) {
-				if (!empty($value)) {
-					if (file_exists(Reg::get("Path.physical").((strlen(Reg::get("Branch.name"))) ? "/branches/".self::uriToFile(Reg::get("Branch.name")) : "")."/controllers/".self::uriToFile($value).".php")) {
-						$uri_vals = array(
-							"prepend" => array_slice($url_vals, 0, ($key-count($url_vals))),
-							"main" => array_slice($url_vals, $key)
-						);
-						
-						// if the controller that was found matches the default controller do a redirect without the controller in the url
-						if (!empty($uriMap['controller']) && $uriMap['controller'] == $value) {
-							if (empty($_POST) && empty($_FILES) && !headers_sent() && !is_array(Reg::get("Route.current")) && !Error::triggered()) {
-								// only do the redirect if this isnt a route, an error hasnÕt been triggered, headers havent been sent, and nothing is being posted or uploaded
-								header("HTTP/1.1 301 Moved Permanently");
-								header("Location: ".Reg::get("URI.base") . Reg::get("URI.prepend") . ((Reg::get("Branch.name")) ? "/" . Reg::get("Branch.name") : "") ."/".implode("/", array_merge($uri_vals['prepend'], array_slice($uri_vals['main'], 1))) . ((!empty($_SERVER['QUERY_STRING'])) ? ((!Reg::get("URI.useModRewrite")) ? "&" . $_SERVER['QUERY_STRING'] : "?" . $_SERVER['QUERY_STRING']) : ""));
-								header("Connection: close");
-								exit;
+		$count = 0;
+		foreach($uriMap as $key => $item) {
+			if (!empty($item) && empty($uri_vals[$count])) {
+				// if map key doesn't have a uri value but has a default set then set to default
+				if (is_array($item)) {
+					$uri_params[$key] = reset($item);
+				} else {
+					$uri_params[$key] = $item;
+				}
+			} else if (!empty($uri_vals[$count])) {
+				if ((strtolower($key) == 'controller') || (is_array($item) && count($item) > 1 && (is_array($item[1]) || function_exists($item[1])))) {
+					if (strtolower($key) != 'controller') {
+						// if there is validation defined for a uri map key then test the value
+						if ((!is_array($item[1]) && function_exists($item[1]) && $item[1]($uri_vals[$count]) == true) || (is_array($item[1]) && count($item[1]) > 1 && is_callable($item[1]) && call_user_func($item[1], $uri_vals[$count]) == true)) {
+							// uri value passed map key validation so set value to key
+							$uri_params[$key] = $uri_vals[$count];
+							$count++;
+							continue;
+						} else if (strtolower($key) != 'controller') {
+							// uri value didn't pass the validation so set this map's key to the default value
+							$uri_params[$key] = (string)$item[0];
+						}
+					} else {
+						// check if the controller exists
+						if (file_exists(Reg::get("Path.physical").((strlen(Reg::get("Branch.name"))) ? "/branches/".self::uriToFile(Reg::get("Branch.name")) : "")."/controllers/".self::uriToFile($uri_vals[$count]).".php")) {
+							$uri_params[$key] = $uri_vals[$count];
+							$count++;
+							continue;
+						} else {
+							// if the controller 
+							if (is_array($item)) {
+								$uri_params[$key] = reset($item);
+							} else {
+								$uri_params[$key] = $item;
 							}
 						}
-						break;
-					}
-				}
-			}
-			// clean up after loop
-			unset($key, $value);
-		}
-		
-		if (!isset($uri_vals['prepend']) && !isset($uri_vals['main'])) {
-			// if no controller was found in the uri then loop through and merge the uri values to what's in the controller
-			$count = 0;
-			foreach($uriMap as $key => $item) {
-				if ((!empty($item) && empty($url_vals[$count])) || $key == 'controller') {
-					// if we are at the controller position and no value is defined then use the default
-					if (is_array($item) && count($item) > 1) {
-						$item = reset($item);
-					}
-					$uri_params[$key] = $item;
-				} else if (!empty($url_vals[$count])) {
-					if (is_array($item) && count($item) > 1 && (is_array($item[1]) || function_exists($item[1]))) {
-						// if there is validation defined for a uri map key then test the value
-						if ((!is_array($item[1]) && function_exists($item[1]) && $item[1]($url_vals[$count]) == true) || (is_array($item[1]) && count($item[1]) > 1 && is_callable($item[1]) && call_user_func($item[1], $url_vals[$count]) == true)) {
-							// uri value passed map key validation so set value to key
-							$uri_params[$key] = $url_vals[$count];
-							$count++;
-						} else {
-							// uri value didnÕt pass the validation so set this map's key to the default value
-							$uri_params[$key] = (string)$item[0];
-						}
-					} else {
-						// a uri value matched a map key so set the key with the uri value
-						$uri_params[$key] = $url_vals[$count];
-						$count++;
 					}
 				} else {
-					// no matching uri was found for this map key so set it's value to null
-					$uri_params[$key] = null;
+					// a uri value matched a map key so set the key with the uri value
+					$uri_params[$key] = $uri_vals[$count];
+					$count++;
+					continue;
 				}
-			}
-		} else {
-			// controller is present in the uri so loop through the prepend until the controller is found and then loop through main
-			$foundController = false;
-			$count = 0;
-			foreach($uriMap as $key => $item) {
-				if ($key == 'controller') {
-					// at the controller key so setup the loop to use different uri values
-					$foundController = true;
-					$count = 0;
-				}
-				
-				if ($foundController) {
-					// controller found use the main array for values
-					$uriKey = "main";
-				} else {
-					// controller hasnÕt been found so use the prepend array for values
-					$uriKey = "prepend";
-				}
-				
-				if (!empty($item) && empty($uri_vals[$uriKey][$count])) {
-					// if map key doesnÕt have a uri value but has a default set then set to default
-					if (is_array($item)) {
-						$uri_params[$key] = reset($item);
-					} else {
-						$uri_params[$key] = $item;
-					}
-				} else if (!empty($uri_vals[$uriKey][$count])) {
-					if (is_array($item) && count($item) > 1 && (is_array($item[1]) || function_exists($item[1]))) {
-						// if there is validation defined for a uri map key then test the value
-						if ((!is_array($item[1]) && function_exists($item[1]) && $item[1]($uri_vals[$uriKey][$count]) == true) || (is_array($item[1]) && count($item[1]) > 1 && is_callable($item[1]) && call_user_func($item[1], $uri_vals[$uriKey][$count]) == true)) {
-							// uri value passed map key validation so set value to key
-							$uri_params[$key] = $uri_vals[$uriKey][$count];
-							$count++;
-						} else {
-							// uri value didnÕt pass the validation so set this map's key to the default value
-							$uri_params[$key] = (string)$item[0];
-						}
-					} else {
-						// a uri value matched a map key so set the key with the uri value
-						$uri_params[$key] = $uri_vals[$uriKey][$count];
-						$count++;
-					}
-				} else {
-					// no matching uri was found for this map key so set it's value to null
-					$uri_params[$key] = null;
-				}
+			} else {
+				// no matching uri was found for this map key so set it's value to null
+				$uri_params[$key] = null;
 			}
 		}
-		
-		// clean up after both uri map loops
-		unset($key, $item, $count, $foundController, $url_vals, $uriMap, $uriKey);
+		unset($uriMap, $key, $item);
 		
 		// set the URI.working to the $uri_params variable which was generated above using the URI.map and the current uri
 		Reg::set("URI.working", $uri_params);
@@ -914,7 +851,7 @@ final class Reg {
 					break;
 				} else {
 					if (!isset($variablesHolder[$path_key])) {
-						// setup element in array if it doesnÕt exist
+						// setup element in array if it doesnï¿½t exist
 						$variablesHolder[$path_key] = array();
 					}
 					// set the current level of the array to the holder and continue to loop
@@ -939,7 +876,7 @@ final class Reg {
 		// loop through the exploded variable key to get to the correct level in the variable array
 		foreach($path as $i => $path_key) {
 			if ($i == (count($path) - 1)) {
-				// return the value of the variable key or null if it doesnÕt exist
+				// return the value of the variable key or null if it doesnï¿½t exist
 				return (isset($variablesHolder[$path_key])) ? $variablesHolder[$path_key] : null;
 			} else {
 				// set the current level of the array to the holder and continue to loop
