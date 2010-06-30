@@ -39,6 +39,13 @@
     Reg::set("Database.viewQueries", false);
 	Reg::set('Database.storeQueries', true);
 	
+	// cache
+	Reg::set(array(
+		'Cache.enabled'	=> true,
+		'Cache.path'		=> Reg::get('Path.physical') . '/cache',
+		'Cache.expires'	=> 3600, // 1 hour
+	));
+	
 	## Routes ##
 	Config::registerRoute("/pickles/*", array(
 		"branch" => "developer",
