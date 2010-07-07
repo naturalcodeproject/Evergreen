@@ -51,14 +51,19 @@ final class Config {
 	 * @return boolean true
 	 */
 	public static function setup() {
+		// setup the Path.physical configuration setting
+		Reg::set('Path.physical', dirname(dirname(__FILE__)));
+		
+		// load the main hooks.php file. Do this near the beginning so that hooks can be just about anywhere
+		if (file_exists(Reg::get("Path.physical").DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."hooks.php")) {
+			include(Reg::get("Path.physical").DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."hooks.php");
+		}
+		
 		// setup the System.version configuration setting
 		Reg::set('System.version', "1.0b1");
 		
 		// setup the root identifier
 		Reg::set('System.rootIdentifier', "MAIN");
-		
-		// setup the Path.physical configuration setting
-		Reg::set('Path.physical', dirname(dirname(__FILE__)));
 		
 		// setup the URI.base configuration setting
 		$base_uri = dirname($_SERVER['SCRIPT_NAME']);
@@ -841,6 +846,11 @@ final class Reg {
 		
 		// loop through the array of variables that need to be set
 		foreach($name as $key => $value) {
+			// call hook
+			if (method_exists('Hook', 'call')) {
+				Hook::call('Reg.set.' . $key, array(&$value));
+			}
+			
 			$path = explode('.', $key);
 			$variablesHolder =& self::$variables;
 			// loop through the exploded variable key to create all the array levels
@@ -877,7 +887,14 @@ final class Reg {
 		foreach($path as $i => $path_key) {
 			if ($i == (count($path) - 1)) {
 				// return the value of the variable key or null if it doesn�t exist
-				return (isset($variablesHolder[$path_key])) ? $variablesHolder[$path_key] : null;
+				$value = (isset($variablesHolder[$path_key])) ? $variablesHolder[$path_key] : null;
+				
+				// call hook
+				if (method_exists('Hook', 'call')) {
+					Hook::call('Reg.get.' . $key, array(&$value));
+				}
+				
+				return $value;
 			} else {
 				// set the current level of the array to the holder and continue to loop
 				$variablesHolder =& $variablesHolder[$path_key];
@@ -895,6 +912,11 @@ final class Reg {
 	 * @return boolean true if the variable exists and boolean false if not
 	 */
 	public static function has($key) {
+		// call hook
+		if (method_exists('Hook', 'call')) {
+			Hook::call('Reg.has.' . $key, array(&$key));
+		}
+		
 		$path = explode('.', $key);
 		$variablesHolder =& self::$variables;
 		// loop through the exploded variable key to get to the correct level in the variable array
@@ -925,7 +947,14 @@ final class Reg {
 		foreach($path as $i => $path_key) {
 			if ($i == (count($path) - 1)) {
 				// return true if the variable key does have a value and false if it doesnt
-				return !empty($variablesHolder[$path_key]);
+				$val = !empty($variablesHolder[$path_key]);
+				
+				// call hook
+				if (method_exists('Hook', 'call')) {
+					Hook::call('Reg.hasVal.' . $key, array(&$val));
+				}
+				
+				return $val;
 			} else {
 				// set the current level of the array to the holder and continue to loop
 				$variablesHolder =& $variablesHolder[$path_key];
@@ -943,6 +972,11 @@ final class Reg {
 	 * @return boolean true if the variable was deleted and boolean false if it wasn't or doesn't exist
 	 */
 	public static function del($key) {
+		// call hook
+		if (method_exists('Hook', 'call')) {
+			Hook::call('Reg.has.' . $key, array(&$key));
+		}
+		
 		$path = explode('.', $key);
 		$variablesHolder =& self::$variables;
 		// loop through the exploded variable key to get to the correct level in the variable array

@@ -30,12 +30,12 @@
 class Hook {
 	/**
 	 * stores all hooks by the location and priority they are called
-	 * 
+	 *
 	 * @access private
 	 * @static
 	 */
 	private static $hooks = array();
-	
+
 	/**
 	 * adds a hook to be executed
 	 *
@@ -50,13 +50,22 @@ class Hook {
 		if (self::checkFunction($function) === false) {
 			return false;
 		}
+
+		// make sure variables exists
+		if (!isset(self::$hooks[$name])) {
+			self::$hooks[$name] = array();
+		}
+		
+		if (!isset(self::$hooks[$name][$priority])) {
+			self::$hooks[$name][$priority] = array();
+		}
 		
 		// add the hook to the array
 		self::$hooks[$name][$priority][] = $function;
-		
+
 		return true;
 	}
-	
+
 	/**
 	 * removes a hook so that it isn't executed
 	 *
@@ -72,10 +81,10 @@ class Hook {
 			if (empty(self::$hooks[$name][$priority])) {
 				return;
 			}
-			
+
 			// find the keys for the functions
 			$keys = array_keys(self::$hooks[$name][$priority], $function);
-			
+
 			// loop through and remove them
 			foreach($keys as $key) {
 				unset(self::$hooks[$name][$priority][$key]);
@@ -84,19 +93,19 @@ class Hook {
 			if (empty(self::$hooks[$name])) {
 				return;
 			}
-			
+
 			// loop through all possible hooks
 			foreach(self::$hooks[$name] as $priority => &$functions) {
 				// get the keys where the functions are
 				$keys = array_keys($functions, $function);
-				
+
 				foreach($keys as $key) {
 					unset($functions[$key]);
 				}
 			}
 		}
 	}
-	
+
 	/**
 	 * executes all hooks on a section
 	 *
@@ -106,17 +115,26 @@ class Hook {
 	 * @param array $args the arguments to pass on to the hooks
 	 */
 	public static function call($name, $args = array()) {
-		$hooks = self::get($name);
-		
+		$hooks = &self::get($name);
+
 		foreach($hooks as $priority => $functions) {
 			foreach($functions as $function) {
-				if (Hook::checkFunction($function)) {
+				if (self::checkFunction($function)) {
 					call_user_func_array($function, $args);
 				}
 			}
 		}
 	}
-	
+
+	/**
+	 * Alias for Hook::call()
+	 *
+	 * @see Hook::call()
+	 */
+	public static function invoke($name, $args = array()) {
+		self::call($name, $args);
+	}
+
 	/**
 	 * gets the hooks for location
 	 *
@@ -125,16 +143,17 @@ class Hook {
 	 * @param string $name the location of the hooks to get
 	 * @return array all of the hooks for the location
 	 */
-	public static function get($name) {
+	public static function &get($name) {
 		if (!empty(self::$hooks[$name])) {
 			asort(self::$hooks[$name]);
-			
+
 			return self::$hooks[$name];
 		} else {
-			return array();
+			$blank = array();
+			return $blank;
 		}
 	}
-	
+
 	/**
 	 * returns all of the hooks
 	 *
@@ -142,10 +161,10 @@ class Hook {
 	 * @static
 	 * @return array all of the hooks that have been set
 	 */
-	public static function getAll() {
+	public static function &getAll() {
 		return self::$hooks;
 	}
-	
+
 	/**
 	 * checks to make sure a function is valid
 	 *
@@ -157,7 +176,7 @@ class Hook {
 		if (is_array($function)) {
 			return method_exists($function[0], $function[1]);
 		}
-		
+
 		return function_exists($function);
 	}
 }

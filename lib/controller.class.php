@@ -28,6 +28,36 @@
  * layouts, running filters, bouncebacks, handling override logic, handling view 404's,
  * running the formhandler helper class, and running the designer fixes.
  *
+ * Hooks:
+ * Controller.setup.before
+ * Controller.setup.after
+ * Controller.destruct.before
+ * Controller.destruct.after
+ * Controller.showView.before
+ * Controller.showView.after
+ * Controller.loadView.before
+ * Controller.loadView.after
+ * Controller.getView.before
+ * Controller.getView.after
+ * Controller.viewExists.before
+ * Controller.viewExists.after
+ * Controller.setLayout.before
+ * Controller.setLayout.after
+ * Controller.removeLayout.before
+ * Controller.removeLayout.after
+ * Controller.renderLayout.before
+ * Controller.renderLayout.after
+ * Controller.setBounceBack.before
+ * Controller.setBounceBack.after
+ * Controller.removeBounceBack.before
+ * Controller.removeBounceBack.after
+ * Controller.runBounceBack.before
+ * Controller.runBounceBack.after
+ * Controller.getViewContent
+ * Controller.setViewContent
+ * Controller.getFullPageContent
+ * Controller.setFullPageContent
+ *
  * @package       evergreen
  * @subpackage    lib
  * @abstract
@@ -128,6 +158,9 @@ abstract class Controller {
 	 * @final
 	 */
 	final private function _controllerSetup() {
+		// call hook
+		Hook::call('Controller.setup.before');
+		
 		// Construct Code
 		$this->params = Reg::get("URI.working");
 		if (!strlen($this->params['view'])) {
@@ -137,6 +170,9 @@ abstract class Controller {
 		$this->viewToLoad = Config::uriToMethod($this->params['view']);
 		
 		$this->formhandler = new Formhandler($this);
+		
+		// call hook
+		Hook::call('Controller.setup.after');
 	}
 	
 	/**
@@ -146,9 +182,15 @@ abstract class Controller {
 	 * @final
 	 */
 	final private function _controllerDestruct() {
+		// call hook
+		Hook::call('Controller.destruct.before');
+		
 		unset($this->viewContent);
 		unset($this->fullPageContent);
 		unset($this->formhandler);
+		
+		// call hook
+		Hook::call('Controller.destruct.after');
 	}
 	
 	/**
@@ -158,6 +200,9 @@ abstract class Controller {
 	 * @final
 	 */
 	final public function _showView() {
+		// call hook
+		Hook::call('Controller.showView.before');
+		
 		// Run the controller's Setup
 		$this->_controllerSetup();
 		// Set up the actual page
@@ -177,6 +222,9 @@ abstract class Controller {
 		echo $this->fullPageContent;
 		$this->_runFilters('Page.output.after');
 		$this->_controllerDestruct();
+		
+		// call hook
+		Hook::call('Controller.showView.after');
 	}
 	
 	/**
@@ -186,6 +234,9 @@ abstract class Controller {
 	 * @final
 	 */
 	final private function _loadView() {
+		// call hook
+		Hook::call('Controller.loadView.before', array(get_class($this), &$this->viewToLoad));
+		
 		ob_start();
 		$error = false;
 		if ((is_callable(array($this, $this->viewToLoad)) && $this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) || (!$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true)) && ($this->_runBounceBack()))) {
@@ -218,6 +269,9 @@ abstract class Controller {
 		
 		$this->fullPageContent = ob_get_clean();
 		$this->_runFilters('Page.after');
+		
+		// call hook
+		Hook::call('Controller.loadView.after', array(&$this->fullPageContent));
 	}
 	
 	/**
@@ -254,6 +308,10 @@ abstract class Controller {
 			);
 			unset($override);
 		}
+		
+		// call hook
+		Hook::call('Controller.getView.before', array(&$args));
+		
 		if (empty($args['name'])) {
 			return false;
 		}
@@ -270,20 +328,25 @@ abstract class Controller {
 			$args['override'] = false;
 		}
 		
+		$return = false;
 		if ($this->overriddenView == false && $args['override'] == true) {
 			$this->overriddenView = $args['override'];
 			unset($args['override']);
 			$this->overriddenViewToLoad = $args;
-			return true;
+			$return = true;
+		} else {
+			$path = Reg::get("Path.physical").((!empty($args['branch'])) ? "/branches/".Config::uriToFile(Config::classToFile($args['branch'])) : "")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
+			
+			if (((file_exists($path) && (include($path)) == true))) {
+				$return = true;
+			}
+			unset($path);
 		}
-		$path = Reg::get("Path.physical").((!empty($args['branch'])) ? "/branches/".Config::uriToFile(Config::classToFile($args['branch'])) : "")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
-
-		if (((file_exists($path) && (include($path)) == true))) {
-			return true;
-		}
-		unset($path);
 		
-		return false;
+		// call hook
+		Hook::call('Controller.getView.after', array(&$return));
+		
+		return $return;
 	}
 	
 	/**
@@ -300,7 +363,7 @@ abstract class Controller {
 		$args = func_get_args();
 		if (count($args) < 1 || count($args) > 4) {
 			return false;
-		}
+		}		
 		if (count($args) == 1 && is_array($args[0])) {
 			$args = $args[0];
 		} else {
@@ -319,6 +382,10 @@ abstract class Controller {
 			);
 			unset($checkmethod);
 		}
+		
+		// call hook
+		Hook::call('Controller.viewExists.before', array(&$args));
+		
 		if (empty($args['name'])) {
 			return false;
 		}
@@ -344,9 +411,9 @@ abstract class Controller {
 				$load = implode('_', $load);
 				
 				if (is_callable(array($load, Config::uriToMethod(Config::fileToMethod($args['name'])))) && method_exists($load, Config::uriToMethod(Config::fileToMethod($args['name'])))) {
-					return true;
+					$return = true;
 				} else {
-					return false;
+					$return = false;
 				}
 			} else {
 				$path = Reg::get("Path.physical").(($args['branch']) ? "/branches/".Config::uriToFile(Config::classToFile($args['branch'])) : "")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
@@ -360,20 +427,26 @@ abstract class Controller {
 						$load = implode('_', $load);
 						
 						if (is_callable(array($load, Config::uriToMethod(Config::fileToMethod($args['name'])))) && method_exists($load, Config::uriToMethod(Config::fileToMethod($args['name'])))) {
-							return true;
+							$return = true;
 						} else {
-							return false;
+							$return = false;
 						}
+					} else {
+						$return = true;
 					}
-					return true;
 				} else {
-					return false;
+					$return = false;
 				}
 				unset($path);
 			}
 		} else {
-			return false;
+			$return = false;
 		}
+		
+		// call hook
+		Hook::call('Controller.viewExists.after', array(&$return));
+		
+		return $return;
 	}
 	
 	/**
@@ -387,13 +460,17 @@ abstract class Controller {
 	 */
 	final protected function _setLayout($name, $branch = '') {
 		$layout = array('name' => $name, 'branch' => $branch);
+		
+		// call hook
+		Hook::call('Controller.setLayout.before', array(&$layout));
+		
 		if (($layout['branch'] == Reg::get('System.rootIdentifier')) || (!Reg::hasVal("Branch.name") && empty($layout['branch']))) {
 			$path = Reg::get("Path.physical")."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
 			if (file_exists($path)) {
 				$this->layout = $layout;
-				return true;
+				$return = true;
 			} else {
-				return false;
+				$return = false;
 			}
 		} else if ((Reg::hasVal("Branch.name") && empty($layout['branch'])) || !empty($layout['branch'])) {
 			if (!empty($layout['branch'])) {
@@ -404,12 +481,18 @@ abstract class Controller {
 			$path = Reg::get("Path.physical")."/branches/".Config::uriToFile(Config::classToFile($branchToUse))."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
 			if (file_exists($path)) {
 				$this->layout = $layout;
-				return true;
+				$return = true;
 			} else {
-				return false;
+				$return = false;
 			}
+		} else {
+			$return = false;
 		}
-		return false;
+		
+		// call hook
+		Hook::call('Controller.setLayout.after', array(&$return));
+		
+		return $return;
 	}
 	
 	/**
@@ -420,7 +503,14 @@ abstract class Controller {
 	 * @return boolean true
 	 */
 	final protected function _removeLayout() {
+		// call hook
+		Hook::call('Controller.removeLayout.before');
+		
 		$this->layout = null;
+		
+		// call hook
+		Hook::call('Controller.removeLayout.after');
+		
 		return true;
 	}
 	
@@ -433,15 +523,19 @@ abstract class Controller {
 	 */
 	final private function _renderLayout() {
 		$layout = array_merge(array('name'=>'', 'branch'=>''), (array)$this->layout);
+		
+		// call hook
+		Hook::call('Controller.renderLayout.before', array(&$layout));
+		
 		if (empty($layout['name'])) {
 			return false;
 		}
 		if (($layout['branch'] == Reg::get('System.rootIdentifier')) || (!Reg::hasVal("Branch.name") && empty($layout['branch']))) {
 			$path = Reg::get("Path.physical")."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
 			if ((file_exists($path) && (include($path)) == true)) {
-				return true;
+				$return = true;
 			} else {
-				return false;
+				$return =  false;
 			}
 		} else if ((Reg::hasVal("Branch.name") && empty($layout['branch'])) || !empty($layout['branch'])) {
 			if (!empty($layout['branch'])) {
@@ -451,12 +545,18 @@ abstract class Controller {
 			}
 			$path = Reg::get("Path.physical")."/branches/".Config::uriToFile(Config::classToFile($branchToUse))."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
 			if ((file_exists($path) && (include($path)) == true)) {
-				return true;
+				$return = true;
 			} else {
-				return false;
+				$return = false;
 			}
+		} else {
+			$return = false;
 		}
-		return false;
+		
+		// call hook
+		Hook::call('Controller.renderLayout.after', array(&$return));
+		
+		return $return;
 	}
 	
 	/**
@@ -692,6 +792,8 @@ abstract class Controller {
 	 * @return boolean true
 	 */
 	final protected function _setBounceBack($check, $bounce) {
+		// call hook
+		Hook::call('Controller.setBounceBack.before', array(&$check, &$bounce));
 		
 		if (!is_array($check)) {
 			$check = array($this, $check);
@@ -706,6 +808,9 @@ abstract class Controller {
 			'bounce' => $bounce
 		);
 		
+		// call hook
+		Hook::call('Controller.setBounceBack.after', array(&$this->bounceback));
+		
 		return true;
 	}
 	
@@ -717,7 +822,14 @@ abstract class Controller {
 	 * @return boolean true
 	 */
 	final protected function _removeBounceBack() {
+		// call hook
+		Hook::call('Controller.removeBounceBack.before');
+			
 		$this->bounceback = null;
+		
+		// call hook
+		Hook::call('Controller.removeBounceBack.after');
+		
 		return true;
 	}
 	
@@ -729,6 +841,9 @@ abstract class Controller {
 	 * @return boolean true if the check returns true and boolean false if not
 	 */
 	final private function _runBounceBack() {
+		// call hook
+		Hook::call('Controller.runBounceBack.before', array(&$this->bounceback));
+		
 		if (((isset($this->bounceback['check']) && method_exists($this->bounceback['check'][0], $this->bounceback['check'][1])) && (isset($this->bounceback['bounce']) && method_exists($this->bounceback['bounce'][0], $this->bounceback['bounce'][1]))) && !$this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true))) {
 			$keys = array_keys(Reg::get('URI.working'));
 			$values = array_values(Reg::get('URI.working'));
@@ -741,15 +856,20 @@ abstract class Controller {
 			$this->viewToLoad = Config::uriToMethod($this->params['view']);
 			
 			if ($this->_viewExists(array("name" => $this->viewToLoad, "checkmethod" => true)) !== true) {
-				return false;
+				$return = false;
+			} else if (is_callable($this->bounceback['check']) && call_user_func($this->bounceback['check']) === false) {
+				$return = false;
+			} else {
+				$return = true;
 			}
-			
-			if (is_callable($this->bounceback['check']) && call_user_func($this->bounceback['check']) === false) {
-				return false;
-			}
-			return true;
+		} else {
+			$return = false;
 		}
-		return false;
+		
+		// call hook
+		Hook::call('Controller.runBounceBack.after', array(&$return));
+		
+		return $return;
 	}
 	
 	/**
@@ -760,6 +880,9 @@ abstract class Controller {
 	 * @return string
 	 */
 	final protected function &_getViewContent() {
+		// call hook
+		Hook::call('Controller.getViewContent', array(&$this->viewContent));
+		
 		return $this->viewContent;
 	}
 	
@@ -771,6 +894,9 @@ abstract class Controller {
 	 * @param string &$content The view content
 	 */
 	final protected function _setViewContent(&$content) {
+		// call hook
+		Hook::call('Controller.setViewContent', array(&$content));
+		
 		$this->viewContent = $content;
 	}
 	
@@ -782,6 +908,9 @@ abstract class Controller {
 	 * @return string
 	 */
 	final protected function &_getFullPageContent() {
+		// call hook
+		Hook::call('Controller.getFullPageContent', array(&$this->fullPageContent));
+		
 		return $this->fullPageContent;
 	}
 	
@@ -793,6 +922,9 @@ abstract class Controller {
 	 * @param string &$content The full page content
 	 */
 	final protected function _setFullPageContent(&$content) {
+		// call hook
+		Hook::call('Controller.setFullPageContent', array(&$content));
+		
 		$this->fullPageContent = $content;
 	}
 	
