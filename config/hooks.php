@@ -1,4 +1,9 @@
 <?php
 
-Hook::add('Reg.set.System.mode', array('Test_Helper', 'setSystemMode'));
-Hook::add('Reg::set(System.mode)', array('Test_Helper', 'setSystemMode'));
+Hook::add('Controller.designerFixCallback', 'test');
+
+function test(&$var1 = '', &$var2 = '') {
+	if ($var1 == '[custom]') {
+		$var2 = '<p>This is my custom content</p>';
+	}
+}

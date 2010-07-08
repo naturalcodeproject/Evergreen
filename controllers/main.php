@@ -23,6 +23,7 @@ class Main_Controller extends ApplicationController_Controller {
 		//throw new Exception('something happened');
 		$test = new TestClass();
 		var_dump($test);
+		$this->test = $test;
 		//throw new EvergreenException("VIEW_NOT_FOUND");
 		//BadStaticClass::$someVariable;
 		//$badclass = new BadClass();

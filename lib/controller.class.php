@@ -57,6 +57,7 @@
  * Controller.setViewContent
  * Controller.getFullPageContent
  * Controller.setFullPageContent
+ * Controller.designerFixCallback
  *
  * @package       evergreen
  * @subpackage    lib
@@ -933,84 +934,113 @@ abstract class Controller {
 	 * 
 	 * @access private
 	 * @final
-	 * @param array $link An array of the found items from the regular expression
+	 * @param array $match An array of the found items from the regular expression
 	 * @return string
 	 */
-	final private function _designerFixCallback($link) {
-		
-		$link_arr = explode("/", $link[2]);
-		$up_link_count = count(array_keys(array_slice($link_arr, 1), ".."));
-		
-		$return = '';
-		switch ($link_arr[0]) {
-			case "[current]":
-				$new_base = explode("/", Reg::get("Path.current"));
-				$return = implode("/", (($up_link_count) ? array_slice($new_base, 0, -$up_link_count) : $new_base)) . implode("/", array_pad(array_slice($link_arr, $up_link_count+1), -(count(array_slice($link_arr, $up_link_count+1))+1), ""));
-			break;
+	final private function _designerFixCallback($match) {
+		$match = $match[0];
+		$return = $match;
+
+		// see if it is a php variable. Quick way to echo variables from $this
+		if (strpos($match, '$') === 1) {
+			$var = str_replace(array('[', ']', '$', 'this->'), '', $match);
 			
-			case "[site]":
-				$new_base = explode("/", Reg::get("Path.site"));
-				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
-			break;
-			
-			case "[skin]":
-				$new_base = explode("/", Reg::get("Path.skin"));
-				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
-			break;
-			
-			case "[root]":
-				$new_base = explode("/", Reg::get("Path.root"));
-				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
-			break;
-			
-			case "[branch.site]":
-				$new_base = explode("/", Reg::get("Path.branch"));
-				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
-			break;
-			
-			case "[branch.skin]":
-				$new_base = explode("/", Reg::get("Path.branchSkin"));
-				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
-			break;
-			
-			case "[branch.root]":
-				$new_base = explode("/", Reg::get("Path.branchRoot"));
-				$return = implode("/", $new_base) . implode("/", array_pad(array_slice($link_arr, 1), -(count(array_slice($link_arr, 1))+1), ""));
-			break;
-			
-			default:
-				$working_uri = Reg::get("URI.working");
+			// if it is in an object then we need to go down the objects pulling out the variables
+			// not pretty
+			if (strpos($var, '->') !== false) {
+				$parts = explode('->', $var);
 				
-				if (Reg::hasVal("Branch.name")) {
-					$working_uri = array_merge(array("branch"=>Reg::get("Branch.name")), $working_uri);
-				}
-				
-				foreach($working_uri as $key => $item) {
-					$tmp_key = "[".$key."]";
-					
-					if ($link_arr[0] == $tmp_key) {
-						$position = array_search($key, array_keys($working_uri));
-						$new_base = explode("/", Reg::get("Path.root"));
-						
-						$new_url = array_merge( array_merge($new_base, array_slice($working_uri, 0, ($position+1))), array_pad(array_slice($link_arr, $up_link_count+1), -(count(array_slice($link_arr, $up_link_count+1))), "") );
-						
-						$return = implode("/",  $new_url );
-						break 1;
+				$failed = false;
+				$var = $this->{array_shift($parts)};
+				foreach($parts as $part) {
+					if (!isset($var->$part)) {
+						// variable isn't set so it failed
+						$failed = true;
+						break;
 					}
+					$var = $var->$part;
 				}
-			break;
+				
+				if ($failed === false) {
+					$return = $var;
+				}
+			} else {
+				// it is a variable that isn't an object
+				if (isset($this->$var)) {
+					$return = $this->$var;
+				}
+			}
+			
+			// the variable didn't exist so send nothing back to the page
+			// don't want variable names to sneak in
+			if ($return == $match) {
+				$return = '';
+			}
+		} else {	
+			switch ($match) {
+				case "[current]":
+					$return = Reg::get("Path.current");
+				break;
+				
+				case "[site]":
+					$return = Reg::get("Path.site");
+				break;
+				
+				case "[skin]":
+					$return = Reg::get("Path.skin");
+				break;
+				
+				case "[root]":
+					$return = Reg::get("Path.root");
+				break;
+				
+				case "[branch.site]":
+					$return = Reg::get("Path.branch");
+				break;
+				
+				case "[branch.skin]":
+					$return = Reg::get("Path.branchSkin");
+				break;
+				
+				case "[branch.root]":
+					$return = Reg::get("Path.branchRoot");
+				break;
+				
+				default:
+					$working_uri = Reg::get("URI.working");
+					
+					if (Reg::hasVal("Branch.name")) {
+						$working_uri = array_merge(array("branch"=>Reg::get("Branch.name")), $working_uri);
+					}
+					
+					foreach($working_uri as $key => $item) {
+						$tmp_key = "[".$key."]";	
+						if ($match == $tmp_key) {
+							$position = array_search($key, array_keys($working_uri));
+							$new_base = explode('/', Reg::get("Path.root"));
+							
+							$new_url = array_merge( array_merge($new_base, array_slice($working_uri, 0, ($position+1))));
+							
+							$return = implode("/",  $new_url );
+							
+							break 1;
+						}
+					}
+				break;
+			}
 		}
 		
-		$return = str_replace("//", "/", $return);
-		
-		if (Reg::get("URI.useModRewrite") != true && !empty($return)) {
+		/*if (Reg::get("URI.useModRewrite") != true && !empty($return)) {
 			if (substr_count($return, "?", 0) > 1) {
 				$return = strrev(preg_replace("/\?/i", "&", strrev($return), (substr_count($return, "?", 0) - 1)));
 			}
 
-		}
+		}*/
 		
-		return $link[1].((!empty($return)) ? $return : $link[2]);
+		// call hook
+		Hook::call('Controller.designerFixCallback', array(&$match, &$return));
+		
+		return $return;
 	}
 	
 	/**
@@ -1021,7 +1051,11 @@ abstract class Controller {
 	 * @param string &$content The content to run the fix on
 	 */
 	final public function _designerFix (&$content) {
-		$content = preg_replace_callback("/(=\"|=\'|=)([\[\]][^(\"|\'|[:space:]|>)]+)/", array($this, "_designerFixCallback"), $content);
+		// requires [tag] to follow =" or =' and be within >
+		//$content = preg_replace_callback('#(?<=="|=\'|=)(\[.+?\])(?=[^>]*)#', array($this, '_designerFixCallback'), $content);
+		
+		// matches all [tag]
+		$content = preg_replace_callback('#(\[[\w\.\$\-\>]+?\])#i', array($this, '_designerFixCallback'), $content);
 	}
 
 }
