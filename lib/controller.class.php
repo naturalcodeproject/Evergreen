@@ -75,10 +75,10 @@ abstract class Controller {
 	/**
 	 * Holder for the called Formhandler class.
 	 * 
-	 * @access private
+	 * @access protected
 	 * @var object
 	 */
-	private $formhandler = null;
+	protected $formhandler = null;
 	
 	/**
 	 * The layout to be loaded.
@@ -172,8 +172,12 @@ abstract class Controller {
 		
 		$this->formhandler = new Formhandler($this);
 		
+		// add hooks for designer fix and form handler
+		Hook::add("Controller.loadView.after", array($this, "_designerFix"));
+		Hook::add("Controller.loadView.after", array($this->formhandler, "decode"));
+		
 		// call hook
-		Hook::call('Controller.setup.after');
+		Hook::call('Controller.setup.after', array(&$this));
 	}
 	
 	/**
@@ -208,15 +212,6 @@ abstract class Controller {
 		$this->_controllerSetup();
 		// Set up the actual page
 		$this->_loadView();
-		
-		// First Designer Fix
-		$this->_designerFix($this->fullPageContent);
-		
-		// Form Fix
-		$this->formhandler->decode($this->fullPageContent);
-		
-		// Second Designer Fix
-		//$this->_designerFix($fullPage);
 		
 		// Output Page
 		$this->_runFilters('Page.output.before');
@@ -941,72 +936,76 @@ abstract class Controller {
 		$match = $match[0];
 		$return = $match;
 
-		// see if it is a php variable. Quick way to echo variables from $this
-		if (strpos($match, '$') === 1) {
-			$var = str_replace(array('[', ']', '$', 'this->'), '', $match);
+		switch ($match) {
+			case "[current]":
+				$return = Reg::get("Path.current");
+			break;
 			
-			// if it is in an object then we need to go down the objects pulling out the variables
-			// not pretty
-			if (strpos($var, '->') !== false) {
-				$parts = explode('->', $var);
-				
-				$failed = false;
-				$var = $this->{array_shift($parts)};
-				foreach($parts as $part) {
-					if (!isset($var->$part)) {
-						// variable isn't set so it failed
-						$failed = true;
-						break;
+			case "[site]":
+				$return = Reg::get("Path.site");
+			break;
+			
+			case "[skin]":
+				$return = Reg::get("Path.skin");
+			break;
+			
+			case "[root]":
+				$return = Reg::get("Path.root");
+			break;
+			
+			case "[branch.site]":
+				$return = Reg::get("Path.branch");
+			break;
+			
+			case "[branch.skin]":
+				$return = Reg::get("Path.branchSkin");
+			break;
+			
+			case "[branch.root]":
+				$return = Reg::get("Path.branchRoot");
+			break;
+			
+			default:
+				// see if it is a php variable. Quick way to echo variables from $this
+				if (strpos($match, '$') === 1) {
+					$var = str_replace(array('[', ']', '$', 'this->'), '', $match);
+					
+					// if it is in an object then we need to go down the objects pulling out the variables
+					// not pretty
+					if (strpos($var, '->') !== false) {
+						$parts = explode('->', $var);
+						
+						$failed = false;
+						$var = $this->{array_shift($parts)};
+						foreach($parts as $part) {
+							if (!isset($var->$part)) {
+								// variable isn't set so it failed
+								$failed = true;
+								break;
+							}
+							$var = $var->$part;
+						}
+						
+						if ($failed === false) {
+							$return = $var;
+						}
+					} else {
+						// it is a variable that isn't an object
+						if (isset($this->$var)) {
+							$return = $this->$var;
+						}
 					}
-					$var = $var->$part;
-				}
-				
-				if ($failed === false) {
-					$return = $var;
-				}
-			} else {
-				// it is a variable that isn't an object
-				if (isset($this->$var)) {
-					$return = $this->$var;
-				}
-			}
-			
-			// the variable didn't exist so send nothing back to the page
-			// don't want variable names to sneak in
-			if ($return == $match) {
-				$return = '';
-			}
-		} else {	
-			switch ($match) {
-				case "[current]":
-					$return = Reg::get("Path.current");
-				break;
-				
-				case "[site]":
-					$return = Reg::get("Path.site");
-				break;
-				
-				case "[skin]":
-					$return = Reg::get("Path.skin");
-				break;
-				
-				case "[root]":
-					$return = Reg::get("Path.root");
-				break;
-				
-				case "[branch.site]":
-					$return = Reg::get("Path.branch");
-				break;
-				
-				case "[branch.skin]":
-					$return = Reg::get("Path.branchSkin");
-				break;
-				
-				case "[branch.root]":
-					$return = Reg::get("Path.branchRoot");
-				break;
-				
-				default:
+					
+					// the variable didn't exist so send nothing back to the page
+					// don't want variable names to sneak in
+					if ($return == $match) {
+						$return = '';
+					}
+				} else if (Reg::has(str_replace(array('[', ']'), '', $match))) {
+					// get the variable from the registry
+					$return = Reg::get(str_replace(array('[', ']'), '', $match));
+				} else {
+					// look for the tag within the working URI
 					$working_uri = Reg::get("URI.working");
 					
 					if (Reg::hasVal("Branch.name")) {
@@ -1026,11 +1025,13 @@ abstract class Controller {
 							break 1;
 						}
 					}
-				break;
-			}
+				}
+			break;
 		}
 		
-		/*if (Reg::get("URI.useModRewrite") != true && !empty($return)) {
+		/*
+		since this function handles more than just links now the following needs to be moved somewhere else
+		if (Reg::get("URI.useModRewrite") != true && !empty($return)) {
 			if (substr_count($return, "?", 0) > 1) {
 				$return = strrev(preg_replace("/\?/i", "&", strrev($return), (substr_count($return, "?", 0) - 1)));
 			}
@@ -1054,7 +1055,7 @@ abstract class Controller {
 		// requires [tag] to follow =" or =' and be within >
 		//$content = preg_replace_callback('#(?<=="|=\'|=)(\[.+?\])(?=[^>]*)#', array($this, '_designerFixCallback'), $content);
 		
-		// matches all [tag]
+		// matches all [tags]
 		$content = preg_replace_callback('#(\[[\w\.\$\-\>]+?\])#i', array($this, '_designerFixCallback'), $content);
 	}
 

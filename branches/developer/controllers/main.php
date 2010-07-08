@@ -41,7 +41,7 @@ class Main_Developer_Controller extends ApplicationController_Developer_Controll
 	
 	public function formtest()
 	{
-		
+		//Hook::remove("Controller.loadView.after", array($this->formhandler, "decode"));
 	}
 	
 	public function foobar()

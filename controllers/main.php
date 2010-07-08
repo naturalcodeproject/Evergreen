@@ -65,6 +65,9 @@ class Main_Controller extends ApplicationController_Controller {
 	}
 	
 	public function anotherDefault() {
+		// remove the design fix hook
+		Hook::remove('Controller.loadView.after', array($this, '_designerFix'));
+		
 		echo "this is another default<br />";
 	}
 	

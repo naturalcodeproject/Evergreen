@@ -4,6 +4,8 @@
 
 <p>[custom]</p>
 
+<p>System Mode: [System.mode]</p>
+
 <pre>
 	<?php var_dump(Config::read('Path')); ?>
 </pre>
