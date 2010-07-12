@@ -231,7 +231,7 @@ abstract class Controller {
 	 */
 	final private function _loadView() {
 		// call hook
-		Hook::call('Controller.loadView.before', array(get_class($this), &$this->viewToLoad));
+		Hook::call('Controller.loadView.before', array(&$this->viewToLoad));
 		
 		ob_start();
 		$error = false;
@@ -926,17 +926,27 @@ abstract class Controller {
 	
 	/**
 	 * Callback function for the designer fix preg_replace_callback
+	 * Automatically adjusts paths if they have .. in them
 	 * 
 	 * @access private
 	 * @final
 	 * @param array $match An array of the found items from the regular expression
 	 * @return string
 	 */
-	final private function _designerFixCallback($match) {
-		$match = $match[0];
-		$return = $match;
+	final private function _designerFixCallback($match) {	
+		// if this isn't empty then it is a link
+		$link = !empty($match[2]);
 
-		switch ($match) {
+		// get the tag
+		$tag = $match[1];
+		
+		// set the default to return the full string that was matched
+		$return = $match[0];
+
+		$custom = false;
+
+		// do the replacement
+		switch ($tag) {
 			case "[current]":
 				$return = Reg::get("Path.current");
 			break;
@@ -967,8 +977,10 @@ abstract class Controller {
 			
 			default:
 				// see if it is a php variable. Quick way to echo variables from $this
-				if (strpos($match, '$') === 1) {
-					$var = str_replace(array('[', ']', '$', 'this->'), '', $match);
+				if (strpos($tag, '$') === 1) {
+					$custom = true;
+					
+					$var = str_replace(array('[', ']', '$', 'this->'), '', $tag);
 					
 					// if it is in an object then we need to go down the objects pulling out the variables
 					// not pretty
@@ -998,12 +1010,14 @@ abstract class Controller {
 					
 					// the variable didn't exist so send nothing back to the page
 					// don't want variable names to sneak in
-					if ($return == $match) {
+					if ($return == $tag) {
 						$return = '';
 					}
-				} else if (Reg::has(str_replace(array('[', ']'), '', $match))) {
+				} else if (Reg::has(str_replace(array('[', ']'), '', $tag))) {
+					$custom = true;
+					
 					// get the variable from the registry
-					$return = Reg::get(str_replace(array('[', ']'), '', $match));
+					$return = Reg::get(str_replace(array('[', ']'), '', $tag));
 				} else {
 					// look for the tag within the working URI
 					$working_uri = Reg::get("URI.working");
@@ -1014,9 +1028,9 @@ abstract class Controller {
 					
 					foreach($working_uri as $key => $item) {
 						$tmp_key = "[".$key."]";	
-						if ($match == $tmp_key) {
+						if ($tag == $tmp_key) {
 							$position = array_search($key, array_keys($working_uri));
-							$new_base = explode('/', Reg::get("Path.root"));
+							$new_base = explode('/', Reg::get("Path.site"));
 							
 							$new_url = array_merge( array_merge($new_base, array_slice($working_uri, 0, ($position+1))));
 							
@@ -1029,14 +1043,25 @@ abstract class Controller {
 			break;
 		}
 		
-		/*
-		since this function handles more than just links now the following needs to be moved somewhere else
-		if (Reg::get("URI.useModRewrite") != true && !empty($return)) {
-			if (substr_count($return, "?", 0) > 1) {
-				$return = strrev(preg_replace("/\?/i", "&", strrev($return), (substr_count($return, "?", 0) - 1)));
+		// if it is a link then we need to do some more processing
+		if ($link === true && $custom === false) {
+			// remove any ../ from the url so that they are clean
+			$link_arr = explode("/", $match[2]);
+			$up_link_count = count(array_keys(array_slice($link_arr, 1), ".."));
+			
+			$return = explode('/', $return);
+			$return = implode("/", (($up_link_count) ? array_slice($return, 0, -1 * $up_link_count) : $return)) . implode("/", array_pad(array_slice($link_arr, $up_link_count+1), -(count(array_slice($link_arr, $up_link_count+1))+1), ""));
+			
+			// if mod_rewrite isn't being used then need to make sure the URL is valid by turning any extra ? into &
+			if (Reg::get("URI.useModRewrite") != true && !empty($return)) {
+				if (substr_count($return, "?", 0) > 1) {
+					$return = strrev(preg_replace("/\?/i", "&", strrev($return), (substr_count($return, "?", 0) - 1)));
+				}
+	
 			}
-
-		}*/
+		} else if (!empty($match[2])) {
+			$return .= $match[2];
+		}
 		
 		// call hook
 		Hook::call('Controller.designerFixCallback', array(&$match, &$return));
@@ -1051,12 +1076,9 @@ abstract class Controller {
 	 * @final
 	 * @param string &$content The content to run the fix on
 	 */
-	final public function _designerFix (&$content) {
-		// requires [tag] to follow =" or =' and be within >
-		//$content = preg_replace_callback('#(?<=="|=\'|=)(\[.+?\])(?=[^>]*)#', array($this, '_designerFixCallback'), $content);
-		
-		// matches all [tags]
-		$content = preg_replace_callback('#(\[[\w\.\$\-\>]+?\])#i', array($this, '_designerFixCallback'), $content);
+	final public function _designerFix (&$content) {		
+		// matches all [tags] and everything after it that is before a space, <, >, ", ', .
+		$content = preg_replace_callback('#(\[[\w\.\$\-\>]+\])(.*?)(?=(?:"|\'|\>|\<|\s))#i', array($this, '_designerFixCallback'), $content);
 	}
 
 }
