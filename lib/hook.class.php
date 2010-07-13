@@ -35,6 +35,14 @@ class Hook {
 	 * @static
 	 */
 	private static $hooks = array();
+	
+	/**
+	 * stores which hooks have been run
+	 *
+	 * @access private
+	 * @static
+	 */
+	private static $run = array();
 
 	/**
 	 * adds a hook to be executed
@@ -120,6 +128,8 @@ class Hook {
 		foreach($hooks as $priority => $functions) {
 			foreach($functions as $function) {
 				if (self::checkFunction($function)) {
+					self::$run[$name][$priority][] = $function;
+					
 					call_user_func_array($function, $args);
 				}
 			}
@@ -163,6 +173,31 @@ class Hook {
 	 */
 	public static function &getAll() {
 		return self::$hooks;
+	}
+	
+	/**
+	 * checks to see if a hook has run
+	 *
+	 * @access public
+	 * @static
+	 * @param string $name the name of the hook to check
+	 * @param string $function the function to check
+	 * @param integer $priority the priority
+	 */
+	public static function hasRun($function = '', $priority = null) {
+		$hooks = self::$run;
+		
+		foreach($hooks as $location => $priorities) {
+			foreach($priorities as $priorit => $functions) {
+				if (empty($priority) || $priorit == $priority) {
+					if (in_array($function, $functions)) {
+						return true;
+					}
+				}
+			}
+		}
+		
+		return false;
 	}
 
 	/**
