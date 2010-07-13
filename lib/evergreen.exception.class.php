@@ -26,6 +26,21 @@
  * This is the class that extends PHP's default exception class to handle errors for Evergreen.
  * This class sets up the Error class, handles messages, and processing errors such as loading urls.
  *
+ * Hooks:
+ * Exeception.construct
+ * Exception.toString
+ * Exception.parsePrintfParameters
+ * Exception.dsprintf
+ * Exception.dsprintfMatch
+ * Exception.processError.before
+ * Exception.processError.include
+ * Exception.processError.after
+ * Exception.clearAllBuffers
+ * Exception.loadURL.before
+ * Exception.loadURL.redirect
+ * Exception.loadURL.controller
+ * Exception.loadURL.default
+ *
  * @package       evergreen
  * @subpackage    lib
  */
@@ -54,6 +69,9 @@ class EvergreenException extends Exception {
 			);
 		}
 		
+		// call hook
+		Hook::call('Exeception.construct', array(&$message, &$params));
+		
 		if ($error = Config::getError($message)) {
 			if (isset($error['messageArgs']) && isset($params['messageArgs'])) {
 				$params['messageArgs'] = array_merge($error['messageArgs'], $params['messageArgs']);
@@ -81,7 +99,12 @@ class EvergreenException extends Exception {
 	 * @return string
 	 */
 	public function __toString() {
-		return __CLASS__ . ": [{$this->code}]: {$this->message}\n";
+		$return = __CLASS__ . ": [{$this->code}]: {$this->message}\n";
+		
+		// call hook
+		Hook::call('Exception.toString', array(&$return));
+		
+		return $return;
 	}
 	
 	/**
@@ -109,7 +132,11 @@ class EvergreenException extends Exception {
 	      	error(sprintf('"%s" has an error near "%s".', $originalString, $string)); 
 	      	return NULL; 
 	      } 
-	    } 
+	    }
+		
+		// call hook
+		Hook::call('Exception.parsePrintfParameters', array(&$string, &$result));
+		
 	    return $result; 
 	}
 
@@ -134,7 +161,10 @@ class EvergreenException extends Exception {
 		$string = preg_replace('/\%\((.*?)\)(.)/e', '\$this->dsprintfMatch(\'$1\',\'$2\',\$data,\$used_keys)', $string); 
 		$data = array_diff_key($data,$used_keys);
 		$countParams = count($this->parsePrintfParameters($string));
-		return vsprintf($string,array_pad($data, $countParams, 'NULL'));
+		$return = vsprintf($string,array_pad($data, $countParams, 'NULL'));
+		
+		// call hook
+		Hook::call('Exception.dsprintf', array(&$return));
 	}
 
 	/**
@@ -154,13 +184,18 @@ class EvergreenException extends Exception {
 		if (isset($data[$m1])) {
 			$str = $data[$m1];
 			$used_keys[$m1] = $m1;
-			return sprintf("%".$m2,$str);
+			$return = sprintf("%".$m2,$str);
 		} else if (Reg::hasVal($m1)) {
 			$used_keys[$m1] = $m1;
-			return sprintf("%".$m2,Reg::get($m1));
+			$return = sprintf("%".$m2,Reg::get($m1));
 		} else {
-			return "NULL";
+			$return = "NULL";
 		}
+		
+		// call hook
+		Hook::call('Exception.dsprintfMatch', array(&$m1, &$m2, &$data, &$used_keys, &$return));
+		
+		return $return;
 	}
 
 	/**
@@ -173,6 +208,9 @@ class EvergreenException extends Exception {
 	 */
 	public function processError() {
 		$this->clearAllBuffers();
+		
+		// call hook
+		Hook::call('Exception.processError.before', array(&$this));
 
 		if (isset($this->code) && !headers_sent()) {
 			switch((string)$this->code) {
@@ -218,6 +256,9 @@ class EvergreenException extends Exception {
                     $code = $this->code;
                 }
 
+				// call hook
+				Hook::call('Exception.processError.include', array(&$code));
+
                 switch ($code) {
                     case 'GEN':
                         include(Reg::get("System.defaultErrorGEN"));
@@ -231,6 +272,9 @@ class EvergreenException extends Exception {
                 }
 			}
 		}
+		
+		// call hook
+		Hook::call('Exception.processError.after', array(&$this));
 	}
 
 	/**
@@ -241,6 +285,9 @@ class EvergreenException extends Exception {
 	 * @final
 	 */
 	public function clearAllBuffers() {
+		// call hook
+		Hook::call('Exception.clearAllBuffers');
+		
 		$buffer_count = ob_get_level();
 		for($i = 1; $i <= $buffer_count; $i++) {
 			ob_end_clean();
@@ -258,8 +305,14 @@ class EvergreenException extends Exception {
 	 * @param string|array $url The url that should be loaded can be the url or an array in the URI.map format
 	 */
 	public function loadURL($url) {
+		// call hook
+		Hook::call('Exception.loadURL.before', array(&$url));
+		
 		if (!empty($url)) {
 			if (!is_array($url) && preg_match("/^(http:|https:|ftp:|ftps:)/im", $url)) {
+				// call hook
+				Hook::call('Exception.loadURL.redirect', array(&$url));
+				
 				header('Location: '.$url);
 				header('Connection: close');
 				exit;
@@ -290,12 +343,19 @@ class EvergreenException extends Exception {
 				}
 			} else {
 				try {
+					// call hook
+					Hook::call('Exception.loadURL.controller', array(&$controller));
+					
 					$controller->_showView();
 				} catch(EvergreenException $e) {
 					if (Reg::get("System.mode") == "development") {
                         if (isset(self::$params['code'])) {
                             $code = self::$params['code'];
                         }
+						
+						// call hook
+						Hook::call('Exception.loadURL.default', array(&$url, &$code));
+						
                         switch ($code) {
                             case 'GEN':
                             	if (file_exists(Reg::get("System.defaultErrorGEN"))) {

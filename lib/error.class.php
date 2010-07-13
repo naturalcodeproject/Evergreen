@@ -26,6 +26,17 @@
  * This class is a helper for thrown errors in that it holds the data for an evergreen exception
  * to allow the error information to be accessed from url's or pages loaded by the thrown error.
  *
+ * Hooks:
+ * Error.setupError.before
+ * Error.setupError.after
+ * Error.getMessage
+ * Error.getCode
+ * Error.getFile
+ * Error.getLine
+ * Error.getTrace
+ * Error.getParams
+ * Error.triggered
+ *
  * @package       evergreen
  * @subpackage    lib
  */
@@ -102,6 +113,9 @@ final class Error {
 	 * @param object $e The exception that was thrown
 	 */
 	final public static function setupError($e) {
+		// call hook
+		Hook::call('Error.setupError.before', array(&$e));
+		
 		if (is_object($e)) {
 			self::$message = $e->getMessage();
 			self::$code = $e->getCode();
@@ -111,6 +125,9 @@ final class Error {
 			self::$params = $e->getParams();
 			self::$triggered = true;
 		}
+		
+		// call hook
+		Hook::call('Error.setupError.after');
 	}
 	
 	/**
@@ -122,7 +139,12 @@ final class Error {
 	 * @return string
 	 */
 	final public static function getMessage() {
-		return self::$message;
+		$message = self::$message;
+		
+		// call hook
+		Hook::call('Error.getMessage', array(&$message));
+		
+		return $message;
 	}
 	
 	/**
@@ -134,7 +156,12 @@ final class Error {
 	 * @return mixed
 	 */
 	final public static function getCode() {
-		return self::$code;
+		$code = self::$code;
+		
+		// call hook
+		Hook::call('Error.getCode', array(&$code));
+		
+		return $message;
 	}
 	
 	/**
@@ -146,7 +173,12 @@ final class Error {
 	 * @return string
 	 */
 	final public static function getFile() {
-		return self::$file;
+		$file = self::$file;
+		
+		// call hook
+		Hook::call('Error.getFile', array(&$file));
+		
+		return $file;
 	}
 	
 	/**
@@ -158,7 +190,12 @@ final class Error {
 	 * @return integer
 	 */
 	final public static function getLine() {
-		return self::$line;
+		$line = self::$line;
+		
+		// call hook
+		Hook::call('Error.getLine', array(&$line));
+		
+		return $line;
 	}
 	
 	/**
@@ -170,7 +207,12 @@ final class Error {
 	 * @return array
 	 */
 	final public static function getTrace() {
-		return self::$trace;
+		$trace = self::$trace;
+		
+		// call hook
+		Hook::call('Error.getTrace', array(&$trace));
+		
+		return $trace;
 	}
 	
 	/**
@@ -182,7 +224,12 @@ final class Error {
 	 * @return array
 	 */
     final public static function getParams() {
-        return self::$params;
+        $params = self::$params;
+		
+		// call hook
+		Hook::call('Error.getParams', array(&$params));
+		
+		return $params;
     }
 	
 	/**
@@ -194,7 +241,12 @@ final class Error {
 	 * @return boolean true if an error has been triggered and boolean false if not
 	 */
 	final public static function triggered() {
-		return self::$triggered;
+		$triggered = self::$triggered;
+		
+		// call hook
+		Hook::call('Error.triggered', array(&$triggered));
+		
+		return $triggered;
 	}
 }
 ?>

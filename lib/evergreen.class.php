@@ -29,6 +29,13 @@ require 'autoloader.class.php';
  * This is the main load point for the framework. This class sets up the Autoloader,
  * error handling, loads in the base configuration, loads in the base registered errors,
  * causes the Config class to process the uri and actually loads the controller.
+ * 
+ * Hooks:
+ * shutdown.before
+ * shutdown.after
+ * showPageLoadInfo.before
+ * showPageLoadInfo.after
+ * 
  *
  * @package       evergreen
  * @subpackage    lib
@@ -69,10 +76,8 @@ final class Evergreen {
 				exit;
 			}
 			
-			// display page load info as in how many queries were run, how much memory it took to run, and how long it took to run
-			if (Reg::get('System.displayPageLoadInfo') == true) {
-				register_shutdown_function(array($this, 'showPageLoadInfo'), $starttime);
-			}
+			// code that is run at the exit of the script
+			register_shutdown_function(array($this, 'shutdown'), $starttime);
 			
 			// process the uri and setup the Reg variables
 			Config::processURI();
@@ -108,6 +113,19 @@ final class Evergreen {
 		}
 	}
 	
+	public function shutdown($starttime) {
+		// call hook
+		Hook::call('shutdown.before', array(&$starttime));
+		
+		// display page load info as in how many queries were run, how much memory it took to run, and how long it took to run
+		if (Reg::get('System.displayPageLoadInfo') == true) {
+			$this->showPageLoadInfo($starttime);
+		}
+		
+		// call hook
+		Hook::call('shutdown.after');
+	}
+	
 	/**
 	 * Returns the page load info.
 	 * 
@@ -115,6 +133,9 @@ final class Evergreen {
 	 * @param integer $starttime The float microtime that the script started
 	 */
 	public function showPageLoadInfo($starttime) {
+		// call hook
+		Hook::call('showPageLoadInfo.before', array(&$starttime));
+		
 		$totaltime = microtime(true) - $starttime;
 		echo sprintf('Time : %.3fs seconds', $totaltime);
 		
@@ -132,6 +153,9 @@ final class Evergreen {
 			// php 5.2+
 			echo ' | Peak Memory Used: ' . $this->convertBytes(memory_get_peak_usage(true));
 		}
+		
+		// call hook
+		Hook::call('showPageLoadInfo.after');
 	}
 	
 	/**

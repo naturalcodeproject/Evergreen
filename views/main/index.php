@@ -4,10 +4,12 @@
 
 <p>[custom]</p>
 
-<p>System Mode: [System.mode]</p>
+<p>The System Mode is [System.mode].. It is cool!</p>
 
 <pre>
 	<?php var_dump(Config::read('Path')); ?>
 </pre>
 
 <p>Short tag for echo: [$test->something]</p>
+
+<p>[view]/../foobar?foo=bar&bar=[System.mode]</p>

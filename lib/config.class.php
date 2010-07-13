@@ -95,6 +95,9 @@ final class Config {
 		Reg::set('Database.storeQueries', false);
 		Reg::set('Database.autoExtract', false);
 		
+		// call hook
+		Hook::call('Config.setup');
+		
 		// return true for good measure
 		return true;
 	}
@@ -146,6 +149,9 @@ final class Config {
 	 * @param array $validation Array used to validate named properties found by the definition
 	 */
 	public static function registerRoute($definition, $action, $validation=array()) {
+		// call hook
+		Hook::call('Config.registerRoute', array(&$definition, &$action, &$validation));
+		
 		// add the current branch name to the route definition if it is not set and we are defining the route from a branch
 		if (!isset($action['branch']) && Reg::hasVal("Branch.name")) {
 			$action = array_merge(array('branch' => Reg::get("Branch.name")), $action);
@@ -164,10 +170,16 @@ final class Config {
 			$params = array("message"=>$params);
 		}
 		
+		// call hook
+		Hook::call('Config.registerError', array(&$key, &$params));
+		
 		self::$errors[$key] = $params;
 	}
 	
 	final public static function getError($key) {
+		// call hook
+		Hook::call('Config.getError', array(&$key, &self::$errors));
+		
 		if (isset(self::$errors[$key])) {
 			return self::$errors[$key];
 		}
@@ -183,6 +195,9 @@ final class Config {
 	 * @return boolean true if successful and boolean false if a route was matched
 	 */
 	public static function processURI() {
+		// call hook
+		Hook::call('Config.processURI.before');
+		
 		// make sure that the uri map exists and is an array with at least 2 keys
 		if (!is_array(Reg::get("URI.map")) || count(Reg::get("URI.map")) < 2) {
 			throw new EvergreenException("NO_URI_MAP");
@@ -225,7 +240,7 @@ final class Config {
 				
 				// set URI.prepend to route to index.php and create a query string using the prepend identifier
 				Reg::set("URI.prepend", "/index.php?" . Reg::get("URI.prependIdentifier") . "=");
-				Reg::set("URI.working", $_GET[Reg::get("URI.prependIdentifier")]);
+				Reg::set("URI.working", (isset($_GET[Reg::get("URI.prependIdentifier")])) ? $_GET[Reg::get("URI.prependIdentifier")] : '');
 			}
 		}
 		
@@ -384,6 +399,9 @@ final class Config {
 		}
 		Reg::set("Path.current", str_replace("//", "/", implode("/", array_merge(array(Reg::get("Path.site")), $current_uri_map))));
 		
+		// call hook
+		Hook::call('Config.processURI.after');
+		
 		return true;
 	}
 	
@@ -403,7 +421,12 @@ final class Config {
 		} else {
 			$regex = '/[_]/';
 		}
-		return strtolower(preg_replace($regex, '.', $uriItem));
+		$return = strtolower(preg_replace($regex, '.', $uriItem));
+		
+		// call hook
+		Hook::call('Config.uriToFile', array(&$return));
+		
+		return $return;
 	}
 	
 	/**
@@ -429,7 +452,12 @@ final class Config {
 		if (count($uriItem) > 0) {
 			$uriItem[0] = strtolower($uriItem[0]);
 		}
-		return implode('', $uriItem);
+		$return = implode('', $uriItem);
+		
+		// call hook
+		Hook::call('Config.uriToMethod', array(&$return));
+		
+		return $return;
 	}
 	
 	/**
@@ -450,7 +478,12 @@ final class Config {
 		}
 		
 		$uriItem = explode(' ', ucwords(preg_replace($regex, ' ', $uriItem)));
-		return implode('', $uriItem);
+		$return = implode('', $uriItem);
+		
+		// call hook
+		Hook::call('Config.uriToClass', array(&$return));
+		
+		return $return;
 	}
 	
 	/**
@@ -462,7 +495,12 @@ final class Config {
 	 * @return string
 	 */
 	public static function methodToFile($methodItem) {
-		return strtolower(trim(preg_replace('/[A-Z]/', '.$0', $methodItem), '.'));
+		$return = strtolower(trim(preg_replace('/[A-Z]/', '.$0', $methodItem), '.'));
+		
+		// call hook
+		Hook::call('Config.methodToFile', array(&$return));
+		
+		return $return;
 	}
 	
 	/**
@@ -474,7 +512,12 @@ final class Config {
 	 * @return string
 	 */
 	public static function classToFile($classItem) {
-		return self::methodToFile($classItem);
+		$return = self::methodToFile($classItem);
+		
+		// call hook
+		Hook::call('Config.classToFile', array(&$return));
+		
+		return $return;
 	}
 	
 	/**
@@ -491,7 +534,12 @@ final class Config {
 		if (count($fileItem) > 0) {
 			$fileItem[0] = strtolower($fileItem[0]);
 		}
-		return implode('', $fileItem);
+		$return = implode('', $fileItem);
+		
+		// call hook
+		Hook::call('Config.fileToMethod', array(&$return));
+		
+		return $return;
 	}
 	
 	/**
@@ -504,7 +552,12 @@ final class Config {
 	 */
 	public static function fileToClass($fileItem) {
 		$fileItem = explode(' ', ucwords(preg_replace('/\./', ' ', $fileItem)));
-		return implode('', $fileItem);
+		$return = implode('', $fileItem);
+		
+		// call hook
+		Hook::call('Config.fileToClass', array(&$return));
+		
+		return $return;
 	}
 	
 	/**
@@ -516,7 +569,12 @@ final class Config {
 	 * @return boolean true if the $branch_name matches a branch directory and boolean false if not
 	 */
 	public static function isBranch($branch_name) {
-		return is_dir(Reg::get("Path.physical")."/branches/".self::uriToFile($branch_name));
+		$return = is_dir(Reg::get("Path.physical")."/branches/".self::uriToFile($branch_name));
+		
+		// call hook
+		Hook::call('Config.isBranch', array(&$return));
+		
+		return $return;
 	}
 	
 	/**
@@ -974,7 +1032,7 @@ final class Reg {
 	public static function del($key) {
 		// call hook
 		if (method_exists('Hook', 'call')) {
-			Hook::call('Reg.has.' . $key, array(&$key));
+			Hook::call('Reg.del.' . $key, array(&$key));
 		}
 		
 		$path = explode('.', $key);

@@ -1078,7 +1078,7 @@ abstract class Controller {
 	 */
 	final public function _designerFix (&$content) {		
 		// matches all [tags] and everything after it that is before a space, <, >, ", ', .
-		$content = preg_replace_callback('#(\[[\w\.\$\-\>]+\])(.*?)(?=(?:"|\'|\>|\<|\s))#i', array($this, '_designerFixCallback'), $content);
+		$content = preg_replace_callback('#(\[[\w\.\$\-\>]+\])(.*?)(?=(?:"|\'|\>|\<|\s|\[|\]))#i', array($this, '_designerFixCallback'), $content);
 	}
 
 }

@@ -10,7 +10,7 @@
 
 <div class="header">
 	<div class="h3">
-		<span class="header-title"><img src="[skin]/images/logo.png"></span>
+		<span class="header-title"><img src="[skin]/../public/images/logo.png"></span>
 	</div>
 </div>
 
