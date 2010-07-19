@@ -54,6 +54,11 @@ class Hook {
 	 * @param integer $priority the order to call the function. Default is 10. Lower gets called first. Higher last.
 	 */
 	public static function add($name, $function, $priority = 10) {
+		// if an array is passed in then make it a string if it is only size 1
+		if (is_array($function) && sizeof($function) == 1) {
+			$function = $function[0];
+		}
+		
 		// make sure the function is valid
 		if (self::checkFunction($function) === false) {
 			return false;

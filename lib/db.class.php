@@ -276,6 +276,12 @@ class DB {
 		// prepare the statement and get it ready to be executed
 		$statement = self::$pdo->prepare($query);
 
+		if (Reg::get('Database.viewQueries')) {
+			echo '<pre>';
+			var_dump(array($query, $values));
+			echo '</pre>';
+		}
+
 		// execute the query
 		if ($statement->execute($values) === false) {
 			// handle the error
