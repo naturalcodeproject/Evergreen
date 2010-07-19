@@ -13,9 +13,9 @@
  * @copyright		Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
  * @package			evergreen
  * @subpackage		lib
- * @version			$Revision: 263 $
- * @modifiedby		$LastChangedBy: jack $
- * @lastmodified	$Date: 2010-05-13 10:57:05 -0600 (Thu, 13 May 2010) $
+ * @version			$Revision$
+ * @modifiedby		$LastChangedBy$
+ * @lastmodified	$Date$
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 
