@@ -1164,7 +1164,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 */
 	private function checkRequiredFields() {
 		foreach ($this->fields as $name => $field) {
-			if (isset($field['required']) && empty($this->data[$this->current_row][$name])) {
+			if (isset($field['required']) && !isset($this->data[$this->current_row][$name])) {
 				$this->addError($name, (!empty($field['required']) ? $field['required'] : 'The validator \'required\' failed on the \''.$name.'\' field'), 'required', ModelFieldError::TYPE_REQUIRED_FIELD_MISSING);
 			}
 		}
