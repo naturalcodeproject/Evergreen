@@ -359,7 +359,6 @@ final class Config {
 			Reg::set("Path.branch", str_replace("//", "/", Reg::get("Path.site")."/".Reg::get("Branch.name")));
 			Reg::set("Path.branchRoot", str_replace("//", "/", Reg::get("URI.base")."/branches/".Reg::get("Branch.name")));
 			Reg::set("Path.branchSkin", str_replace("//", "/", Reg::get("Path.branchRoot")."/public"));
-			Reg::set("Path.branchPhysical", str_replace("//", "/", Reg::get("Path.physical")."/branches/".Reg::get("Branch.name")));
 		}
 		Reg::set("Path.root", str_replace("//", "/", Reg::get("URI.base")));
 		Reg::set("Path.skin", str_replace("//", "/", Reg::get("Path.root")."/public"));
@@ -588,6 +587,7 @@ final class Config {
 	public static function checkForBranch($url_vals) {
 		if (is_array($url_vals) && !empty($url_vals) && self::isBranch($url_vals[0]) && !file_exists(Reg::get("Path.physical")."/controllers/".self::uriToFile($url_vals[0]).".php")) {
 			Reg::set("Branch.name", self::uriToMethod($url_vals[0]));
+			Reg::set("Path.branchPhysical", str_replace("//", "/", Reg::get("Path.physical")."/branches/".Reg::get("Branch.name")));
 			self::loadBranchConfig(Reg::get("Branch.name"));
 			array_shift($url_vals);
 			return $url_vals;
