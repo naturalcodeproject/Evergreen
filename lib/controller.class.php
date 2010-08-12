@@ -1028,13 +1028,8 @@ abstract class Controller {
 					
 					foreach($working_uri as $key => $item) {
 						$tmp_key = "[".$key."]";	
-						if ($tag == $tmp_key) {
-							$position = array_search($key, array_keys($working_uri));
-							$new_base = explode('/', Reg::get("Path.site"));
-							
-							$new_url = array_merge( array_merge($new_base, array_slice($working_uri, 0, ($position+1))));
-							
-							$return = implode("/",  $new_url );
+						if ($tag == $tmp_key && Reg::has('Path.' . $key)) {
+							$return = Reg::get('Path.' . $key);
 							
 							break 1;
 						}

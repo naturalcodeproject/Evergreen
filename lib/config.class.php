@@ -365,12 +365,16 @@ final class Config {
 		
 		// setup all the other path variables based on the URI.map definition
 		$count = 0;
+		$position = 0;
+		$skip = 0;
 		$uriMap = Reg::get("URI.map");
 		$uriWorking = Reg::get("URI.working");
 		foreach($uriWorking as $key => $value) {
-			// no need to set up variable if there is no value
-			if (empty($value)) {
-				continue;
+			// if the current item is a prepend with a default and the default is the current item in the uri then dont show that item in the paths
+			if (is_array($uriMap[$key]) && $uriMap[$key][0] == $value) {
+				$skip++;
+				$count--;
+				$position--;
 			}
 			
 			// fix the paths so that they dont show the URI.map defined defaults
@@ -384,7 +388,7 @@ final class Config {
 			}
 			
 			// set the actual variables
-			Reg::set("Path.".$key, Reg::get("URI.base").'/'.trim(implode('/', array_merge((array)Reg::get('Branch.name'), array_slice($uriWorking, 0, $position))), '/'));
+			Reg::set("Path.".$key, Reg::get("URI.base").'/'.trim(implode('/', array_merge((array)Reg::get('Branch.name'), array_slice($uriWorking, $skip, $position))), '/'));
 			$count++;
 		}
 		
