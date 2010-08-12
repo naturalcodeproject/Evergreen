@@ -19,7 +19,7 @@
  * @lastmodified	$Date$
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
- 
+
 /**
  * Model Class
  *
@@ -32,55 +32,55 @@
 abstract class Model implements Iterator, Countable, arrayaccess {
 	/**
 	 * Name of the database table.
-	 * 
+	 *
 	 * @access protected
 	 * @var string
 	 */
 	protected $table_name = '';
-	
+
 	/**
 	 * All of the fields for the model.
-	 * 
+	 *
 	 * @access private
 	 * @var array
 	 */
 	private $fields = array();
-	
+
 	/**
 	 * Holds all of the relationship information for the model.
-	 * 
+	 *
 	 * @access private
 	 * @var array
 	 */
 	private $relationships = array();
-	
+
 	/**
 	 * All errors generated from validation methods.
-	 * 
+	 *
 	 * @access private
 	 * @var array
 	 */
 	private $errors = array();
-	
+
 	/**
 	 * Holds the data for the row.
-	 * 
+	 *
 	 * @access private
 	 * @var array
 	 */
 	private $data = array();
-	
+
 	/**
 	 * Holds the identifier for the current data set.
-	 * 
+	 *
 	 * @access private
 	 * @var integer
 	 */
 	private $current_row = 0;
-	
+
 	/**
 	 * Sets the table name for the model.
-	 * 
+	 *
 	 * @access public
 	 * @param string $name The name of the table for the model
 	 * @return boolean true
@@ -90,17 +90,17 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 
 		return true;
 	}
-	
+
 	/**
 	 * Gets the table name for the model.
-	 * 
+	 *
 	 * @access public
 	 * @return string
 	 */
 	public function getTableName() {
 		return $this->table_name;
 	}
-	
+
 	/**
 	 * Adds a field to the model.
 	 *
@@ -116,7 +116,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 * );
 	 * ?>
 	 * </code>
-	 * 
+	 *
 	 * @access protected
 	 * @param string $name The name of the field
 	 * @param array $options Optional The field options such as the validators and the format
@@ -171,7 +171,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		if (!empty($options['format'])) {
 			if (!is_array($options['format'])) {
 				$format = $this->_checkFormatter($options['format']);
-				
+
 				if (is_string($format)) {
 					$errors[] = $format;
 				} else {
@@ -191,7 +191,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 							$field_data['format']['onGet'] = $format;
 						}
 					}
-					
+
 					// onSet
 					if (isset($options['format']['onSet'])) {
 						$format = $this->_checkFormatter($options['format']['onSet']);
@@ -207,7 +207,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 					// user is providing a class and method for the formatter for onGet
 					if (sizeof($options['format']) != 2) {
 						$errors[] = "Invalid field format. Format needs to be in the form of array('class', 'method')";
-					} else {				
+					} else {
 						// make sure the class and method exists
 						if (!is_object($options['format'][0]) && (!class_exists($options['format'][0]) || !method_exists($options['format'][0], $options['format'][1]))) {
 							$errors[] = 'Invalid field format. Class/function does not exists: ' . $options['format'][0] . '::' . $options['format'][1];
@@ -228,7 +228,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			return true;
 		}
 	}
-	
+
 	/**
 	* checks to see if a format is valid
 	*
@@ -253,7 +253,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			// if the array doesn't have two indexes then it is in the wrong format
 			if (sizeof($format) != 2) {
 				return "Invalid field format. Format needs to be in the form of array('class', 'method')";
-			} else {				
+			} else {
 				// make sure the class and method exists
 				if (!is_object($format[0]) && (!class_exists($format[0]) || !method_exists($format[0], $format[1]))) {
 					return 'Invalid field format. Class/function does not exists: ' . $format[0] . '::' . $format[1];
@@ -263,20 +263,20 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			}
 		}
 	}
-	
+
 	/**
 	 * Gets the fields for a model.
-	 * 
+	 *
 	 * @access public
 	 * @return array
 	 */
 	public function getFields() {
 		return $this->fields;
 	}
-	
+
 	/**
 	 * Gets the field names.
-	 * 
+	 *
 	 * @access public
 	 * @return array
 	 */
@@ -289,7 +289,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 
 		return $names;
 	}
-	
+
 	/**
 	 * Adds an one-to-one relationship.
 	 *
@@ -302,7 +302,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 * );
 	 * ?>
 	 * </code>
-	 * 
+	 *
 	 * @access protected
 	 * @return boolean true if setup correctly and boolean false if setup failed
 	 */
@@ -310,16 +310,16 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		if (!isset($options['local']) || !isset($options['foreign']) || !isset($options['alias']) || isset($this->fields[$options['alias']]) || !isset($this->fields[$options['local']])) {
 			return false;
 		}
-		
+
 		$this->relationships[$options['alias']] = array(
 			'class_name' => $class_name,
 			'type' => 'one',
 			'options' => $options
 		);
-		
+
 		return true;
 	}
-	
+
 	/**
 	 * Adds an one-to-many relationship.
 	 *
@@ -332,7 +332,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 * );
 	 * ?>
 	 * </code>
-	 * 
+	 *
 	 * @access protected
 	 * @return boolean true if setup correctly and boolean false if setup failed
 	 */
@@ -340,32 +340,32 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		if (!isset($options['local']) || !isset($options['foreign']) || !isset($options['alias']) || isset($this->fields[$options['alias']]) || !isset($this->fields[$options['local']])) {
 			return false;
 		}
-		
+
 		$this->relationships[$options['alias']] = array(
 			'class_name' => $class_name,
 			'type' => 'many',
 			'options' => $options
 		);
-		
+
 		return true;
 	}
-	
+
 	/**
 	 * Retrieve one row using the primary key.
-	 * 
+	 *
 	 * @access public
 	 * @return boolean true if results found and setup correctly and boolean false if no results were found
 	 */
 	public function retrieve($id) {
 		$this->clearData();
-		
+
 		$primary = $this->_getPrimaryKeys();
 		$ids = func_get_args();
 		if (count($ids) != count($primary)) {
 			// the row wasn't retrieved because there were to many or to few args. Return false.
 			return false;
 		}
-		
+
 		$where = array();
 		foreach($primary as $item) {
 			$where[] = $this->table_name . '.' . $item . ' = ?';
@@ -390,13 +390,13 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		// the row wasn't retrieved. Return false.
 		return false;
 	}
-	
+
 	/**
 	 * Finds multiple rows AKA a SELECT query.
 	 *
 	 * If the first parameter is a string then that is the alias for a relationship
 	 * and the function will find within the alias.
-	 * 
+	 *
 	 * @access public
 	 * @param array $options Used to set the alias of a relationship find or used for the where of a quick find
 	 * @param array $options2 Optional Used to set the options for a relationship find or used to set the values on a quick find
@@ -405,7 +405,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 */
 	public function find($options = array(), $options2 = array(), $autoExtract = null) {
 		$alias = $this->_determineOptions($options, $options2);
-		
+
 		if (isset($options['autoExtract']) && $options['autoExtract'] == true) {
 			$autoExtract = true;
 		} else if (isset($options['autoExtract']) && $options['autoExtract'] == false) {
@@ -415,7 +415,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		} else {
 			$autoExtract = false;
 		}
-		
+
 		if (!empty($this->relationships[$alias])) {
 			return $this->get($alias, $options);
 		} else {
@@ -423,45 +423,26 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 				$this->clearData();
 			}
 		}
-		
-		unset($options['autoExtract']);
-		
-		$this->_prepareOptions($options);
-		
-		$results = DB::find($this->getFieldNames(), $this->getTableName(), $options);
-		
-		if ($results !== false) {
-			// loop through the results and clone the existing object
-			$models = array();
-			while($row = DB::fetch($results)) {
-				if ($autoExtract == true) {
-					$obj = clone $this;
-					$obj->setProperties($row, true, false);
-					$models[] = $obj;
-				} else {
-					$this->setProperties($row, true, false);
-				}
-			}
-			if ($autoExtract == true) {
-				return $models;
-			} else {
-				return $this;
-			}
-		}
 
-		return false;
+		unset($options['autoExtract']);
+
+		$this->_prepareOptions($options);
+
+		$results = DB::find($this->getFieldNames(), $this->getTableName(), $options);
+
+		return $this->populate($results, $autoExtract);
 	}
-	
+
 	/**
 	 * UPDATE or INSERT a row into the DB. calls create() or update()
-	 * 
+	 *
 	 * @access public
 	 * @final
 	 * @return mixed
 	 */
 	public final function save() {
 		$primary = $this->_getPrimaryKeys();
-		
+
 		// For multiple primary key models, save will always call create, as update must
         // be called explicitly.  For single primary key models, create will be called if
         // a value has not been set for the primary key, otherwise update will be called.
@@ -472,10 +453,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			return $this->create();
 		}
 	}
-	
+
 	/**
 	 * INSERTs a row into the DB
-	 * 
+	 *
 	 * @access public
 	 * @final
 	 * @return mixed
@@ -487,7 +468,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
         $this->checkRequiredFields();
         $this->checkValidators();
-        
+
         if (!$this->hasErrors()) {
 			// prepare the data. This needs to be based on the fields.
 			$data = array();
@@ -496,10 +477,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 					$data[$name] = $this->data[$this->current_row][$name];
 				}
 			}
-	
+
 			// execute the query
 			$id = intval(DB::insert($data, $this->getTableName()));
-			
+
 			$primary = $this->_getPrimaryKeys();
 			if (count($primary) == 1) {
 				if ($id == 0 && !empty($this->data[$this->current_row][$primary[0]])) {
@@ -522,10 +503,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * UPDATEs a row in the DB
-	 * 
+	 *
 	 * @access public
 	 * @final
 	 * @return boolean false if there were errors and boolean true if the update was successful
@@ -538,7 +519,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
         $this->checkKeys();
         $this->checkRequiredFields();
         $this->checkValidators();
-        
+
         if (!$this->hasErrors()) {
 			// prepare the data. This needs to be based on the fields.
 			$data = array();
@@ -547,22 +528,22 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 					$data[$name] = $this->data[$this->current_row][$name];
 				}
 			}
-			
+
 			// execute the query
 			DB::update($this->_getPrimaryKeys(), $data, $this->getTableName());
 
 			if (method_exists($this, 'postUpdate') && is_callable(array($this, 'postUpdate'))) {
 				$this->postUpdate();
 			}
-			
+
 			return true;
 		}
 		return false;
 	}
-	
+
 	/**
 	 * DELETEs a row from the DB
-	 * 
+	 *
 	 * @access public
 	 * @final
 	 * @param array $options Optional Used to set the relationship alias to do the delete on or the options to do a mass delete or the where for a quick delete
@@ -584,43 +565,43 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 					$columns[] = "{$key} = ?";
 					$values[] = $this->data[$this->current_row][$key];
 				}
-				
+
 				$options = array(
 					"where" => array_merge((array)implode(' && ', $columns), $values)
 				);
-				
+
 				$this->_prepareOptions($options);
-				
+
 				DB::delete($this->getTableName(), $options);
-				
+
 				if (method_exists($this, 'postDelete') && is_callable(array($this, 'postDelete'))) {
 					$this->postDelete();
 				}
-				
+
 				return true;
 			}
 		} else {
 			$alias = $this->_determineOptions($options, $options2);
-			
+
 			if (isset($this->relationships[$alias])) {
 				return $this->_relationshipDelete($alias, $options);
 			}
-			
+
 			if (!isset($options['where'])) {
 				return false;
 			}
-			
+
 			$this->_prepareOptions($options);
-			
+
 			DB::delete($this->getTableName(), $options);
 			return true;
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Gets the relationship data.
-	 * 
+	 *
 	 * @access public
 	 * @param string $alias The relationship alias
 	 * @param array $options Optional Used to set the options for the relationship find
@@ -632,7 +613,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
 		$relObj = new $this->relationships[$alias]['class_name']();
 		$local = $this->relationships[$alias]['options']['local'];
-		
+
 		if (!empty($options['where'])) {
 			$query = '('.implode('', array_slice((array)$options['where'], 0, 1)).') && ('.$this->relationships[$alias]['options']['foreign'].' = ?)';
 			$values = array_slice((array)$options['where'], 1);
@@ -641,17 +622,32 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		} else {
 			$options['where'] = array($this->relationships[$alias]['options']['foreign'].' = ?', $this->data[$this->current_row][$local]);
 		}
-		
+
 		if ($this->relationships[$alias]['type'] == 'one') {
 			$options['limit'] = 1;
 		}
-		
+
 		return $relObj->find($options);
 	}
-	
+
+	/**
+	 * Populates the current object based on a custom query
+	 *
+	 * @access public
+	 * @param string $query the query to execute
+	 * @param array $values Optional The values of the query
+	 * @param mixed $autoExtract Optional Defaults to false but when set to true will return an array with each row of data as a separate object
+	 * @return object a reference to the current or relationship object with all the data filled in and an array of objects if $autoExtract is set to true
+	 */
+	public function query($query, $values = array(), $autoExtract = null) {
+		$result = DB::execute($query, $values);
+
+		return $this->populate($result, $autoExtract);
+	}
+
 	/**
 	 * Processes a relationship delete.
-	 * 
+	 *
 	 * @access private
 	 * @param string $alias The relationship alias
 	 * @param array $options Optional Used to set the options for the relationship delete
@@ -663,7 +659,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		}
 		$relObj = new $this->relationships[$alias]['class_name']();
 		$local = $this->relationships[$alias]['options']['local'];
-		
+
 		if (!empty($options['where'])) {
 			$query = '('.implode('', array_slice((array)$options['where'], 0, 1)).') && ('.$this->relationships[$alias]['options']['foreign'].' = ?)';
 			$values = array_slice((array)$options['where'], 1);
@@ -672,21 +668,59 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		} else {
 			$options['where'] = array($this->relationships[$alias]['options']['foreign'].' = ?', $this->data[$this->current_row][$local]);
 		}
-		
+
 		if ($this->relationships[$alias]['type'] == 'one') {
 			$options['limit'] = 1;
 		}
-		
+
 		if ($relObj->delete($options)) {
 			return true;
 		}
-		
+
 		return false;
 	}
-	
+
+	/**
+	 * populates a model from a PDO result
+	 *
+	 * @see DB::execute
+	 * @access public
+	 * @param mixed $results The PDO result set or false
+	 * @param bool $autoExtract Optional Defaults to false but when set to true will return an array with each row of data as a separate object
+	 * @return object a reference to the current or relationship object with all the data filled in and an array of objects if $autoExtract is set to true
+	 */
+	public function populate($results, $autoExtract = null) {
+		if ($autoExtract === null && Reg::get('Database.autoExtract') == true) {
+			$autoExtract = true;
+		} else {
+			$autoExtract = false;
+		}
+
+		if ($results !== false) {
+			// loop through the results and clone the existing object
+			$models = array();
+			while($row = DB::fetch($results)) {
+				if ($autoExtract == true) {
+					$obj = clone $this;
+					$obj->setProperties($row, true, false);
+					$models[] = $obj;
+				} else {
+					$this->setProperties($row, true, false);
+				}
+			}
+			if ($autoExtract == true) {
+				return $models;
+			} else {
+				return $this;
+			}
+		}
+
+		return false;
+	}
+
 	/**
 	 * Populates a model from an array.
-	 * 
+	 *
 	 * @access public
 	 * @param array $data An array of data with the fields as the keys to populate the model with
 	 * @param boolean $new Optional When set to true the function creates a new data row in the model for iteration rather than replacing the current row's data
@@ -702,14 +736,14 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			if ($filters === true && $this->isField($key) === true && !empty($this->fields[$key]['format']['onSet'])) {
 				$value = ModelFieldFormat::format($this->fields[$key]['format']['onSet'], $value);
 			}
-			
+
 			$this->data[$this->current_row][$key] = $value;
 		}
 	}
-	
+
 	/**
 	 * Returns the model properties as an array.
-	 * 
+	 *
 	 * @access public
 	 * @return array
 	 */
@@ -721,16 +755,16 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			if ($this->isField($key) === true && !empty($this->fields[$key]['format']['onGet'])) {
 				$value = ModelFieldFormat::format($this->fields[$key]['format']['onGet'], $value);
 			}
-			
+
 			$data[$key] = $value;
 		}
 
 		return $data;
 	}
-	
+
 	/**
 	 * Checks to see if a field is part of the current object or not.
-	 * 
+	 *
 	 * @access public
 	 * @param string $name The field name that is to be checked
 	 * @return boolean true if field exists and boolean false if not
@@ -738,10 +772,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	public function isField($name) {
 		return isset($this->fields[$name]);
 	}
-	
+
 	/**
 	 * Gets the primary keys for a table.
-	 * 
+	 *
 	 * @access private
 	 * @param string $name The field name that is to be checked
 	 * @return array if there are keys and boolean false if there are none
@@ -756,10 +790,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 
 		return (!empty($return)) ? $return : false;
 	}
-	
+
 	/**
 	 * Takes the options that are being passed to a function and based on what is being passed determines what the options are and if there is an alias being passed.
-	 * 
+	 *
 	 * @access private
 	 * @param mixed &$options The options that need to be parsed or the alias of a relationship or a where string in the where short hand
 	 * @param array $options2 Optional The options for a relationship find/delete or the values for find short hand
@@ -780,13 +814,13 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		} else if(is_array($options)) {
 			return true;
 		}
-		
+
 		return false;
 	}
-	
+
 	/**
 	 * Prepares the options by appending the table name to the front of the columns.
-	 * 
+	 *
 	 * @access private
 	 * @param array &$options The options to be prepared to be passed to the DB class
 	 */
@@ -810,26 +844,26 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 				$replace_names($item);
 			}
 		}
-		
+
 		if (isset($options['limit']) && is_array($options['limit'])) {
 			$options['limit'] = trim(implode(', ', $options['limit']), ', ');
 		}
 		unset($replace_names);
 	}
-	
+
 	/**
 	 * Returns the total rows populated in the current object.
-	 * 
+	 *
 	 * @access public
 	 * @return integer
 	 */
 	public function count() {
 		return count($this->data);
 	}
-	
+
 	/**
 	 * Magic method for setting a field's value.
-	 * 
+	 *
 	 * @access public
 	 */
 	public function __set($name, $value) {
@@ -837,13 +871,13 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		if ($this->isField($name) === true && !empty($this->fields[$name]['format']['onSet'])) {
 			$value = ModelFieldFormat::format($this->fields[$name]['format']['onSet'], $value);
 		}
-		
+
 		$this->data[$this->current_row][$name] = $value;
 	}
-	
+
 	/**
 	 * Magic method for getting a field's value or relationship's data.
-	 * 
+	 *
 	 * @access public
 	 * @param string $name The name of the field to get
 	 * @return mixed
@@ -851,12 +885,12 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	public function __get($name) {
 		if (isset($this->data[$this->current_row][$name])) {
 			$value = $this->data[$this->current_row][$name];
-			
+
 			// apply the formatter for the field
 			if ($this->isField($name) === true && !empty($this->fields[$name]['format']['onGet'])) {
 				$value = ModelFieldFormat::format($this->fields[$name]['format']['onGet'], $value);
 			}
-				
+
 			return $value;
 		} else if (isset($this->relationships[$name])) {
 			// it is an alias
@@ -865,10 +899,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			return NULL;
 		}
 	}
-	
+
 	/**
 	 * Magic method to check if a field exists.
-	 * 
+	 *
 	 * @access public
 	 * @param string $name The name of the field to check
 	 * @return boolean true if the field exists and boolean false if not
@@ -876,20 +910,20 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	public function __isset($name) {
 		return isset($this->data[$this->current_row][$name]);
 	}
-	
+
 	/**
 	 * Magic method to unset a field.
-	 * 
+	 *
 	 * @access public
 	 * @param string $name The name of the field to unset
 	 */
 	public function __unset($name) {
 		unset($this->data[$this->current_row][$name]);
 	}
-	
+
 	/**
 	 * Magic method that prepares the current object for cloning.
-	 * 
+	 *
 	 * @access public
 	 */
 	public function __clone() {
@@ -899,10 +933,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		$this->setProperties($currentData);
 		$this->setErrors($currentErrors);
 	}
-	
+
 	/**
 	 * Turns one result set in the current object into its own object.
-	 * 
+	 *
 	 * @access public
 	 * @param integer $key The key or position of the result set to extract, assumes the current result set if empty
 	 * @return object if the desired result set is found and boolean false if not
@@ -911,7 +945,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		if ($key === null) {
 			$key = $this->current_row;
 		}
-		
+
 		if (!empty($this->data[$key])) {
 			$obj = clone $this;
 			$obj->setProperties($this->data[$key]);
@@ -920,10 +954,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 
 		return false;
 	}
-	
+
 	/**
 	 * Turns every result set in the current object into it's own object.
-	 * 
+	 *
 	 * @access public
 	 * @return array
 	 */
@@ -932,13 +966,13 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		for($i = 0, $total = count($this->data); $i < $total; $i++) {
 			$return[] = $this->extract($i);
 		}
-		
+
 		return $return;
 	}
-	
+
 	/**
 	 * Clears out all the result sets and errors in the current object and resets the current row count to 0.
-	 * 
+	 *
 	 * @access private
 	 */
 	private function clearData() {
@@ -946,64 +980,64 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		$this->errors = array();
 		$this->current_row = 0;
 	}
-	
+
 	/**
 	 * Iterator method.
 	 * Resets the current row pointer.
-	 * 
+	 *
 	 * @access public
 	 */
 	public function rewind() {
 		$this->current_row = 0;
 	}
-	
+
 	/**
 	 * Iterator method.
 	 * Gets the current row which is the object. The current row has already been incremented.
-	 * 
+	 *
 	 * @access public
 	 * @return object
 	 */
 	public function current() {
 		return $this;
 	}
-	
+
 	/**
 	 * Iterator method.
 	 * Returns the current pointer's value.
-	 * 
+	 *
 	 * @access public
 	 * @return integer
 	 */
 	public function key() {
 		return $this->current_row;
 	}
-	
+
 	/**
 	 * Iterator method.
 	 * Advances the current pointer's value by 1.
-	 * 
+	 *
 	 * @access public
 	 */
 	public function next() {
 		$this->current_row += 1;
 	}
-	
+
 	/**
 	 * Iterator method.
 	 * Checks if the row the current pointer is targeting is a valid row in the result set.
-	 * 
+	 *
 	 * @access public
 	 * @return boolean true if the current row is a valid row and boolean false if not
 	 */
 	public function valid() {
 		return isset($this->data[$this->current_row]);
 	}
-	
+
 	/**
 	 * Arrayaccess method.
 	 * Checks if the passed in offset exists.
-	 * 
+	 *
 	 * @access public
 	 * @param integer $offset The zero based numeric key of the result set to check
 	 * @return boolean true if the result set at the asked for offset exists and boolean false if not
@@ -1011,11 +1045,11 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	public function offsetExists($offset) {
 		return isset($this->data[$offset]);
 	}
-	
+
 	/**
 	 * Arrayaccess method.
 	 * Returns an object with the result set data defined by the passed in offset.
-	 * 
+	 *
 	 * @access public
 	 * @param integer $offset The zero based numeric key of the result set to get
 	 * @return object
@@ -1023,11 +1057,11 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	public function offsetGet($offset) {
 		return $this->extract($offset);
 	}
-	
+
 	/**
 	 * Arrayaccess method.
 	 * Let's you set the value of the array but we don't need that and don't want to allow people to do that.
-	 * 
+	 *
 	 * @access public
 	 * @param integer $offset The zero based numeric key of the result set to set
 	 * @param mixed $value The value of the defined offset
@@ -1036,21 +1070,21 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	public function offsetSet($offset, $value) {
 		return false;
 	}
-	
+
 	/**
 	 * Arrayaccess method.
 	 * Unsets a result set row based on the passed in offset.
-	 * 
+	 *
 	 * @access public
 	 * @param integer $offset The zero based numeric key of the result set to unset
 	 */
 	public function offsetUnset($offset) {
 		unset($this->data[$offset]);
 	}
-	
+
 	/**
 	 * Creates, sets up, and stores an error object for a field error.
-	 * 
+	 *
 	 * @access public
 	 * @param string $field The name of the field that had the error occur
 	 * @param string $msg The error message
@@ -1065,62 +1099,62 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	    $modelError->msg = $msg;
 	    $modelError->code = $code;
 		$modelError->validator = $validator;
-	    
+
 	    $this->errors[$this->current_row][] = $modelError;
 	}
-	
+
 	/**
 	 * Method used to clear all currently set errors for all result sets.
-	 * 
+	 *
 	 * @access public
 	 */
 	public function clearAllErrors() {
 	    $this->errors = array();
 	}
-	
+
 	/**
 	 * Method used to clear all errors for the current result set.
-	 * 
+	 *
 	 * @access public
 	 */
 	public function clearErrors() {
 	    unset($this->errors[$this->current_row]);
 	}
-	
+
 	/**
 	 * Method used to bulk set errors for the current result set.
-	 * 
+	 *
 	 * @access public
 	 * @param array $errors An array of errors to be set
 	 */
 	public function setErrors($errors) {
 	    $this->errors[$this->current_row] = (array)$errors;
 	}
-	
+
 	/**
 	 * Checks if the current result set has errors and returns the count.
-	 * 
+	 *
 	 * @access public
 	 * @return integer
 	 */
 	public function hasErrors() {
 	    return (count(((isset($this->errors[$this->current_row])) ? $this->errors[$this->current_row] : array())) > 0);
 	}
-	
+
 	/**
 	 * Returns an array of all the error objects for the current result set.
-	 * 
+	 *
 	 * @access public
 	 * @return array if there are errors and boolean false if not
 	 */
 	public function getErrors() {
 	    return ((isset($this->errors[$this->current_row])) ? $this->errors[$this->current_row] : false);
 	}
-	
+
 	/**
 	 * Returns an array of all the error messages for the current result set.
 	 * If a field is defined will return all the error messages for the defined field for the current result set.
-	 * 
+	 *
 	 * @access public
 	 * @param string $field Optional Field to get the errors for
 	 * @return array
@@ -1136,10 +1170,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	    }
 	    return $messages;
 	}
-	
+
 	/**
 	 * Returns the error message for the defined field and validator.
-	 * 
+	 *
 	 * @access public
 	 * @param string $field Field to get the errors for
 	 * @param string $validator The validator to ge the errors for
@@ -1153,13 +1187,13 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 				}
 			}
 	    }
-	    
+
 	    return null;
 	}
-	
+
 	/**
 	 * Validates that all the required fields for the model have a value and sets up and error if not.
-	 * 
+	 *
 	 * @access private
 	 */
 	private function checkRequiredFields() {
@@ -1169,10 +1203,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			}
 		}
 	}
-	
+
 	/**
 	 * Validates that all the primary key fields for the model have a value and sets up and error if not.
-	 * 
+	 *
 	 * @access private
 	 */
 	private function checkKeys() {
@@ -1182,10 +1216,10 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			}
 		}
 	}
-	
+
 	/**
 	 * Runs all the defined custom validators on a field and sets up an error if they return a string or false.
-	 * 
+	 *
 	 * @access private
 	 */
 	private function checkValidators() {
@@ -1217,7 +1251,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 class ModelFieldFormat {
 	/**
 	 * Formats the value for the column and returns the result.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param string $format The format to run
@@ -1231,10 +1265,10 @@ class ModelFieldFormat {
 
 		return $value;
 	}
-	
+
 	/**
 	 * Integer format.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param mixed $value The value to run the format on
@@ -1246,7 +1280,7 @@ class ModelFieldFormat {
 
 	/**
 	 * Plain text format.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param mixed $value The value to run the format on
@@ -1255,10 +1289,10 @@ class ModelFieldFormat {
 	public static function plaintext($value) {
 		return stripslashes(htmlspecialchars($value));
 	}
-	
+
 	/**
 	 * HTML text format.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param mixed $value The value to run the format on
@@ -1267,10 +1301,10 @@ class ModelFieldFormat {
 	public static function htmltext($value) {
 		return $value;
 	}
-	
+
 	/**
 	 * Timestamp format.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param mixed $value The value to run the format on
@@ -1280,7 +1314,7 @@ class ModelFieldFormat {
 		if (is_numeric($value)) {
 			return intval($value);
 		}
-		
+
 		return strtotime($value);
 	}
 }
@@ -1296,39 +1330,39 @@ class ModelFieldFormat {
 class ModelFieldError {
 	/**
 	 * The error type as defined by the type constants.
-	 * 
+	 *
 	 * @access public
 	 * @var integer
 	 */
     public $type;
-    
+
     /**
 	 * The field the error occurred on.
-	 * 
+	 *
 	 * @access public
 	 * @var string
 	 */
     public $field;
-    
+
     /**
 	 * The error message.
-	 * 
+	 *
 	 * @access public
 	 * @var string
 	 */
     public $msg;
-    
+
     /**
 	 * The error code if any.
-	 * 
+	 *
 	 * @access public
 	 * @var integer
 	 */
     public $code;
-    
+
     /**
 	 * The name of the validator that failed.
-	 * 
+	 *
 	 * @access public
 	 * @var string
 	 */
@@ -1341,10 +1375,10 @@ class ModelFieldError {
     const TYPE_KEY_MISSING = 1;
     const TYPE_REQUIRED_FIELD_MISSING = 2;
     const TYPE_CUSTOM_VALIDATOR_FAILED = 3;
-    
+
 	/**
 	 * Class constructor.
-	 * 
+	 *
 	 * @access public
 	 */
     public function __construct() {

@@ -21,7 +21,7 @@
  * @lastmodified	$Date$
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
- 
+
 /**
  * DB Class
  *
@@ -51,16 +51,16 @@ class DB {
 
 	/**
 	 * Holds the PDO connection object.
-	 * 
+	 *
 	 * @access private
 	 * @static
 	 * @var object
 	 */
 	private static $pdo;
-	
+
 	/**
 	 * Holds the DB driver object.
-	 * 
+	 *
 	 * @access private
 	 * @static
 	 * @var object
@@ -69,16 +69,16 @@ class DB {
 
 	/**
 	 * Holds the queries that have been executed. Useful when debugging.
-	 * 
+	 *
 	 * @access private
 	 * @static
 	 * @var array
 	 */
 	private static $queries = array();
-	
+
 	/**
 	 * Holds a count of the executed queries.
-	 * 
+	 *
 	 * @access private
 	 * @static
 	 * @var array
@@ -87,7 +87,7 @@ class DB {
 
 	/**
 	 * Sets up the driver and the PDO connection.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 */
@@ -103,7 +103,7 @@ class DB {
 
 	/**
 	 * Helper function to select data from a table.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param array $fields An array of the fields registered in the model
@@ -120,16 +120,16 @@ class DB {
 		if (isset($options['where']) && is_array($options['where'])) {
 			$values = array_slice($options['where'], 1);
 		}
-		
+
 		// execute the query
 		$results = self::execute($query, $values);
-		
+
 		return $results;
 	}
-	
+
 	/**
 	 * Helper function to insert a row into the table.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param array $values The array with the values that need to be inserted with the field names as keys
@@ -138,15 +138,15 @@ class DB {
 	 */
 	public static function insert($values, $table) {
 		$query = self::$driver->insert(array_keys($values), $table);
-		
+
 		self::execute($query, array_values($values));
 
 		return self::$pdo->lastInsertId();
 	}
-	
+
 	/**
 	 * Helper function to update a row in a table.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param array $keys An array populated with the defined model's keys
@@ -165,13 +165,13 @@ class DB {
 		}
 
 		$query = self::$driver->update($keys, array_keys($data), $table);
-		
+
 		return self::execute($query, array_merge(array_values($data), $keyValues));
 	}
-	
+
 	/**
 	 * Helper function to delete a row in a table.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param string $table The name of the target table
@@ -180,19 +180,19 @@ class DB {
 	 */
 	public static function delete($table, $options) {
 		$query = self::$driver->delete($table, $options);
-		
+
 		// get the values out of the where
 		$values = array();
 		if (isset($options['where']) && is_array($options['where'])) {
 			$values = array_slice($options['where'], 1);
 		}
-		
+
 		return self::execute($query, (array)$values);
 	}
-	
+
 	/**
 	 * Helper function to truncate a table.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param string $table The name of the target table
@@ -200,16 +200,16 @@ class DB {
 	 */
 	public static function truncate($table) {
 		$query = self::$driver->truncate($table);
-		
+
 		return self::execute($query);
 	}
-	
+
 	/**
 	 * Executes a SQL query and returns the result set.
 	 *
 	 * Values for the query can either be an array as the second argument or
 	 * multiple arguments in the method.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param string|array $query The query to be run or an array with the query and the values in it
@@ -226,13 +226,11 @@ class DB {
 
 		return self::fetchAll($result);
 	}
-	
+
 	/**
-	 * Executes a SQL query and returns the result set as an object.
+	 * Executes a SQL query and returns the result set as an object. If the class is a model then it will populate
+	 * the model with the data that is returned
 	 *
-	 * This creates a new object for each row. Don't know if the obj is a model or not
-	 * so can't use the way that stores the data.
-	 * 
 	 * @access public
 	 * @static
 	 * @param string $query The query to be run
@@ -243,20 +241,25 @@ class DB {
 	public static function queryObject($query, $values = array(), $obj_name = 'stdClass') {
 		$result = self::execute($query, $values);
 
-		$objects = array();
-		while($row = self::fetchObject($result, $obj_name)) {
-			$objects[] = $row;
+		$objects = new $obj_name;
+		if (is_a($objects, 'Model')) {
+			$objects = $objects->populate($result);
+		} else {
+			$objects = array();
+			while($row = self::fetchObject($result, $obj_name)) {
+				$objects[] = $row;
+			}
 		}
 
 		return $objects;
 	}
-	
+
 	/**
 	 * Executes a SQL query.
 	 *
 	 * Values for the query can either be an array as the second argument or
 	 * multiple arguments in the method.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param string $query The query to be run
@@ -264,15 +267,15 @@ class DB {
 	 * @return mixed
 	 */
 	public static function execute($query, $values = array()) {
-		
+
 		if (!is_array($values)) {
 			$values = func_get_args();
 			array_shift($values); // first argument is the sql query
 		}
-		
+
 		// fix operators in query
 		$query = self::fixOperators($query, $values);
-		
+
 		// prepare the statement and get it ready to be executed
 		$statement = self::$pdo->prepare($query);
 
@@ -296,24 +299,24 @@ class DB {
 		} else {
 			// store a count of the queries
 			self::$queryCount += 1;
-			
+
 			if (Reg::get('Database.storeQueries') == true) {
 				// store the query
 				self::$queries[] = array($query, $values);
 			}
-			
+
 			// set the default fetch mode for the query
 			$statement->setFetchMode(PDO::FETCH_ASSOC);
-	
+
 			return $statement;
 		}
-		
+
 		return false;
 	}
-	
+
 	/**
 	 * Return the query with the operators fixed.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param string $query The query to be run
@@ -323,7 +326,7 @@ class DB {
 	public static function fixOperators($query, &$values) {
 		$query = str_replace(DB::AND_THIS, self::$driver->andOperator(), $query);
 		$query = str_replace(DB::OR_THIS, self::$driver->orOperator(), $query);
-		
+
 		global $count, $processedValues;
 		$count = 0;
 		$processedValues = $values;
@@ -335,13 +338,13 @@ class DB {
 		'), $query);
 		$values = $processedValues;
 		unset($count, $processedValues);
-		
+
 		return $query;
 	}
-	
+
 	/**
 	 * Callback for each operator and value pair matched in the query.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param array $found The array of matches
@@ -352,7 +355,7 @@ class DB {
 	public static function _operatorCallback($found, &$values, &$key) {
 		$whole = $found[0];
 		$operator = $found[2];
-		
+
 		if (strtolower($operator) == 'in') {
 			global $total, $current;
 			$total = substr_count($whole, "?");
@@ -373,9 +376,9 @@ class DB {
 				$current++;
 				return $return;
 			'), $whole);
-			
+
 			unset($total, $current);
-			
+
 			if (substr_count($whole, '?') >= 1 && !preg_match('/[\(]+(.*)[\)]+/is', $whole)) {
 				$whole = preg_replace('(\?([^\s\)]*))', '($0)', $whole);
 			}
@@ -405,14 +408,14 @@ class DB {
 		} else if ($operator == DB::OR_THIS) {
 			$whole = str_replace(DB::OR_THIS, self::$driver->orOperator(), $whole);
 		}
-		
+
 		unset($operator);
 		return $whole;
 	}
-	
+
 	/**
 	 * Returns a row from a query that has been executed.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param mixed $statement The result from the PDO execute
@@ -421,10 +424,10 @@ class DB {
 	public static function fetch($statement) {
 		return $statement->fetch();
 	}
-	
+
 	/**
 	 * Returns all of the rows from a query that has been executed.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param mixed $statement The result from the PDO execute
@@ -433,10 +436,10 @@ class DB {
 	public static function fetchAll($statement) {
 		return $statement->fetchAll();
 	}
-	
+
 	/**
 	 * Returns a row from a query that has been executed as an object.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @param mixed $statement The result from the PDO execute
@@ -446,10 +449,10 @@ class DB {
 	public static function fetchObject($statement, $class_name = 'stdClass') {
 		return $statement->fetchObject($class_name);
 	}
-	
+
 	/**
 	 * Returns a count of all the queries executed on a page.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @return integer
@@ -457,10 +460,10 @@ class DB {
 	public static function getQueryCount() {
 		return self::$queryCount;
 	}
-	
+
 	/**
 	 * Returns an array of all the executed queries.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @return array
