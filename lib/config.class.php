@@ -388,7 +388,7 @@ final class Config {
 			}
 			
 			// set the actual variables
-			Reg::set("Path.".$key, Reg::get("URI.base").'/'.trim(implode('/', array_merge((array)Reg::get('Branch.name'), array_slice($uriWorking, $skip, $position))), '/'));
+			Reg::set("Path.".$key, Reg::get("Path.site").'/'.trim(implode('/', array_merge((array)Reg::get('Branch.name'), array_slice($uriWorking, $skip, $position))), '/'));
 			$count++;
 		}
 		
@@ -590,13 +590,26 @@ final class Config {
 	 */
 	public static function checkForBranch($url_vals) {
 		if (is_array($url_vals) && !empty($url_vals) && self::isBranch($url_vals[0]) && !file_exists(Reg::get("Path.physical")."/controllers/".self::uriToFile($url_vals[0]).".php")) {
-			Reg::set("Branch.name", self::uriToMethod($url_vals[0]));
-			Reg::set("Path.branchPhysical", str_replace("//", "/", Reg::get("Path.physical")."/branches/".Reg::get("Branch.name")));
-			self::loadBranchConfig(Reg::get("Branch.name"));
+			self::setupBranch($url_vals[0]);
 			array_shift($url_vals);
 			return $url_vals;
 		} else {
 			return $url_vals;
+		}
+	}
+	
+	/**
+	 * Loads everything necessary to get a branch setup.
+	 * 
+	 * @access public
+	 * @static
+	 * @param string $branch_name The name of the branch
+	 */
+	public static function setupBranch($branch_name) {
+		if (self::isBranch($branch_name)) {
+			Reg::set("Branch.name", self::uriToMethod($branch_name));
+			Reg::set("Path.branchPhysical", str_replace("//", "/", Reg::get("Path.physical")."/branches/".Reg::get("Branch.name")));
+			self::loadBranchConfig(Reg::get("Branch.name"));
 		}
 	}
 	

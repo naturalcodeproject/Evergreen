@@ -112,7 +112,7 @@ $data = ' . var_export($data, true) . ';');
 		$class = self::getClassName($data_function);
 		
 		// name of the cache file is a md5 hash of the class, function and name
-		$filename = md5($class . '::' . $data_function[1] . '-' . $name) . '.php';
+		$filename = 'cache_' . md5($class . '::' . $data_function[1] . '-' . $name) . '.php';
 		
 		return self::getPath() . '/' . $filename;
 	}
@@ -202,5 +202,23 @@ $data = ' . var_export($data, true) . ';');
 		}
 		
 		return call_user_func_array($function, $extra_args);
+	}
+	
+	/**
+	 * deletes all cache files
+	 *
+	 * @access public
+	 * @static
+	 */
+	public static function clear() {
+		if (Reg::get('Cache.enabled') != true) {
+			return;
+		}
+		
+		$files = glob(self::getPath() . '/cache_*.php');
+		
+		foreach($files as $file) {
+			unlink($file);
+		}
 	}
 }

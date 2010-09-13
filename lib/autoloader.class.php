@@ -85,7 +85,7 @@ class AutoLoader {
 	public static function loadFiles() {
 		foreach(self::$files as $file) {
 			if (file_exists($file)) {
-				require $file;
+				require_once $file;
 			} else {
 				throw new EvergreenException('FILE_NOT_FOUND', array('messageArgs'=>array('file'=>$file)));
 			}
@@ -302,6 +302,11 @@ class AutoLoader {
 					}
 				}
 				unset($file, $dir);
+				
+				// try to load all the registered files again incase some more were registered later
+				if (!class_exists($className, false) && !interface_exists($className, false)) {
+					self::loadFiles();
+				}
 			}
 		}
 	}
@@ -321,7 +326,7 @@ class AutoLoader {
 		
 		// setup the config
 		if (!class_exists('Config', false)) {
-			include("lib".DIRECTORY_SEPARATOR."config.class.php");
+			include(dirname(__FILE__) .DIRECTORY_SEPARATOR."config.class.php");
 			Config::setup();
 		}
 		

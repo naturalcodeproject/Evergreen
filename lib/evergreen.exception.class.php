@@ -87,7 +87,7 @@ class EvergreenException extends Exception {
 			$message = $this->dsprintf($message, $params['messageArgs']);
 		}
 		$this->params = (array)$params;
-		
+
 		parent::__construct($message, ((is_long($code)) ? $code : null));
 		Error::setupError($this);
 	}
@@ -206,13 +206,13 @@ class EvergreenException extends Exception {
 	 * @final
 	 * @param object $errorObj Optional Error object passed when called in side of a catch statement
 	 */
-	public function processError() {
+	public function processError() {		
 		$this->clearAllBuffers();
 		
 		// call hook
 		Hook::call('Exception.processError.before', array(&$this));
 
-		if (isset($this->code) && !headers_sent()) {
+		if (isset($this->params['code']) && !headers_sent()) {
 			switch((string)$this->code) {
 				case "301":
 					header("HTTP/1.1 301 Moved Permanently");
@@ -241,7 +241,7 @@ class EvergreenException extends Exception {
 			}
 		}
 
-		if (isset($this->code) && array_key_exists($this->code, (array)Reg::get("Error"))) {
+		if (isset($this->params['code']) && array_key_exists($this->params['code'], (array)Reg::get("Error"))) {
 			if (isset($this->params['url'])) {
 				$this->loadURL($this->params['url']);
 			} else {
@@ -252,8 +252,8 @@ class EvergreenException extends Exception {
 				$this->loadURL($this->params['url']);
 			} else {
 				$code = null;
-                if (isset($this->code)) {
-                    $code = $this->code;
+                if (isset($this->params['code'])) {
+                    $code = $this->params['code'];
                 }
 
 				// call hook
@@ -323,6 +323,7 @@ class EvergreenException extends Exception {
 			}
 
 			$url = str_replace(Reg::get('Path.root'), "", $url);
+			$_SERVER['REQUEST_URI'] = $url;
 			Reg::set("URI.working", $url);
 			Reg::del("Branch.name");
 			Config::processURI();
@@ -348,6 +349,7 @@ class EvergreenException extends Exception {
 					
 					$controller->_showView();
 				} catch(EvergreenException $e) {
+					var_dump($e); exit;
 					if (Reg::get("System.mode") == "development") {
                         if (isset(self::$params['code'])) {
                             $code = self::$params['code'];

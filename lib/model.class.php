@@ -463,6 +463,9 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 */
 	public final function create() {
 		$this->clearErrors();
+		if (method_exists($this, 'preSave') && is_callable(array($this, 'preSave'))) {
+			$this->preSave('create');
+		}
 		if (method_exists($this, 'preCreate') && is_callable(array($this, 'preCreate'))) {
 			$this->preCreate();
 		}
@@ -499,6 +502,9 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			if (method_exists($this, 'postCreate') && is_callable(array($this, 'postCreate'))) {
 				$this->postCreate();
 			}
+			if (method_exists($this, 'postSave') && is_callable(array($this, 'postSave'))) {
+				$this->postSave('create');
+			}
 			return $id;
 		}
 		return false;
@@ -513,6 +519,9 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 */
 	public final function update() {
 		$this->clearErrors();
+		if (method_exists($this, 'preSave') && is_callable(array($this, 'preSave'))) {
+			$this->preSave('update');
+		}
 		if (method_exists($this, 'preUpdate') && is_callable(array($this, 'preUpdate'))) {
 			$this->preUpdate();
 		}
@@ -535,6 +544,9 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			if (method_exists($this, 'postUpdate') && is_callable(array($this, 'postUpdate'))) {
 				$this->postUpdate();
 			}
+			if (method_exists($this, 'postSave') && is_callable(array($this, 'postSave'))) {
+				$this->postSave('update');
+			}
 
 			return true;
 		}
@@ -551,11 +563,11 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 * @return boolean false if there were errors and boolean true if the delete was successful
 	 */
 	public final function delete($options = array(), $options2 = array()) {
+		$this->clearErrors();
+		if (method_exists($this, 'preDelete') && is_callable(array($this, 'preDelete'))) {
+			$this->preDelete();
+		}
 		if (empty($options)) {
-			$this->clearErrors();
-			if (method_exists($this, 'preDelete') && is_callable(array($this, 'preDelete'))) {
-				$this->preDelete();
-			}
 	        $this->checkKeys();
 			if (!$this->hasErrors()) {
 				$keys = $this->_getPrimaryKeys();
@@ -594,6 +606,11 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 			$this->_prepareOptions($options);
 
 			DB::delete($this->getTableName(), $options);
+			
+			if (method_exists($this, 'postDelete') && is_callable(array($this, 'postDelete'))) {
+				$this->postDelete();
+			}
+			
 			return true;
 		}
 		return false;
@@ -973,9 +990,9 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	/**
 	 * Clears out all the result sets and errors in the current object and resets the current row count to 0.
 	 *
-	 * @access private
+	 * @access public
 	 */
-	private function clearData() {
+	public function clearData() {
 		$this->data = array();
 		$this->errors = array();
 		$this->current_row = 0;
@@ -1211,7 +1228,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 	 */
 	private function checkKeys() {
 		foreach ($this->fields as $name => $field) {
-			if (isset($field['key']) && empty($this->data[$this->current_row][$name])) {
+			if (isset($field['key']) && !isset($this->data[$this->current_row][$name])) {
 				$this->addError($name, (!empty($field['key']) ? $field['key'] : 'The validator \'key\' failed on the \''.$name.'\' field'), 'key', ModelFieldError::TYPE_KEY_MISSING);
 			}
 		}

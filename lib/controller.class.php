@@ -38,10 +38,13 @@
  * Controller.loadView.before
  * Controller.loadView.after
  * Controller.getView.before
+ * Controller.getView.setPath
  * Controller.getView.after
  * Controller.viewExists.before
+ * Controller.viewExists.setPath
  * Controller.viewExists.after
  * Controller.setLayout.before
+ * Controller.setLayout.setPath
  * Controller.setLayout.after
  * Controller.removeLayout.before
  * Controller.removeLayout.after
@@ -333,6 +336,9 @@ abstract class Controller {
 		} else {
 			$path = Reg::get("Path.physical").((!empty($args['branch'])) ? "/branches/".Config::uriToFile(Config::classToFile($args['branch'])) : "")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
 			
+			// call hook
+			Hook::call('Controller.getView.setPath', array(&$args, &$path));
+			
 			if (((file_exists($path) && (include($path)) == true))) {
 				$return = true;
 			}
@@ -413,6 +419,10 @@ abstract class Controller {
 				}
 			} else {
 				$path = Reg::get("Path.physical").(($args['branch']) ? "/branches/".Config::uriToFile(Config::classToFile($args['branch'])) : "")."/views/".Config::uriToFile(Config::classToFile($args['controller']))."/".Config::uriToFile(Config::methodToFile($args['name'])).".php";
+				
+				// call hook
+				Hook::call('Controller.viewExists.setPath', array(&$args, &$path));
+				
 				if (file_exists($path)) {
 					if ($args['checkmethod'] == 'both') {
 						$load['name'] = Config::uriToClass(Config::fileToClass($args['controller']));
@@ -462,8 +472,12 @@ abstract class Controller {
 		
 		if (($layout['branch'] == Reg::get('System.rootIdentifier')) || (!Reg::hasVal("Branch.name") && empty($layout['branch']))) {
 			$path = Reg::get("Path.physical")."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
+			
+			// call hook
+			Hook::call('Controller.setLayout.setPath', array(&$layout, &$path));
+			
 			if (file_exists($path)) {
-				$this->layout = $layout;
+				$this->layout = $path;
 				$return = true;
 			} else {
 				$return = false;
@@ -474,9 +488,14 @@ abstract class Controller {
 			} else {
 				$branchToUse = Reg::get("Branch.name");
 			}
+			
 			$path = Reg::get("Path.physical")."/branches/".Config::uriToFile(Config::classToFile($branchToUse))."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
+			
+			// call hook
+			Hook::call('Controller.setLayout.setPath', array(&$layout, &$path));
+			
 			if (file_exists($path)) {
-				$this->layout = $layout;
+				$this->layout = $path;
 				$return = true;
 			} else {
 				$return = false;
@@ -518,35 +537,16 @@ abstract class Controller {
 	 * @return boolean true if the layout was loaded and boolean false if not
 	 */
 	final private function _renderLayout() {
-		$layout = array_merge(array('name'=>'', 'branch'=>''), (array)$this->layout);
-		
 		// call hook
-		Hook::call('Controller.renderLayout.before', array(&$layout));
+		Hook::call('Controller.renderLayout.before', array(&$this->layout));
 		
-		if (empty($layout['name'])) {
+		if (empty($this->layout)) {
 			return false;
 		}
-		if (($layout['branch'] == Reg::get('System.rootIdentifier')) || (!Reg::hasVal("Branch.name") && empty($layout['branch']))) {
-			$path = Reg::get("Path.physical")."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
-			if ((file_exists($path) && (include($path)) == true)) {
-				$return = true;
-			} else {
-				$return =  false;
-			}
-		} else if ((Reg::hasVal("Branch.name") && empty($layout['branch'])) || !empty($layout['branch'])) {
-			if (!empty($layout['branch'])) {
-				$branchToUse = $layout['branch'];
-			} else {
-				$branchToUse = Reg::get("Branch.name");
-			}
-			$path = Reg::get("Path.physical")."/branches/".Config::uriToFile(Config::classToFile($branchToUse))."/views/layouts/".Config::uriToFile(Config::methodToFile($layout['name'])).".php";
-			if ((file_exists($path) && (include($path)) == true)) {
-				$return = true;
-			} else {
-				$return = false;
-			}
+		if ((file_exists($this->layout) && (include($this->layout)) == true)) {
+			$return = true;
 		} else {
-			$return = false;
+			$return =  false;
 		}
 		
 		// call hook
@@ -1073,7 +1073,7 @@ abstract class Controller {
 	 */
 	final public function _designerFix (&$content) {		
 		// matches all [tags] and everything after it that is before a space, <, >, ", ', .
-		$content = preg_replace_callback('#(\[[\w\.\$\-\>]+\])(.*?)(?=(?:"|\'|\>|\<|\s|\[|\]))#i', array($this, '_designerFixCallback'), $content);
+		$content = preg_replace_callback('#(\[[\w\.\$\-\>\:]+\])(.*?)(?=(?:"|\'|\>|\<|\s|\[|\]))#i', array($this, '_designerFixCallback'), $content);
 	}
 
 }

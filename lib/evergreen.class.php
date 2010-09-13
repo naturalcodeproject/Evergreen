@@ -21,7 +21,7 @@
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 
-require 'autoloader.class.php';
+require dirname(__FILE__) . '/autoloader.class.php';
 
 /**
  * Evergreen Class

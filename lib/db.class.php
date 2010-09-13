@@ -330,7 +330,7 @@ class DB {
 		global $count, $processedValues;
 		$count = 0;
 		$processedValues = $values;
-		$query = preg_replace_callback('/(([^\s,]+)[\s]+(?(?=[\(])\(([^\)]*)\)|([\?]+)))|(\?)/is', create_function('$matches', '
+		$query = preg_replace_callback('/(([^\s]+)[\s]+(?(?=[\(])\(([^\)a-z0-9]*)\)|([\?]+)))|(\?)/is', create_function('$matches', '
 			global $count, $processedValues;
 			$return = DB::_operatorCallback($matches, $processedValues, $count);
 			$count++;
