@@ -257,6 +257,8 @@ $data = ' . var_export($data, true) . ';');
 		
 		$sizes = array(' Bytes', ' KB', ' MB', ' GB', ' TB', ' PB', ' EB', ' ZB', ' YB');
 		
+		if ($size == 0) return '0' . $sizes[0];
+		
 		return (round($size/pow(1024, ($i = floor(log($size, 1024)))), $i > 1 ? 2 : 0) . $sizes[$i]);
 	}
 }
