@@ -221,4 +221,42 @@ $data = ' . var_export($data, true) . ';');
 			unlink($file);
 		}
 	}
+	
+	/**
+	 * calculates the filesize of the cache
+	 *
+	 * @access public
+	 * @static
+	 * @return string
+	 */
+	public static function getFilesize() {
+		
+		if (Reg::get('Cache.enabled') != true) {
+			return 'Disabled';
+		}
+		
+		$size = 0;
+		$files = glob(self::getPath() . '/cache_*.php');
+		
+		foreach ($files as $file) {
+			
+			$size += filesize($file);
+		}
+		
+		return self::formatFilesize($size);
+	}
+	
+	/**
+	 * formats a float into a human-readable filesize
+	 *
+	 * @access pirvate
+	 * @static
+	 * @return string
+	 */
+	private static function formatFilesize($size = 0) {
+		
+		$sizes = array(' Bytes', ' KB', ' MB', ' GB', ' TB', ' PB', ' EB', ' ZB', ' YB');
+		
+		return (round($size/pow(1024, ($i = floor(log($size, 1024)))), $i > 1 ? 2 : 0) . $sizes[$i]);
+	}
 }
