@@ -52,7 +52,7 @@ class Cache {
 			@include($file);
 			
 			// make sure the data exists and is still valid
-			if (!empty($data) && !empty($created) && time() - $created < self::getExpires($expires)) {
+			if (isset($data) && !empty($created) && time() - $created < self::getExpires($expires)) {
 				// the cache is valid, return it
 				return $data;
 			}
