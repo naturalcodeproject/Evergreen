@@ -90,7 +90,7 @@
 			  padding: 10px;
 			  font-size: 11px;
 			}
-			a { padding-left: 5px; padding-right: 5px; color: #008000; text-decoration: none; font-family: "Lucida Grande", Verdana, sans-serif; }
+			a { color: #008000; text-decoration: none; font-family: "Lucida Grande", Verdana, sans-serif; }
 			a:visited { color: #008000; text-decoration: none; }
 			a:hover { color: #008000; text-decoration: none; }
 			#list{
@@ -374,13 +374,17 @@
 				<div class="content-wrapper">
 					<div id="container">
 						<div id="content">
-							<h1>
-								High Five
-							</h1>
+							<h1>High Five</h1>
+							
 							<?php echo "Welcome to Evergreen version ".Config::read("System.version"); ?>
-							<h2>
-								Get Started
-							</h2>For best results it is helpful to set the following permissions <code>chmod -R 777 public/errors</code>
+							
+							<h2>Get Started</h2>
+							
+							<p>For best results it is helpful to set the following permissions <code>chmod -R 777 public/errors</code></p>
+							
+							<p>You will be routed to this page until it is removed. It may be found at <em>/public/welcome.php</em></p>
+							
+							<p>For more information please visit the <a href="http://github.com/naturalcodeproject/Evergreen/wiki">documentation</a>.</p>
 						</div>
 						<div style="clear: both"></div>
 					</div>
