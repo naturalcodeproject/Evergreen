@@ -248,7 +248,7 @@ class AutoLoader {
 			foreach(self::$namespaces as $ns => $dir) {
 				if (0 === strpos($namespace, $ns)) {
 					$className = substr($className, $pos + 1);
-					$file = $dir.DIRECTORY_SEPARATOR.str_replace('\\', DIRECTORY_SEPARATOR, $namespace).DIRECTORY_SEPARATOR.str_replace('_', DIRECTORY_SEPARATOR, $className).'.php';
+					$file = $dir.'/'.str_replace('\\', '/', $namespace).'/'.str_replace('_', '/', $className).'.php';
 					if (file_exists($file)) {
 						require $file;
 					}
@@ -258,7 +258,7 @@ class AutoLoader {
 		} else {
 			foreach(self::$prefixes as $prefix => $dir) {
 				if (0 === strpos($className, $prefix)) {
-					$file = $dir.DIRECTORY_SEPARATOR.str_replace('_', DIRECTORY_SEPARATOR, $className).'.php';
+					$file = $dir.'/'.str_replace('_', '/', $className).'.php';
 					if (file_exists($file)) {
 						require $file;
 					}
@@ -271,7 +271,7 @@ class AutoLoader {
 					
 					// try to load in a file preserving case
 					if (!class_exists($className, false) && !interface_exists($className, false)) {
-						$file = $dir.DIRECTORY_SEPARATOR.$className.'.php';
+						$file = $dir.'/'.$className.'.php';
 						if (file_exists($file)) {
 							require $file;
 						}
@@ -279,7 +279,7 @@ class AutoLoader {
 					
 					// try to load in a file based on a lowercased class
 					if (!class_exists($className, false) && !interface_exists($className, false)) {
-						$file = $dir.DIRECTORY_SEPARATOR.strtolower($className).'.php';
+						$file = $dir.'/'.strtolower($className).'.php';
 						if (file_exists($file)) {
 							require $file;
 						}
@@ -287,7 +287,7 @@ class AutoLoader {
 					
 					// try to load in file based on adding a . before uppercased characters and then lowercasing
 					if (!class_exists($className, false) && !interface_exists($className, false)) {
-						$file = $dir.DIRECTORY_SEPARATOR.strtolower(trim(preg_replace('/[A-Z]/', '.$0', $className), '.')).'.php';
+						$file = $dir.'/'.strtolower(trim(preg_replace('/[A-Z]/', '.$0', $className), '.')).'.php';
 						if (file_exists($file)) {
 							require $file;
 						}
@@ -295,7 +295,7 @@ class AutoLoader {
 					
 					// try to load in file based on adding a _ before uppercased characters and then lowercasing
 					if (!class_exists($className, false) && !interface_exists($className, false)) {
-						$file = $dir.DIRECTORY_SEPARATOR.strtolower(trim(preg_replace('/[A-Z]/', '_$0', $className), '_')).'.php';
+						$file = $dir.'/'.strtolower(trim(preg_replace('/[A-Z]/', '_$0', $className), '_')).'.php';
 						if (file_exists($file)) {
 							require $file;
 						}
@@ -326,7 +326,7 @@ class AutoLoader {
 		
 		// setup the config
 		if (!class_exists('Config', false)) {
-			include(dirname(__FILE__) .DIRECTORY_SEPARATOR."config.class.php");
+			include(dirname(__FILE__) .'/config.class.php');
 			Config::setup();
 		}
 		
@@ -335,25 +335,25 @@ class AutoLoader {
 		
 		// run through $class and find what needs to be loaded
 		if (isset($class['type'])) {
-			$basePath = Reg::get("Path.physical").((!empty($class['branch'])) ? DIRECTORY_SEPARATOR."branches".DIRECTORY_SEPARATOR.$class['branch'] : "");
-			if ($class['type'] == 'controller' && file_exists($basePath.DIRECTORY_SEPARATOR."controllers".DIRECTORY_SEPARATOR."{$class['class']}.php")) {
+			$basePath = Reg::get("Path.physical").((!empty($class['branch'])) ? '/branches/'.$class['branch'] : '');
+			if ($class['type'] == 'controller' && file_exists($basePath.'/controllers/'.$class['class'].'.php')) {
 				//controller include
-				include_once($basePath.DIRECTORY_SEPARATOR."controllers".DIRECTORY_SEPARATOR."{$class['class']}.php");
-			} else if ($class['type'] == 'model' && file_exists($basePath.DIRECTORY_SEPARATOR."models".DIRECTORY_SEPARATOR."{$class['class']}.php")) {
+				include_once($basePath.'/controllers/'.$class['class'].'.php');
+			} else if ($class['type'] == 'model' && file_exists($basePath.'/models/'.$class['class'].'.php')) {
 				// model include
-				include_once($basePath.DIRECTORY_SEPARATOR."models".DIRECTORY_SEPARATOR."{$class['class']}.php");
-			} else if ($class['type'] == 'helper' && file_exists($basePath.DIRECTORY_SEPARATOR."helpers".DIRECTORY_SEPARATOR."{$class['class']}.php")) {
+				include_once($basePath.'/models'.$class['class'].'.php');
+			} else if ($class['type'] == 'helper' && file_exists($basePath.'/helpers/'.$class['class'].'.php')) {
 				// helper include
-				include_once($basePath.DIRECTORY_SEPARATOR."helpers".DIRECTORY_SEPARATOR."{$class['class']}.php");
-			} else if ($class['type'] == 'plugin' && file_exists($basePath.DIRECTORY_SEPARATOR."plugins".DIRECTORY_SEPARATOR."{$class['class']}.php")) {
+				include_once($basePath.'/helpers/'.$class['class'].'.php');
+			} else if ($class['type'] == 'plugin' && file_exists($basePath.'/plugins/'.$class['class'].'.php')) {
 				// plugin include
-				include_once($basePath.DIRECTORY_SEPARATOR."plugins".DIRECTORY_SEPARATOR."{$class['class']}.php");
+				include_once($basePath.'/plugins/'.$class['class'].'.php');
 			} else if ($class['type'] == 'driver') {
 				// model driver include
 				if (isset($class['specificDriver'])) {
 					// check if driver needs to be loaded from a branch
 					if (!empty($class['branch'])) {
-						$branchDriverPath = Reg::get("Path.physical").DIRECTORY_SEPARATOR."branches".DIRECTORY_SEPARATOR.$class['branch'].DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."drivers".DIRECTORY_SEPARATOR.strtolower(str_replace('_', '.', $class['original'])).".class.php";
+						$branchDriverPath = Reg::get("Path.physical").'/branches/'.$class['branch'].'/config/drivers/'.strtolower(str_replace('_', '.', $class['original'])).'.class.php';
 						if (file_exists($branchDriverPath)) {
 							include_once($branchDriverPath);
 						}
@@ -361,23 +361,23 @@ class AutoLoader {
 					}
 					
 					// load main driver if not loading from a branch
-					$mainDriverPath = Reg::get("Path.physical").DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."drivers".DIRECTORY_SEPARATOR.strtolower(str_replace('_', '.', $class['original'])).".class.php";
+					$mainDriverPath = Reg::get("Path.physical").'/config/drivers/'.strtolower(str_replace('_', '.', $class['original'])).'.class.php';
 					if (!class_exists($class['original'], false) && file_exists($mainDriverPath)) {
 						include_once($mainDriverPath);
 					}
 					unset($mainDriverPath);
 				} else {
 					// other db class includes
-					if (file_exists(Reg::get("Path.physical").DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR.strtolower(str_replace('_', '.', $class['original'])).".class.php")) {
-						include_once(Reg::get("Path.physical").DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR.strtolower(str_replace('_', '.', $class['original'])).".class.php");
+					if (file_exists(Reg::get("Path.physical").'/lib/'.strtolower(str_replace('_', '.', $class['original'])).'.class.php')) {
+						include_once(Reg::get("Path.physical").'/lib/'.strtolower(str_replace('_', '.', $class['original'])).'.class.php');
 					}
 				}
 			}
 			unset($basePath);
 		} else {
 			// lib file includes
-			if (file_exists(Reg::get("Path.physical").DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR."{$class['class']}.class.php")) {
-				include_once(Reg::get("Path.physical").DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR."{$class['class']}.class.php");
+			if (file_exists(Reg::get("Path.physical").'/lib/'.$class['class'].'.class.php')) {
+				include_once(Reg::get("Path.physical").'/lib/'.$class['class'].'.class.php');
 			}
 		}
 		

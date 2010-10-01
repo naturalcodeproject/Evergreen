@@ -55,8 +55,8 @@ final class Config {
 		Reg::set('Path.physical', dirname(dirname(__FILE__)));
 		
 		// load the main hooks.php file. Do this near the beginning so that hooks can be just about anywhere
-		if (file_exists(Reg::get("Path.physical").DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."hooks.php")) {
-			include(Reg::get("Path.physical").DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."hooks.php");
+		if (file_exists(Reg::get("Path.physical").'/config/hooks.php')) {
+			include(Reg::get("Path.physical").'/config/hooks.php');
 		}
 		
 		// setup the System.version configuration setting
@@ -67,7 +67,7 @@ final class Config {
 		
 		// setup the URI.base configuration setting
 		$base_uri = dirname($_SERVER['SCRIPT_NAME']);
-		$base_uri = ($base_uri{strlen($base_uri)-1} == '/') ? substr($base_uri, 0, strlen($base_uri)-1) : $base_uri;
+		$base_uri = ($base_uri{strlen($base_uri)-1} == DIRECTORY_SEPARATOR) ? substr($base_uri, 0, strlen($base_uri)-1) : $base_uri;
 		Reg::set('URI.base', $base_uri);
 		
 		// setup the System.defaultError's configuration setting
