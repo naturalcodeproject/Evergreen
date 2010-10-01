@@ -10,7 +10,6 @@
 	));
 	
 	Reg::set(array("URI.map" => array(
-		"lang"			=> array("en", array('Validation_Helper', 'checkLanguage')),
 		"controller"	=> "main",
 		"view"			=> "index",
 		"action"		=> null,

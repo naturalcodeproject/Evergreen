@@ -57,22 +57,22 @@ final class Evergreen {
 			set_error_handler(array("Config", "logError"), ini_get("error_reporting"));
 			
 			// load the main config.php file
-			if (file_exists(Reg::get("Path.physical").DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."config.php")) {
-				include_once(Reg::get("Path.physical").DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."config.php");
+			if (file_exists(Reg::get("Path.physical").'/config/config.php')) {
+				include_once(Reg::get("Path.physical").'/config/config.php');
 			} else {
 				echo "You are missing the configuration file and without it Evergreen cannot run.";
 				exit;
 			}
 			
 			// load the main errors.php file
-			if (file_exists(Reg::get("Path.physical").DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."errors.php")) {
-				include(Reg::get("Path.physical").DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."errors.php");
+			if (file_exists(Reg::get("Path.physical").'/config/errors.php')) {
+				include(Reg::get("Path.physical").'/config/errors.php');
 			}
 			
 			// check if the welcome content is present and if it is show it
-			if (file_exists(Reg::get("Path.physical").DIRECTORY_SEPARATOR."public".DIRECTORY_SEPARATOR."welcome.php")) {
+			if (file_exists(Reg::get("Path.physical").'/public/welcome.php')) {
 				// Load the welcome content
-				include(Reg::get("Path.physical").DIRECTORY_SEPARATOR."public".DIRECTORY_SEPARATOR."welcome.php");
+				include(Reg::get("Path.physical").'/public/welcome.php');
 				exit;
 			}
 			

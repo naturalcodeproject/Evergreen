@@ -374,20 +374,19 @@
 				<div class="content-wrapper">
 					<div id="container">
 						<div id="content">
-							<h1>
-								High Five
-							</h1>
+							<h1>High Five</h1>
+							
 							<?php echo "Welcome to Evergreen version ".Config::read("System.version"); ?>
-							<h2>
-								Get Started
-							</h2>For best results it is helpful to set the following permissions <code>chmod -R 777 public/errors</code>
+							
+							<h2>Get Started</h2>
+							
+							<p>You will be routed to this page until it is removed. It may be found at <em>/public/welcome.php</em></p>
+							
+							<p>For more information please visit the <a href="http://github.com/naturalcodeproject/Evergreen/wiki" target="_blank">documentation</a>.</p>
 						</div>
 						<div style="clear: both"></div>
 					</div>
 				</div>
-			</div>
-			<div class="footer">
-				this site was built using evergreen
 			</div>
 		</div>
 	</body>
