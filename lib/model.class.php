@@ -963,9 +963,13 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		
 		if (!empty($this->data)) {
 			if ($all === true) {
-				return $this->data;
+				$return = array();
+				for($i = 0, $total = count($this->data); $i < $total; $i++) {
+					$return[] = $this[$i]->getProperties();
+				}
+				return $return;
 			} elseif ($all === false && !empty($this->data[$key])) {
-				return $this->data[$key];
+				return $this[$key]->getProperties();
 			}
 		}
 		
