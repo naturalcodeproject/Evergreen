@@ -429,7 +429,7 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		$this->_prepareOptions($options);
 
 		$results = DB::find($this->getFieldNames(), $this->getTableName(), $options);
-
+		
 		return $this->populate($results, $autoExtract);
 	}
 
@@ -710,23 +710,21 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		if ($autoExtract === null && Reg::get('Database.autoExtract') == true) {
 			$autoExtract = true;
 		} else {
-			$autoExtract = false;
+			if ($autoExtract === null) {
+				$autoExtract = false;
+			} else {
+				$autoExtract = (bool)$autoExtract;
+			}
 		}
-
+		
 		if ($results !== false) {
 			// loop through the results and clone the existing object
 			$models = array();
 			while($row = DB::fetch($results)) {
-				if ($autoExtract == true) {
-					$obj = clone $this;
-					$obj->setProperties($row, true, false);
-					$models[] = $obj;
-				} else {
-					$this->setProperties($row, true, false);
-				}
+				$this->setProperties($row, true, false);
 			}
 			if ($autoExtract == true) {
-				return $models;
+				return $this->extractAll();
 			} else {
 				return $this;
 			}
@@ -949,6 +947,29 @@ abstract class Model implements Iterator, Countable, arrayaccess {
 		$this->clearData();
 		$this->setProperties($currentData);
 		$this->setErrors($currentErrors);
+	}
+	
+	/**
+	 * Method to return the current row's array data or the entire result set's data as an array.
+	 *
+	 * @access public
+	 * @param boolean optional $all An option to return all the result set's data versus only the current row.
+	 * @return array of the current row's data or all the result set's data, and false if there is no data in the model.
+	 */
+	public function toArray($all = false) {
+		if ($all === false) {
+			$key = $this->current_row;
+		}
+		
+		if (!empty($this->data)) {
+			if ($all === true) {
+				return $this->data;
+			} elseif ($all === false && !empty($this->data[$key])) {
+				return $this->data[$key];
+			}
+		}
+		
+		return false;
 	}
 
 	/**
