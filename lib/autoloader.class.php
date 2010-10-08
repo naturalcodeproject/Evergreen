@@ -341,7 +341,7 @@ class AutoLoader {
 				include_once($basePath.'/controllers/'.$class['class'].'.php');
 			} else if ($class['type'] == 'model' && file_exists($basePath.'/models/'.$class['class'].'.php')) {
 				// model include
-				include_once($basePath.'/models'.$class['class'].'.php');
+				include_once($basePath.'/models/'.$class['class'].'.php');
 			} else if ($class['type'] == 'helper' && file_exists($basePath.'/helpers/'.$class['class'].'.php')) {
 				// helper include
 				include_once($basePath.'/helpers/'.$class['class'].'.php');
