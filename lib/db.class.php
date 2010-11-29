@@ -93,7 +93,7 @@ class DB {
 	 */
 	public static function setup() {
 		// connect to the DB
-		self::$pdo = new PDO(strtolower(Reg::get("Database.driver")).':host=' . Reg::get('Database.host') . ';dbname=' .  Reg::get('Database.database'), Reg::get('Database.username'), Reg::get('Database.password'));
+		self::$pdo = new PDO(strtolower(Reg::get("Database.driver")).':host=' . Reg::get('Database.host') . ';dbname=' .  Reg::get('Database.database'), Reg::get('Database.username'), Reg::get('Database.password'), array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
 
 		// load the driver
         $specific_driver = Reg::get("Database.driver");
