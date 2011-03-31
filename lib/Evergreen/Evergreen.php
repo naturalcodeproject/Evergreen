@@ -21,8 +21,6 @@
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 
-require dirname(__FILE__) . '/autoloader.class.php';
-
 /**
  * Evergreen Class
  *
@@ -50,9 +48,6 @@ final class Evergreen {
 		$starttime = microtime(true);
 		
 		try {
-			// register the autoloaders
-			Autoloader::register();
-			
 			// setup error handling
 			set_error_handler(array("Config", "logError"), ini_get("error_reporting"));
 			
