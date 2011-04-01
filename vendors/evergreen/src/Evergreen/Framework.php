@@ -21,8 +21,8 @@
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 
-namespace Evergreen\Common
-
+namespace Evergreen;
+exit('made it');
 /**
  * Evergreen Class
  *
@@ -40,7 +40,7 @@ namespace Evergreen\Common
  * @package       evergreen
  * @subpackage    lib
  */
-final class Init {
+final class Framework {
 	/**
 	 * Constructor for the evergreen class that sets up all the necessary parts of the framework so it can run.
 	 * 

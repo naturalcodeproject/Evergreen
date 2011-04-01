@@ -1,21 +1,42 @@
-Made it!
 <?php
-	require __DIR__ . '/Evergreen/Loader/ClassLoader.php';
+namespace {
+	/**
+	*  Load in the required files to get the framework started
+	*/
+	require __DIR__ . '/ClassLoader.php';
 	
-	use Evergreen\Loader\ClassLoader;
+	/**
+	*  Load in the classes that we need.
+	*/
+	use Evergreen\Common\ClassLoader;
+	use Evergreen\Framework;
 	
-	// Setup the autoloader namespaces
-	ClassLoader::registerNamespaces(array(
-	    'Evergreen' => __DIR__,
-	));
-	
-	// register the autoloaders
-	ClassLoader::register();
-	
-	// Start Evergreen
-	use Evergreen\Common\Init;
-	new Init();
-	
+	/**
+	*  Class that starts the system.
+	*/
+	class StartUp {
+		private $loader = null;
+		function __construct() {
+			$this->loader = new ClassLoader();
+			// Setup the autoloader namespaces
+			$this->loader->registerNamespaces(array(
+			    'Evergreen' => __DIR__.'/evergreen/src',
+			));
+
+			// register the autoloaders
+			$this->loader->register();
+			
+			// Start Evergreen
+			new Framework();
+		}
+	}
+
+	/**
+	*  Run the class.
+	*/
+	new StartUp();
+
 	echo "<pre>";
 		var_dump(get_declared_classes());
-?>
+	
+}
