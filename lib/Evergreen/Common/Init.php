@@ -7,12 +7,12 @@
  * causes the Config class to process the uri and actually loads the controller.
  *
  *
- * Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ * Copyright 2007-2011, NaturalCodeProject (http://www.naturalcodeproject.com)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright		Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ * @copyright		Copyright 2007-2011, NaturalCodeProject (http://www.naturalcodeproject.com)
  * @package			evergreen
  * @subpackage		lib
  * @version			$Revision$
@@ -20,6 +20,8 @@
  * @lastmodified	$Date$
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
+
+namespace Evergreen\Common
 
 /**
  * Evergreen Class
@@ -38,7 +40,7 @@
  * @package       evergreen
  * @subpackage    lib
  */
-final class Evergreen {
+final class Init {
 	/**
 	 * Constructor for the evergreen class that sets up all the necessary parts of the framework so it can run.
 	 * 

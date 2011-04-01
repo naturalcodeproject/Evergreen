@@ -5,12 +5,12 @@
  * Handles adding, removing and calling hooks
  *
  *
- * Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ * Copyright 2007-2011, NaturalCodeProject (http://www.naturalcodeproject.com)
  *
  * Licensed under The MIT License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright		Copyright 2007-2010, NaturalCodeProject (http://www.naturalcodeproject.com)
+ * @copyright		Copyright 2007-2011, NaturalCodeProject (http://www.naturalcodeproject.com)
  * @package			evergreen
  * @subpackage		lib
  * @version			$Revision$
