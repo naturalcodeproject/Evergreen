@@ -20,7 +20,7 @@ local.properties
 .*.sw[a-z]
 *.un~
 
-.DS_Store?
+.DS_Store
 Icon?
 
 # Thumbnails
