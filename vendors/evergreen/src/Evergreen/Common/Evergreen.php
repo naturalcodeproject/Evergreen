@@ -21,8 +21,8 @@
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 
-namespace Evergreen;
-exit('made it');
+namespace Evergreen\Common;
+
 /**
  * Evergreen Class
  *
@@ -40,7 +40,7 @@ exit('made it');
  * @package       evergreen
  * @subpackage    lib
  */
-final class Framework {
+final class Evergreen {
 	/**
 	 * Constructor for the evergreen class that sets up all the necessary parts of the framework so it can run.
 	 * 
@@ -51,49 +51,49 @@ final class Framework {
 		
 		try {
 			// setup error handling
-			set_error_handler(array("Config", "logError"), ini_get("error_reporting"));
+			//set_error_handler(array("Config", "logError"), ini_get("error_reporting"));
 			
 			// load the main config.php file
-			if (file_exists(Reg::get("Path.physical").'/config/config.php')) {
-				include_once(Reg::get("Path.physical").'/config/config.php');
-			} else {
-				echo "You are missing the configuration file and without it Evergreen cannot run.";
-				exit;
-			}
+			// if (file_exists(Reg::get("Path.physical").'/config/config.php')) {
+			// 				include_once(Reg::get("Path.physical").'/config/config.php');
+			// 			} else {
+			// 				echo "You are missing the configuration file and without it Evergreen cannot run.";
+			// 				exit;
+			// 			}
 			
 			// load the main errors.php file
-			if (file_exists(Reg::get("Path.physical").'/config/errors.php')) {
-				include(Reg::get("Path.physical").'/config/errors.php');
-			}
+			//if (file_exists(Reg::get("Path.physical").'/config/errors.php')) {
+			//	include(Reg::get("Path.physical").'/config/errors.php');
+			//}
 			
 			// check if the welcome content is present and if it is show it
-			if (file_exists(Reg::get("Path.physical").'/public/welcome.php')) {
+			//if (file_exists(Reg::get("Path.physical").'/public/welcome.php')) {
 				// Load the welcome content
-				include(Reg::get("Path.physical").'/public/welcome.php');
-				exit;
-			}
+			//	include(Reg::get("Path.physical").'/public/welcome.php');
+			//	exit;
+			//}
 			
 			// code that is run at the exit of the script
 			register_shutdown_function(array($this, 'shutdown'), $starttime);
 			
 			// process the uri and setup the Reg variables
-			Config::processURI();
+			//Config::processURI();
 			
 			// wait till after all the config files are loaded before loading in the autoload files
-			Autoloader::loadFiles();
+			//Autoloader::loadFiles();
 			
 			// build the controller class name
-			$load['name'] = Config::uriToClass(Reg::get("URI.working.controller"));
-			if (Reg::hasVal("Branch.name")) {
-				$load['branch'] = Config::uriToClass(Reg::get("Branch.name"));
-			}
-			$load['type'] = 'Controller';
-			$load = implode('_', $load);
+			// $load['name'] = Config::uriToClass(Reg::get("URI.working.controller"));
+			// 			if (Reg::hasVal("Branch.name")) {
+			// 				$load['branch'] = Config::uriToClass(Reg::get("Branch.name"));
+			// 			}
+			// 			$load['type'] = 'Controller';
+			// 			$load = implode('_', $load);
 			
 			// create an instance of the controller
-			$controller = new $load();
+			//$controller = new $load();
 			// run the _showView method in the loaded controller
-			$controller->_showView();
+			//$controller->_showView();
 			
 		} catch(EvergreenException $e) {
 			// handler for the EvergreenException class

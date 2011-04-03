@@ -1,18 +1,19 @@
+<?php
 namespace {
-	use Evergreen\Loader\ClassLoader;
-	use Evergreen\Framework;
+	use Evergreen\Lib\ClassLoader;
+	use Evergreen\Common\Evergreen;
 	
 	
-	$this->loader = new ClassLoader();
+	$loader = new ClassLoader();
 	
 	// Setup the autoloader namespaces
-	$this->loader->registerNamespaces(array(
+	$loader->registerNamespaces(array(
 	    'Evergreen' => __DIR__.'/src',
 	));
 
 	// register the autoloaders
-	$this->loader->register();
+	$loader->register();
 	
 	// Start Evergreen
-	new Framework();
+	new Evergreen();
 }
