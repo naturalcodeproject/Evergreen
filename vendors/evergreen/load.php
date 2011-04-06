@@ -1,7 +1,7 @@
 <?php
 namespace {
 	use Evergreen\Lib\ClassLoader;
-	use Evergreen\Common\Evergreen;
+	use Evergreen\Common\Dispatch;
 	
 	
 	$loader = new ClassLoader();
@@ -15,5 +15,5 @@ namespace {
 	$loader->register();
 	
 	// Start Evergreen
-	new Evergreen();
+	new Dispatch();
 }
