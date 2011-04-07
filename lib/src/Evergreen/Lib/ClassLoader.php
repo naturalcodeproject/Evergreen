@@ -1,6 +1,6 @@
 <?php
 /**
- * Autoloader Class
+ * ClassLoader Class
  *
  * This is the class that automatically loads all classes in the framework. This class also parses the class name
  * and with that knows where to load the file from.

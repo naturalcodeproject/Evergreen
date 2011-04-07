@@ -11,14 +11,14 @@ namespace {
 	use Evergreen\Lib\ClassLoader;
 	
 	$loader = new ClassLoader();
-	// Setup the autoloader namespaces
 	$loader->registerNamespaces(array(
 	    'Evergreen' => __DIR__.'/src',
 	));
-
-	// register the autoloaders
 	$loader->register();
 	
+  /**
+  * Look for all the vendor modules and load them
+  */
 	foreach(glob(__DIR__.'/../vendors/*/load.php') as $loadFile) {
 		require $loadFile;
 	}
