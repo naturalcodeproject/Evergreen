@@ -1,8 +1,9 @@
 <?php
 namespace {
 	use Evergreen\Lib\ClassLoader;
-  use Evergreen\Lib\BundleLoader;
+	use Evergreen\Lib\BundleLoader;
 	use Evergreen\Common\Dispatch;
+	use Evergreen\Http\Request;
 	
 	
 	$loader = new ClassLoader();
@@ -11,7 +12,10 @@ namespace {
 	));
 	$loader->register();
 	
+	var_dump(Request::createFromGlobals());
+	exit;
+	
 	// Start Evergreen
 	//new Dispatch();
-  $bundleLoader = new BundleLoader(new Dispatch());
+  $bundleLoader = new Dispatch();
 }
