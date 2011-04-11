@@ -12,6 +12,7 @@ namespace {
 	));
 	$loader->register();
 	
+	echo "<pre>";
 	var_dump(Request::createFromGlobals());
 	exit;
 	

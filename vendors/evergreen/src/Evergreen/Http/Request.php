@@ -6,18 +6,18 @@ namespace Evergreen\Http;
  * 
  */
 class Request {
-	protected $attributes;
 	protected $get;
 	protected $post;
-	protected $server;
-	protected $files;
+	protected $attributes;
 	protected $cookies;
-	protected $headers;
+	protected $files;
+	protected $server;
+	protected $method;
+	
 	protected $pathInfo;
 	protected $requestUri;
 	protected $baseUrl;
 	protected $basePath;
-	protected $method;
 	
 	public function __construct(array $get = array(), array $post = array(), array $attributes = array(), array $cookies = array(), array $files = array(), array $server = array()) {
 		$this->setup($get, $post, $attributes, $cookies, $files, $server);
@@ -32,8 +32,9 @@ class Request {
 		$this->server = $server;
 	}
 	
-	public function create($uri) {
+	public function create(string $uri, string $method = "GET", array $request = array(), array $cookies = array(), array $files = array(), array $server = array()) {
 		$uriParts = parse_url($uri);
+		
 	}
 	
 	static public function createfromGlobals() {
