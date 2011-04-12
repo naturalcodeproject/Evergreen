@@ -13,7 +13,8 @@ namespace {
 	$loader->register();
 	
 	echo "<pre>";
-	var_dump(Request::createFromGlobals());
+	//var_dump(Request::createFromGlobals());
+	var_dump(Request::create('https://mail.google.com/mail/u/0/?shva=1#mbox', 'GET', array('stuff'=>'2')));
 	exit;
 	
 	// Start Evergreen

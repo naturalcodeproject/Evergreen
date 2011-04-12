@@ -16,9 +16,9 @@ namespace {
 	));
 	$loader->register();
 	
-  /**
-  * Look for all the vendor modules and load them
-  */
+	/**
+	* Look for all the vendor modules and load them
+	*/
 	foreach(glob(__DIR__.'/../vendors/*/load.php') as $loadFile) {
 		require $loadFile;
 	}
