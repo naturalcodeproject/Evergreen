@@ -19,7 +19,7 @@
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 
-namespace Evergreen\Common
+namespace Evergreen;
 
 /**
  * Version Class
@@ -31,7 +31,7 @@ namespace Evergreen\Common
  */
 class Version {
 	/**
-	 * Holds the current version of the framework.
+	 * Holds the current version number of the framework.
 	 */
-	const VERSION = '2.0';
+	const VERSION = '2.0a';
 }

@@ -2,8 +2,9 @@
 namespace {
 	use Evergreen\Lib\ClassLoader;
 	use Evergreen\Lib\BundleLoader;
-	use Evergreen\Common\Dispatch;
+	use Evergreen\Dispatch;
 	use Evergreen\Http\Request;
+	use Evergreen\Version;
 	
 	
 	$loader = new ClassLoader();
@@ -12,12 +13,10 @@ namespace {
 	));
 	$loader->register();
 	
-	echo "<pre>";
-	//var_dump(Request::createFromGlobals());
-	var_dump(Request::create('https://mail.google.com/mail/u/0/?shva=1#mbox', 'GET', array('stuff'=>'2')));
-	exit;
+	$request = Request::createFromGlobals();
+	//'https://mail.google.com/mail/u/0/?shva=1#mbox', 'GET', array('stuff'=>'2')
 	
 	// Start Evergreen
 	//new Dispatch();
-  $bundleLoader = new Dispatch();
+  $bundleLoader = new Dispatch($request);
 }

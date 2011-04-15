@@ -21,7 +21,7 @@
  * @license			http://www.opensource.org/licenses/mit-license.php The MIT License
  */
 
-namespace Evergreen\Common;
+namespace Evergreen;
 
 /**
  * Evergreen Class
@@ -46,10 +46,17 @@ final class Dispatch {
 	 * 
 	 * @access public
 	 */
-	public function __construct() {
+	public function __construct($request) {
 		$starttime = microtime(true);
 		
 		try {
+			
+			echo $request->getHttpHost();
+			
+			echo "<pre>";
+			var_dump($request);
+			exit;
+			
 			// setup error handling
 			//set_error_handler(array("Config", "logError"), ini_get("error_reporting"));
 			
