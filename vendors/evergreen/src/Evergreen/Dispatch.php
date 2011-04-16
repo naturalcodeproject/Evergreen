@@ -51,7 +51,23 @@ final class Dispatch {
 		
 		try {
 			
-			echo $request->getHttpHost();
+			$request->getCharsets();
+			$request->getContentTypes();
+			$request->getLanguages();
+			
+			echo $request->getPreferredLanguage(array('en', 'es')).'<br />';
+			
+			echo $request,
+					"<br />",
+				$request->getHttpHost(),
+					"<br />",
+				$request->getRequestUri(),
+					"<br />",
+				$request->getBaseUrl(),
+					"<br />",
+				$request->getPathInfo(),
+					"<br />",
+				$request->getUri();
 			
 			echo "<pre>";
 			var_dump($request);

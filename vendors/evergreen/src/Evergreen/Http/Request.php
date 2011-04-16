@@ -13,19 +13,21 @@ class Request {
 	protected $cookies = null;
 	protected $files = null;
 	protected $server = null;
-	protected $headers = null;
 	protected $method = 'GET';
 	
 	protected $pathInfo = null;
 	protected $requestUri = null;
 	protected $baseUrl = null;
-	protected $basePath = null;
+	
+	protected $languages = null;
+    protected $charsets = null;
+	protected $contentTypes = null;
 	
 	protected $formats = null;
 	
 	public function __construct(array $query = array(), array $post = array(), array $cookies = array(), array $files = array(), array $server = array()) {
 		
-		$this->formats = new ParameterStore(array(
+		$this->formats = array(
 			'htm'  => array('text/html', 'application/xhtml+xml'),
 			'html' => array('text/html', 'application/xhtml+xml'),
 			'txt'  => array('text/plain'),
@@ -35,17 +37,17 @@ class Request {
 			'xml'  => array('text/xml', 'application/xml', 'application/x-xml'),
 			'rdf'  => array('application/rdf+xml'),
 			'atom' => array('application/atom+xml'),
-		));
+		);
 		
 		
 		$this->setup($query, $post, $cookies, $files, $server);
 	}
 	
 	public function setup(array $query = array(), array $post = array(), array $cookies = array(), array $files = array(), array $server = array()) {
-		$this->query = $query;
-		$this->post = $post;
-		$this->cookies = $cookies;
-		$this->files = $files;
+		$this->query = new ParameterStore($query);
+		$this->post = new ParameterStore($post);
+		$this->cookies = new ParameterStore($cookies);
+		$this->files = new ParameterStore($files);
 		$this->server = new ParameterStore(array_replace(array(
 			'HTTP_HOST'				=> null,
 			'SERVER_NAME'			=> 'localhost',
@@ -64,6 +66,14 @@ class Request {
 			'SCRIPT_NAME'			=> null,
 			'SCRIPT_FILENAME'		=> null,
 		), $server));
+		$this->languages = null;
+        $this->charsets = null;
+		$this->contentTypes = null;
+        $this->pathInfo = null;
+        $this->requestUri = null;
+        $this->baseUrl = null;
+        $this->basePath = null;
+        $this->method = null;
 	}
 	
 	static public function create($uri, $method = "GET", array $request = array(), array $cookies = array(), array $files = array(), array $server = array()) {
@@ -109,6 +119,20 @@ class Request {
 		return new static($query, $post, $cookies, $files, $server);
 	}
 	
+	public function isSecure() {
+        return (
+            (strtolower($this->server->get('HTTPS')) == 'on' || $this->server->get('HTTPS') == 1)
+            ||
+            (strtolower($this->server->get('HTTP_SSL_HTTPS')) == 'on' || $this->server->get('HTTP_SSL_HTTPS') == 1)
+            ||
+            (strtolower($this->server->get('HTTP_X_FORWARDED_PROTO')) == 'https')
+        );
+    }
+	
+	public function getScriptName() {
+        return $this->server->get('SCRIPT_NAME', $this->server->get('ORIG_SCRIPT_NAME', ''));
+    }
+	
 	static public function createfromGlobals() {
 		return new static($_GET, $_POST, $_COOKIE, $_FILES, $_SERVER);
 	}
@@ -133,12 +157,28 @@ class Request {
         return $this->requestUri;
     }
 	
-	public function getBasePath() {
-		
-	}
+	public function getPathInfo() {
+        if (null === $this->pathInfo) {
+            $this->pathInfo = $this->preparePathInfo();
+        }
+
+        return $this->pathInfo;
+    }
 	
 	public function getScheme() {
         return ($this->server->get('HTTPS') == 'on') ? 'https' : 'http';
+    }
+	
+	public function getPort() {
+        return $this->server->get('SERVER_PORT');
+    }
+	
+	public function getBaseUrl() {
+        if (null === $this->baseUrl) {
+            $this->baseUrl = $this->prepareBaseUrl();
+        }
+
+        return $this->baseUrl;
     }
 	
 	public function getUri() {
@@ -189,25 +229,80 @@ class Request {
         return $name.':'.$port;
     }
 	
-	public function getPort() {
-        return $this->server->get('SERVER_PORT');
-    }
-	
-	public function getBaseUrl() {
-        if (null === $this->baseUrl) {
-            $this->baseUrl = $this->prepareBaseUrl();
+	public function getPreferredLanguage(array $locales = null) {
+        $preferredLanguages = $this->getLanguages();
+
+        if (null === $locales) {
+            return isset($preferredLanguages[0]) ? $preferredLanguages[0] : null;
         }
 
-        return $this->baseUrl;
+        if (!$preferredLanguages) {
+            return $locales[0];
+        }
+
+        $preferredLanguages = array_values(array_intersect($preferredLanguages, $locales));
+
+        return isset($preferredLanguages[0]) ? $preferredLanguages[0] : $locales[0];
     }
+	
+	public function getLanguages() {
+        if (null !== $this->languages) {
+            return $this->languages;
+        }
+		
+		$this->languages = array_map(function($val) {
+			$lang = preg_replace('/^\i\-(.*)$/i', '', trim($val));
+			if(strstr($lang, '-')) {
+				$parts = explode('-', $lang);
+				for($i = 0, $length = count($parts); $i < $length; $i++) {
+					if($i == 0) {
+						$lang = strtolower($parts[$i]);
+					} else {
+						$lang .= '-'.strtoupper($parts[$i]);
+					}
+				}
+			}
+			return $lang;
+		}, $this->parseAcceptHeaders($this->server->get('HTTP_ACCEPT_LANGUAGE')));
+		
+		return $this->languages;
+    }
+	
+	public function getCharsets() {
+        if (null !== $this->charsets) {
+            return $this->charsets;
+        }
+
+        return $this->charsets = $this->parseAcceptHeaders($this->server->get('HTTP_ACCEPT_CHARSET'));
+    }
+	
+	public function getContentTypes() {
+        if (null !== $this->contentTypes) {
+            return $this->contentTypes;
+        }
+
+        return $this->contentTypes = $this->parseAcceptHeaders($this->server->get('HTTP_ACCEPT'));
+    }
+	
+	protected function parseAcceptHeaders($headerVal) {
+		if(empty($headerVal)) {
+			return null;
+		}
+		
+		return array_map(function($val) {
+			return trim($val);
+		}, array_filter(preg_split('/[;,]/', $headerVal), function($val) {
+			return (!preg_match('/^\q\=(.*)$/is', trim($val)));
+		}));
+	}
 	
 	protected function prepareRequestUri()
     {
         $requestUri = '';
-
-        if ($this->headers->has('X_REWRITE_URL')) {
+		
+		if ($this->server->has('HTTP_X_REWRITE_URL')) {
             // check this first so IIS will catch
-            $requestUri = $this->headers->get('X_REWRITE_URL');
+            $requestUri = $this->server->get('HTTP_X_REWRITE_URL');
         } elseif ($this->server->get('IIS_WasUrlRewritten') == '1' && $this->server->get('UNENCODED_URL') != '') {
             // IIS7 with URL Rewrite: make sure we get the unencoded url (double slash problem)
             $requestUri = $this->server->get('UNENCODED_URL');
@@ -225,11 +320,55 @@ class Request {
                 $requestUri .= '?'.$this->server->get('QUERY_STRING');
             }
         }
-
+		
+		$requestUri = preg_replace("/^(".str_replace("/", "\/", $this->getBaseUrl())."?)/i", "", $requestUri);
+		
         return $requestUri;
     }
 	
+	protected function prepareBaseUrl() {
+		$filename = basename($this->server->get('SCRIPT_FILENAME'));
+
+        if (basename($this->server->get('SCRIPT_NAME')) === $filename) {
+            $baseUrl = $this->server->get('SCRIPT_NAME');
+        } elseif (basename($this->server->get('PHP_SELF')) === $filename) {
+            $baseUrl = $this->server->get('PHP_SELF');
+        } elseif (basename($this->server->get('ORIG_SCRIPT_NAME')) === $filename) {
+            $baseUrl = $this->server->get('ORIG_SCRIPT_NAME'); // 1and1 shared hosting compatibility
+        } else {
+            // Backtrack up the script_filename to find the portion matching
+            // php_self
+            $path    = $this->server->get('PHP_SELF', '');
+            $file    = $this->server->get('SCRIPT_FILENAME', '');
+            $segs    = explode('/', trim($file, '/'));
+            $segs    = array_reverse($segs);
+            $index   = 0;
+            $last    = count($segs);
+            $baseUrl = '';
+            do {
+                $seg     = $segs[$index];
+                $baseUrl = '/'.$seg.$baseUrl;
+                ++$index;
+            } while (($last > $index) && (false !== ($pos = strpos($path, $baseUrl))) && (0 != $pos));
+        }
+		
+		return rtrim(dirname(dirname($baseUrl)), '/');
+	}
+	
+	protected function preparePathInfo() {
+        if (null === ($requestUri = $this->getRequestUri())) {
+            return null;
+        }
+        
+		if (strpos($requestUri, "?")) {
+			$requestUri = substr($requestUri, 0, strpos($requestUri, "?"));
+		}
+        $pathInfo = ($requestUri{strlen($requestUri)-1} == DIRECTORY_SEPARATOR) ? substr($requestUri, 0, strlen($requestUri)-1) : $requestUri;
+		
+        return $pathInfo;
+    }
+	
 	public function __toString() {
-		return "Hello World";
+		return $this->getUri();
 	}
 }
