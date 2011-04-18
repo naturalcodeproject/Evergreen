@@ -55,7 +55,7 @@ final class Dispatch {
 			$request->getContentTypes();
 			$request->getLanguages();
 			
-			echo $request->getPreferredLanguage(array('en', 'es')).'<br />';
+			echo $request->getPreferredLanguage(array('es', 'en-US')).'<br />';
 			
 			echo $request,
 					"<br />",

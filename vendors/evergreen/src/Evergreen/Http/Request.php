@@ -119,6 +119,10 @@ class Request {
 		return new static($query, $post, $cookies, $files, $server);
 	}
 	
+	function __clone() {
+		$this->setup($query, $post, $cookies, $files, $server);
+	}
+	
 	public function isSecure() {
         return (
             (strtolower($this->server->get('HTTPS')) == 'on' || $this->server->get('HTTPS') == 1)
